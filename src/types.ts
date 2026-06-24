@@ -133,6 +133,8 @@ export interface CountryFacts {
   shortIntro: string;
   funFacts: string[];
   kidSummary: string;
+  /** A few famous tourist attractions, each with a one-line description. */
+  topAttractions?: { name: string; blurb: string }[];
 }
 
 export interface CountryComparison {

@@ -182,6 +182,27 @@ function StandardFacts({ facts }: { facts: CountryFacts }) {
         <p className="text-sm leading-relaxed text-slate-600">{facts.shortIntro}</p>
       </section>
 
+      {facts.topAttractions && facts.topAttractions.length > 0 && (
+        <section className="mt-4">
+          <h3 className="mb-2 text-xs font-bold uppercase tracking-wide text-brand-blue">
+            📍 Must-see places
+          </h3>
+          <ul className="space-y-2">
+            {facts.topAttractions.map((a) => (
+              <li
+                key={a.name}
+                className="rounded-lg border border-slate-200 bg-white p-2.5 shadow-sm"
+              >
+                <p className="text-sm font-bold text-brand-navy">{a.name}</p>
+                <p className="mt-0.5 text-xs leading-relaxed text-slate-600">
+                  {a.blurb}
+                </p>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
       <section className="mt-4">
         <h3 className="mb-1 text-xs font-bold uppercase tracking-wide text-brand-blue">
           Fun facts

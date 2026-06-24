@@ -32,6 +32,11 @@ export const countryFacts: CountryFacts[] = [
     ],
     kidSummary:
       "Mexico is a big, sunny country just south of the United States with amazing food and huge football crowds.",
+    topAttractions: [
+      { name: "Chichén Itzá", blurb: "A giant Maya step-pyramid built over a thousand years ago." },
+      { name: "Teotihuacán", blurb: "Ancient 'City of the Gods' with huge Sun and Moon pyramids near Mexico City." },
+      { name: "Cancún & the Riviera Maya", blurb: "White-sand Caribbean beaches and warm turquoise water." },
+    ],
   },
   {
     isoA3Code: "ZAF",
@@ -62,6 +67,11 @@ export const countryFacts: CountryFacts[] = [
     ],
     kidSummary:
       "South Africa is at the bottom tip of Africa, full of amazing animals, and it speaks 11 official languages!",
+    topAttractions: [
+      { name: "Table Mountain", blurb: "A flat-topped mountain towering over Cape Town, reached by cable car." },
+      { name: "Kruger National Park", blurb: "A huge safari park where you can spot lions, elephants and rhinos." },
+      { name: "Cape of Good Hope", blurb: "Dramatic cliffs where the land points toward two great oceans." },
+    ],
   },
   {
     isoA3Code: "KOR",
@@ -85,6 +95,11 @@ export const countryFacts: CountryFacts[] = [
     ],
     kidSummary:
       "South Korea is a super high-tech country in East Asia, home to K-pop and lots of cool gadgets.",
+    topAttractions: [
+      { name: "Gyeongbokgung Palace", blurb: "Seoul's grand royal palace with colorful guard ceremonies." },
+      { name: "Bukchon Hanok Village", blurb: "Pretty lanes of traditional wooden Korean houses." },
+      { name: "Jeju Island", blurb: "A volcanic holiday island with beaches, craters and waterfalls." },
+    ],
   },
   {
     isoA3Code: "CZE",
@@ -108,6 +123,11 @@ export const countryFacts: CountryFacts[] = [
     ],
     kidSummary:
       "Czechia is a castle-filled country in the middle of Europe with no ocean of its own.",
+    topAttractions: [
+      { name: "Prague Castle", blurb: "One of the world's largest old castles, watching over the capital." },
+      { name: "Charles Bridge", blurb: "A 600-year-old stone bridge lined with statues across the Vltava River." },
+      { name: "Old Town Astronomical Clock", blurb: "A medieval clock that puts on a show every hour." },
+    ],
   },
   {
     isoA3Code: "CAN",
@@ -131,6 +151,11 @@ export const countryFacts: CountryFacts[] = [
     ],
     kidSummary:
       "Canada is a giant, chilly country with tons of lakes, forests, and maple syrup.",
+    topAttractions: [
+      { name: "Niagara Falls", blurb: "Thundering waterfalls you can ride a boat right up to." },
+      { name: "Banff National Park", blurb: "Turquoise lakes and snowy peaks in the Rocky Mountains." },
+      { name: "CN Tower", blurb: "A super-tall tower in Toronto with a glass floor far above the city." },
+    ],
   },
   {
     isoA3Code: "BIH",
@@ -154,6 +179,11 @@ export const countryFacts: CountryFacts[] = [
     ],
     kidSummary:
       "Bosnia and Herzegovina is a small, mountainous country in the Balkans with a famous old stone bridge.",
+    topAttractions: [
+      { name: "Stari Most (Old Bridge)", blurb: "A graceful arched bridge in Mostar where divers leap into the river." },
+      { name: "Baščaršija", blurb: "Sarajevo's old bazaar full of crafts, cafés and a famous fountain." },
+      { name: "Kravica Waterfalls", blurb: "A wide curtain of falls great for a summer swim." },
+    ],
   },
   {
     isoA3Code: "QAT",
@@ -177,6 +207,11 @@ export const countryFacts: CountryFacts[] = [
     ],
     kidSummary:
       "Qatar is a tiny, very rich desert country in the Middle East that hosted the last World Cup.",
+    topAttractions: [
+      { name: "Museum of Islamic Art", blurb: "A striking modern museum of treasures beside Doha's harbor." },
+      { name: "Souq Waqif", blurb: "A lively market with spices, crafts and tiny shops." },
+      { name: "The Pearl-Qatar", blurb: "A glitzy man-made island of marinas and towers." },
+    ],
   },
   {
     isoA3Code: "CHE",
@@ -200,6 +235,11 @@ export const countryFacts: CountryFacts[] = [
     ],
     kidSummary:
       "Switzerland is a rich mountain country in Europe known for chocolate, watches, and the Alps.",
+    topAttractions: [
+      { name: "The Matterhorn", blurb: "A pointy, snow-capped peak that looks like a giant pyramid." },
+      { name: "Lake Geneva", blurb: "A huge alpine lake with a famous tall water fountain." },
+      { name: "Jungfraujoch", blurb: "'Top of Europe' — Europe's highest railway station among the glaciers." },
+    ],
   },
   {
     isoA3Code: "BRA",
@@ -233,6 +273,11 @@ export const countryFacts: CountryFacts[] = [
     ],
     kidSummary:
       "Brazil is the biggest country in South America, home to the Amazon jungle and five World Cup wins.",
+    topAttractions: [
+      { name: "Christ the Redeemer", blurb: "A giant statue of Jesus with open arms above Rio de Janeiro." },
+      { name: "Sugarloaf Mountain", blurb: "A rocky peak reached by cable car over Rio's bay." },
+      { name: "Iguaçu Falls", blurb: "Hundreds of roaring waterfalls in the jungle on the Argentine border." },
+    ],
   },
   {
     isoA3Code: "MAR",
@@ -256,6 +301,11 @@ export const countryFacts: CountryFacts[] = [
     ],
     kidSummary:
       "Morocco is a North African country with deserts, busy markets, and a history-making football team.",
+    topAttractions: [
+      { name: "Marrakesh medina", blurb: "An old walled city with a huge market square full of music and food." },
+      { name: "Sahara dunes at Merzouga", blurb: "Ride a camel over towering golden sand dunes." },
+      { name: "Chefchaouen", blurb: "A mountain town where the streets are painted bright blue." },
+    ],
   },
   {
     isoA3Code: "HTI",
@@ -279,6 +329,11 @@ export const countryFacts: CountryFacts[] = [
     ],
     kidSummary:
       "Haiti is a Caribbean island nation that was the first country freed and run by formerly enslaved people.",
+    topAttractions: [
+      { name: "Citadelle Laferrière", blurb: "A massive mountaintop fortress, one of the biggest in the Americas." },
+      { name: "Labadee", blurb: "A sunny northern beach with clear Caribbean water." },
+      { name: "Bassin Bleu", blurb: "Hidden blue-green pools fed by jungle waterfalls." },
+    ],
   },
   {
     isoA3Code: "GB-SCT",
@@ -302,6 +357,11 @@ export const countryFacts: CountryFacts[] = [
     ],
     kidSummary:
       "Scotland is the northern part of Britain — part of the UK — famous for highlands, kilts, and bagpipes.",
+    topAttractions: [
+      { name: "Edinburgh Castle", blurb: "An ancient fortress on a rock above the capital city." },
+      { name: "Loch Ness", blurb: "A deep, dark lake said to be home to a legendary monster." },
+      { name: "The Highlands", blurb: "Misty mountains, lochs and glens in Scotland's wild north." },
+    ],
   },
   {
     isoA3Code: "USA",
@@ -325,6 +385,11 @@ export const countryFacts: CountryFacts[] = [
     ],
     kidSummary:
       "The United States is a giant country of 50 states with the biggest economy on Earth.",
+    topAttractions: [
+      { name: "Statue of Liberty", blurb: "A giant green statue welcoming visitors to New York Harbor." },
+      { name: "Grand Canyon", blurb: "A mile-deep, mile-wide canyon carved by a river over millions of years." },
+      { name: "Walt Disney World", blurb: "The world's most-visited theme park resort, in Florida." },
+    ],
   },
   {
     isoA3Code: "PRY",
@@ -348,6 +413,11 @@ export const countryFacts: CountryFacts[] = [
     ],
     kidSummary:
       "Paraguay is a small landlocked country in South America where most people speak two languages.",
+    topAttractions: [
+      { name: "Jesuit Ruins of Trinidad", blurb: "Red-stone ruins of a 300-year-old mission village." },
+      { name: "Asunción riverfront", blurb: "The capital's old buildings and palace beside the Paraguay River." },
+      { name: "Ybycuí National Park", blurb: "Green forest with streams, waterfalls and butterflies." },
+    ],
   },
   {
     isoA3Code: "AUS",
@@ -371,6 +441,11 @@ export const countryFacts: CountryFacts[] = [
     ],
     kidSummary:
       "Australia is a country that's also a continent, home to kangaroos, koalas, and a giant coral reef.",
+    topAttractions: [
+      { name: "Sydney Opera House", blurb: "A famous sail-shaped building beside Sydney Harbour." },
+      { name: "Great Barrier Reef", blurb: "The world's largest coral reef, full of colorful fish." },
+      { name: "Uluru (Ayers Rock)", blurb: "A giant red rock sacred to Aboriginal people in the Outback." },
+    ],
   },
   {
     isoA3Code: "TUR",
@@ -403,6 +478,11 @@ export const countryFacts: CountryFacts[] = [
     ],
     kidSummary:
       "Türkiye is a country that sits on both Europe and Asia, with the famous two-continent city of Istanbul.",
+    topAttractions: [
+      { name: "Hagia Sophia", blurb: "A vast domed building in Istanbul, once a church, then a mosque." },
+      { name: "Cappadocia", blurb: "A land of fairy-chimney rocks where hot-air balloons fill the sky." },
+      { name: "Pamukkale", blurb: "White terraces of warm pools that look like steps of snow." },
+    ],
   },
   {
     isoA3Code: "DEU",
@@ -436,6 +516,11 @@ export const countryFacts: CountryFacts[] = [
     ],
     kidSummary:
       "Germany is Europe's economic powerhouse, famous for cars, castles, and four World Cup trophies.",
+    topAttractions: [
+      { name: "Neuschwanstein Castle", blurb: "A fairy-tale mountain castle that inspired Disney's." },
+      { name: "Brandenburg Gate", blurb: "Berlin's grand columned gateway and symbol of the city." },
+      { name: "Cologne Cathedral", blurb: "A soaring Gothic church with twin towers, centuries in the making." },
+    ],
   },
   {
     isoA3Code: "CUW",
@@ -459,6 +544,11 @@ export const countryFacts: CountryFacts[] = [
     ],
     kidSummary:
       "Curaçao is a tiny, colorful Caribbean island that belongs to the Kingdom of the Netherlands.",
+    topAttractions: [
+      { name: "Willemstad waterfront", blurb: "Rows of candy-colored Dutch houses along the harbor." },
+      { name: "Queen Emma Bridge", blurb: "A floating bridge that swings open to let ships through." },
+      { name: "Klein Curaçao", blurb: "A tiny uninhabited island with white sand and clear water." },
+    ],
   },
   {
     isoA3Code: "CIV",
@@ -482,6 +572,11 @@ export const countryFacts: CountryFacts[] = [
     ],
     kidSummary:
       "Ivory Coast is a West African country that grows most of the world's chocolate beans.",
+    topAttractions: [
+      { name: "Basilica of Yamoussoukro", blurb: "One of the largest churches in the world, with a huge dome." },
+      { name: "Abidjan", blurb: "A lively seaside city of skyscrapers and markets, called 'the Pearl of the Lagoons'." },
+      { name: "Taï National Park", blurb: "A rainforest full of rare monkeys and tool-using chimpanzees." },
+    ],
   },
   {
     isoA3Code: "ECU",
@@ -505,6 +600,11 @@ export const countryFacts: CountryFacts[] = [
     ],
     kidSummary:
       "Ecuador is a South American country right on the Equator, and it owns the famous Galápagos Islands.",
+    topAttractions: [
+      { name: "Galápagos Islands", blurb: "Islands of giant tortoises and tame animals that inspired Darwin." },
+      { name: "Quito Old Town", blurb: "A beautifully preserved colonial city high in the Andes." },
+      { name: "Mitad del Mundo", blurb: "A monument where you can stand on the Equator line itself." },
+    ],
   },
   {
     isoA3Code: "NLD",
@@ -528,6 +628,11 @@ export const countryFacts: CountryFacts[] = [
     ],
     kidSummary:
       "The Netherlands is a flat, bike-loving country in Europe with windmills, tulips, and land below the sea.",
+    topAttractions: [
+      { name: "Amsterdam canals", blurb: "Pretty ringed waterways lined with tall, narrow houses." },
+      { name: "Keukenhof gardens", blurb: "Millions of tulips blooming in spring colors." },
+      { name: "Kinderdijk windmills", blurb: "A row of historic windmills that drained the watery land." },
+    ],
   },
   {
     isoA3Code: "JPN",
@@ -551,6 +656,11 @@ export const countryFacts: CountryFacts[] = [
     ],
     kidSummary:
       "Japan is an island country in Asia mixing old temples with super-fast trains and cool technology.",
+    topAttractions: [
+      { name: "Mount Fuji", blurb: "A perfectly shaped snow-capped volcano and Japan's tallest peak." },
+      { name: "Tokyo", blurb: "A buzzing megacity of neon streets, anime shops and tasty food." },
+      { name: "Kyoto temples", blurb: "Golden pavilions, red shrine gates and quiet bamboo groves." },
+    ],
   },
   {
     isoA3Code: "SWE",
@@ -574,6 +684,11 @@ export const countryFacts: CountryFacts[] = [
     ],
     kidSummary:
       "Sweden is a long northern country with forests, lakes, and winters where you can see the Northern Lights.",
+    topAttractions: [
+      { name: "Gamla Stan", blurb: "Stockholm's old town of cobbled lanes on its own little island." },
+      { name: "Icehotel", blurb: "A hotel in the far north rebuilt from ice and snow every winter." },
+      { name: "Vasa Museum", blurb: "A giant 400-year-old wooden warship raised from the sea." },
+    ],
   },
   {
     isoA3Code: "TUN",
@@ -597,6 +712,11 @@ export const countryFacts: CountryFacts[] = [
     ],
     kidSummary:
       "Tunisia is the most northern country in Africa, with deserts used as movie sets and ancient ruins.",
+    topAttractions: [
+      { name: "Ruins of Carthage", blurb: "Stone remains of a once-mighty ancient sea empire." },
+      { name: "Sidi Bou Said", blurb: "A clifftop village of white houses with bright blue doors." },
+      { name: "Sahara film sets", blurb: "Desert spots near Tozeur used in 'Star Wars' movies." },
+    ],
   },
   {
     isoA3Code: "BEL",
@@ -620,6 +740,11 @@ export const countryFacts: CountryFacts[] = [
     ],
     kidSummary:
       "Belgium is a small European country famous for chocolate and waffles and home to the EU's capital.",
+    topAttractions: [
+      { name: "Grand-Place", blurb: "Brussels' dazzling old square ringed by golden guild houses." },
+      { name: "Bruges", blurb: "A storybook town of canals, bridges and medieval streets." },
+      { name: "Atomium", blurb: "A giant shiny model of an atom you can climb inside." },
+    ],
   },
   {
     isoA3Code: "EGY",
@@ -643,6 +768,11 @@ export const countryFacts: CountryFacts[] = [
     ],
     kidSummary:
       "Egypt is a desert country in Africa with ancient pyramids and the mighty River Nile.",
+    topAttractions: [
+      { name: "Pyramids of Giza & Sphinx", blurb: "Giant 4,500-year-old tombs guarded by a stone lion-man." },
+      { name: "Valley of the Kings", blurb: "Hidden royal tombs cut into desert rock near Luxor." },
+      { name: "A Nile cruise", blurb: "Sail the world's longest river past temples and palm trees." },
+    ],
   },
   {
     isoA3Code: "IRN",
@@ -674,6 +804,11 @@ export const countryFacts: CountryFacts[] = [
     ],
     kidSummary:
       "Iran is a large Middle Eastern country, once home to the ancient Persian Empire, famous for carpets.",
+    topAttractions: [
+      { name: "Persepolis", blurb: "Grand ruins of the ancient Persian Empire's ceremonial city." },
+      { name: "Naqsh-e Jahan Square", blurb: "A huge Isfahan plaza ringed by tiled blue mosques." },
+      { name: "Golestan Palace", blurb: "A dazzling royal palace of mirrors and gardens in Tehran." },
+    ],
   },
   {
     isoA3Code: "NZL",
@@ -697,6 +832,11 @@ export const countryFacts: CountryFacts[] = [
     ],
     kidSummary:
       "New Zealand is a green island country in the Pacific with mountains, sheep, and Māori culture.",
+    topAttractions: [
+      { name: "Hobbiton", blurb: "The real movie set of round hobbit-hole houses in green hills." },
+      { name: "Milford Sound", blurb: "A dramatic fjord of cliffs and waterfalls dropping into the sea." },
+      { name: "Rotorua", blurb: "A bubbling land of hot springs, geysers and Māori culture." },
+    ],
   },
   {
     isoA3Code: "ESP",
@@ -720,6 +860,11 @@ export const countryFacts: CountryFacts[] = [
     ],
     kidSummary:
       "Spain is a sunny European country famous for flamenco, tapas, and the Spanish language.",
+    topAttractions: [
+      { name: "Sagrada Família", blurb: "Barcelona's wild, still-unfinished church designed by Gaudí." },
+      { name: "Alhambra", blurb: "A hilltop palace-fortress with beautiful carved Moorish courtyards." },
+      { name: "Park Güell", blurb: "A colorful mosaic park full of curvy, dreamlike shapes." },
+    ],
   },
   {
     isoA3Code: "CPV",
@@ -743,6 +888,11 @@ export const countryFacts: CountryFacts[] = [
     ],
     kidSummary:
       "Cape Verde is a tiny group of islands off the coast of Africa with beautiful music and beaches.",
+    topAttractions: [
+      { name: "Sal island beaches", blurb: "Long white-sand shores and warm, calm Atlantic water." },
+      { name: "Pico do Fogo", blurb: "An active volcano you can hike, with a village in its crater." },
+      { name: "Cidade Velha", blurb: "Africa's oldest colonial town, now a World Heritage site." },
+    ],
   },
   {
     isoA3Code: "SAU",
@@ -774,6 +924,11 @@ export const countryFacts: CountryFacts[] = [
     ],
     kidSummary:
       "Saudi Arabia is a large desert country in the Middle East with lots of oil and holy cities.",
+    topAttractions: [
+      { name: "Hegra (Mada'in Salih)", blurb: "Ancient tombs carved into desert rock, like a quieter Petra." },
+      { name: "Edge of the World", blurb: "A dramatic cliff with views over an endless desert plain." },
+      { name: "Diriyah", blurb: "Restored mud-brick old town, the birthplace of the Saudi state." },
+    ],
   },
   {
     isoA3Code: "URY",
@@ -797,6 +952,11 @@ export const countryFacts: CountryFacts[] = [
     ],
     kidSummary:
       "Uruguay is a small South American country that won the very first World Cup back in 1930.",
+    topAttractions: [
+      { name: "Montevideo Rambla", blurb: "A long seaside walkway around the capital's coast." },
+      { name: "Punta del Este", blurb: "A beach resort with a famous giant 'fingers' sculpture in the sand." },
+      { name: "Colonia del Sacramento", blurb: "A charming old town of cobbled streets by the river." },
+    ],
   },
   {
     isoA3Code: "FRA",
@@ -829,6 +989,11 @@ export const countryFacts: CountryFacts[] = [
     ],
     kidSummary:
       "France is a European country famous for the Eiffel Tower, great food, and a star football team.",
+    topAttractions: [
+      { name: "Eiffel Tower", blurb: "The iron tower that is the symbol of Paris and France." },
+      { name: "The Louvre", blurb: "The world's most-visited museum, home to the Mona Lisa." },
+      { name: "Palace of Versailles", blurb: "A dazzling royal palace with a hall of mirrors and huge gardens." },
+    ],
   },
   {
     isoA3Code: "SEN",
@@ -858,6 +1023,11 @@ export const countryFacts: CountryFacts[] = [
     ],
     kidSummary:
       "Senegal is a West African country at the edge of the continent, with great music and football.",
+    topAttractions: [
+      { name: "Gorée Island", blurb: "A peaceful island off Dakar with a moving history museum." },
+      { name: "Lake Retba (Pink Lake)", blurb: "A lake that can turn bubblegum-pink from tiny algae." },
+      { name: "Djoudj Bird Park", blurb: "A wetland where millions of birds, including flamingos, gather." },
+    ],
   },
   {
     isoA3Code: "IRQ",
@@ -881,6 +1051,11 @@ export const countryFacts: CountryFacts[] = [
     ],
     kidSummary:
       "Iraq is a Middle Eastern country where the world's first cities and writing were born long ago.",
+    topAttractions: [
+      { name: "Ancient Babylon", blurb: "Ruins of one of the most famous cities of the ancient world." },
+      { name: "Ziggurat of Ur", blurb: "A huge stepped temple-tower built over 4,000 years ago." },
+      { name: "Erbil Citadel", blurb: "A hilltop town said to be one of the oldest lived-in places on Earth." },
+    ],
   },
   {
     isoA3Code: "NOR",
@@ -904,6 +1079,11 @@ export const countryFacts: CountryFacts[] = [
     ],
     kidSummary:
       "Norway is a northern European country of fjords, Vikings, and the glowing Northern Lights.",
+    topAttractions: [
+      { name: "Geirangerfjord", blurb: "A deep blue fjord framed by cliffs and waterfalls." },
+      { name: "Tromsø", blurb: "A northern city that's one of the best places to see the Northern Lights." },
+      { name: "Bergen & Bryggen", blurb: "A harbor town with colorful old wooden wharf houses." },
+    ],
   },
   {
     isoA3Code: "ARG",
@@ -927,6 +1107,11 @@ export const countryFacts: CountryFacts[] = [
     ],
     kidSummary:
       "Argentina is a long South American country, current World Cup champions, and the home of tango.",
+    topAttractions: [
+      { name: "Perito Moreno Glacier", blurb: "A giant wall of ice that cracks and splashes into a lake." },
+      { name: "La Boca / Caminito", blurb: "A Buenos Aires street of brightly painted houses and tango dancers." },
+      { name: "Iguazú Falls", blurb: "Endless thundering waterfalls in the jungle (shared with Brazil)." },
+    ],
   },
   {
     isoA3Code: "DZA",
@@ -958,6 +1143,11 @@ export const countryFacts: CountryFacts[] = [
     ],
     kidSummary:
       "Algeria is the largest country in Africa, mostly covered by the giant Sahara Desert.",
+    topAttractions: [
+      { name: "Casbah of Algiers", blurb: "A maze of steep old streets above the Mediterranean Sea." },
+      { name: "Timgad", blurb: "Remarkably complete ruins of a Roman city in the highlands." },
+      { name: "Hoggar Mountains", blurb: "Jagged desert peaks with star-filled Sahara skies." },
+    ],
   },
   {
     isoA3Code: "AUT",
@@ -990,6 +1180,11 @@ export const countryFacts: CountryFacts[] = [
     ],
     kidSummary:
       "Austria is a landlocked country in the Alps, famous for classical music and skiing.",
+    topAttractions: [
+      { name: "Schönbrunn Palace", blurb: "Vienna's grand royal summer palace with huge gardens." },
+      { name: "Hallstatt", blurb: "A tiny lakeside village backed by steep alpine mountains." },
+      { name: "Salzburg old town", blurb: "Mozart's birthplace, a city of domes and a clifftop fortress." },
+    ],
   },
   {
     isoA3Code: "JOR",
@@ -1013,6 +1208,11 @@ export const countryFacts: CountryFacts[] = [
     ],
     kidSummary:
       "Jordan is a desert country in the Middle East with the rock city of Petra and the super-salty Dead Sea.",
+    topAttractions: [
+      { name: "Petra", blurb: "A whole ancient city carved into rose-red rock cliffs." },
+      { name: "Wadi Rum", blurb: "A red-sand desert of giant rock towers, used in space movies." },
+      { name: "The Dead Sea", blurb: "Water so salty you float on top without trying." },
+    ],
   },
   {
     isoA3Code: "PRT",
@@ -1036,6 +1236,11 @@ export const countryFacts: CountryFacts[] = [
     ],
     kidSummary:
       "Portugal sits on Europe's western coast and its sailors once explored much of the world.",
+    topAttractions: [
+      { name: "Belém Tower", blurb: "A fairy-tale stone tower guarding Lisbon's river since the 1500s." },
+      { name: "Pena Palace", blurb: "A colorful fairy-tale castle on a hill in Sintra." },
+      { name: "The Algarve", blurb: "Golden cliffs, sea caves and sunny southern beaches." },
+    ],
   },
   {
     isoA3Code: "COD",
@@ -1069,6 +1274,11 @@ export const countryFacts: CountryFacts[] = [
     ],
     kidSummary:
       "DR Congo is a giant country in central Africa with huge rainforests, gorillas, and a mighty river.",
+    topAttractions: [
+      { name: "Virunga National Park", blurb: "Africa's oldest park, home to rare mountain gorillas." },
+      { name: "Mount Nyiragongo", blurb: "A volcano with one of the world's largest bubbling lava lakes." },
+      { name: "Congo River", blurb: "A vast, powerful river winding through the rainforest." },
+    ],
   },
   {
     isoA3Code: "UZB",
@@ -1098,6 +1308,11 @@ export const countryFacts: CountryFacts[] = [
     ],
     kidSummary:
       "Uzbekistan is a Central Asian country on the old Silk Road, so far from the sea you cross two countries to reach it.",
+    topAttractions: [
+      { name: "Registan, Samarkand", blurb: "A square framed by three giant blue-tiled Silk Road schools." },
+      { name: "Bukhara old city", blurb: "Ancient domes, minarets and markets little changed for centuries." },
+      { name: "Khiva (Itchan Kala)", blurb: "A walled desert city like stepping into the past." },
+    ],
   },
   {
     isoA3Code: "COL",
@@ -1121,6 +1336,11 @@ export const countryFacts: CountryFacts[] = [
     ],
     kidSummary:
       "Colombia is a South American country famous for coffee, with coasts on two different seas.",
+    topAttractions: [
+      { name: "Cartagena old town", blurb: "A walled Caribbean city of colorful balconied streets." },
+      { name: "Coffee Cultural Landscape", blurb: "Green hills of coffee farms and palm-filled valleys." },
+      { name: "Caño Cristales", blurb: "A river that glows red, yellow and green from water plants." },
+    ],
   },
   {
     isoA3Code: "GB-ENG",
@@ -1144,6 +1364,11 @@ export const countryFacts: CountryFacts[] = [
     ],
     kidSummary:
       "England is part of the United Kingdom and is the country where modern football was invented.",
+    topAttractions: [
+      { name: "Big Ben & Parliament", blurb: "London's famous clock tower beside the River Thames." },
+      { name: "Tower of London", blurb: "An old riverside castle that guards the Crown Jewels." },
+      { name: "Stonehenge", blurb: "A mysterious ring of giant standing stones from prehistoric times." },
+    ],
   },
   {
     isoA3Code: "HRV",
@@ -1173,6 +1398,11 @@ export const countryFacts: CountryFacts[] = [
     ],
     kidSummary:
       "Croatia is a small European country with a stunning coastline and over a thousand islands.",
+    topAttractions: [
+      { name: "Dubrovnik old town", blurb: "A walled seaside city used as a 'Game of Thrones' set." },
+      { name: "Plitvice Lakes", blurb: "A national park of turquoise lakes linked by waterfalls." },
+      { name: "Diocletian's Palace, Split", blurb: "A Roman emperor's palace that is now a living town center." },
+    ],
   },
   {
     isoA3Code: "GHA",
@@ -1196,6 +1426,11 @@ export const countryFacts: CountryFacts[] = [
     ],
     kidSummary:
       "Ghana is a West African country rich in gold and cocoa, with passionate football fans.",
+    topAttractions: [
+      { name: "Cape Coast Castle", blurb: "A historic seaside fort with a powerful story of the past." },
+      { name: "Kakum National Park", blurb: "A rainforest with rope walkways high up in the treetops." },
+      { name: "Kwame Nkrumah Memorial", blurb: "A park in Accra honoring Ghana's independence leader." },
+    ],
   },
   {
     isoA3Code: "PAN",
@@ -1219,5 +1454,10 @@ export const countryFacts: CountryFacts[] = [
     ],
     kidSummary:
       "Panama is a narrow country joining two continents, home to the famous ship canal between two oceans.",
+    topAttractions: [
+      { name: "Panama Canal", blurb: "Watch huge ships ride locks between two oceans." },
+      { name: "Casco Viejo", blurb: "Panama City's old quarter of plazas and colonial buildings." },
+      { name: "San Blas Islands", blurb: "Tiny palm-dotted islands run by the Indigenous Guna people." },
+    ],
   },
 ];
