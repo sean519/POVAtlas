@@ -17,12 +17,14 @@ const CONFETTI = ["🎉", "⚽", "⭐", "🎊", "🏡", "🥳"];
 export default function EasterEggModal({ open, onClose }: EasterEggModalProps) {
   const [cheer, setCheer] = useState<{ name: string; text: string; id: number } | null>(null);
   const [waving, setWaving] = useState(false);
+  const [zoomed, setZoomed] = useState<EggMember | null>(null);
   const timer = useRef<number | undefined>(undefined);
 
   useEffect(() => {
     if (!open) {
       setCheer(null);
       setWaving(false);
+      setZoomed(null);
     }
   }, [open]);
 
@@ -30,11 +32,17 @@ export default function EasterEggModal({ open, onClose }: EasterEggModalProps) {
 
   if (!open) return null;
 
-  const onMemberClick = (m: EggMember) => {
+  const rollCheer = (m: EggMember) => {
     const text = m.cheers[Math.floor(Math.random() * m.cheers.length)];
     setCheer({ name: m.name, text, id: Date.now() });
     window.clearTimeout(timer.current);
     timer.current = window.setTimeout(() => setCheer(null), 1300);
+  };
+
+  // Tapping a member opens an enlarged portrait so the avatar is clearly visible.
+  const onMemberClick = (m: EggMember) => {
+    setZoomed(m);
+    rollCheer(m);
   };
 
   const doWave = () => {
@@ -53,17 +61,9 @@ export default function EasterEggModal({ open, onClose }: EasterEggModalProps) {
           onClick={() => onMemberClick(m)}
           className="relative flex flex-col items-center gap-1 rounded-2xl bg-slate-50 py-3 transition hover:bg-brand-sky/10"
         >
-          {cheer?.name === m.name && (
-            <span
-              key={cheer.id}
-              className="egg-pop absolute -top-3 z-10 whitespace-nowrap rounded-full bg-brand-navy px-2 py-0.5 text-[11px] font-bold text-white shadow"
-            >
-              {cheer.text}
-            </span>
-          )}
           {m.avatarUrl ? (
             <span
-              className="block h-14 w-14 shrink-0 overflow-hidden rounded-full bg-white ring-2 ring-white shadow-sm"
+              className="relative block h-14 w-14 shrink-0 overflow-hidden rounded-full bg-white ring-2 ring-white shadow-sm"
               style={{
                 aspectRatio: "1 / 1",
                 ...(waving
@@ -77,6 +77,9 @@ export default function EasterEggModal({ open, onClose }: EasterEggModalProps) {
                 alt={m.name}
                 draggable={false}
               />
+              <span className="pointer-events-none absolute bottom-0 right-0 rounded-full bg-brand-navy/80 px-1 text-[9px] leading-4 text-white shadow">
+                🔍
+              </span>
             </span>
           ) : (
             <span
@@ -160,7 +163,7 @@ export default function EasterEggModal({ open, onClose }: EasterEggModalProps) {
         </section>
 
         <p className="mt-3 text-center text-[11px] text-slate-400">
-          Tap a player to hear them cheer ⚽
+          点头像放大看看，再点一下听他们欢呼 ⚽
         </p>
         <button
           type="button"
@@ -170,6 +173,73 @@ export default function EasterEggModal({ open, onClose }: EasterEggModalProps) {
           全体欢呼 🎉
         </button>
       </div>
+
+      {/* Enlarged portrait — tap a member to see them up close */}
+      {zoomed && (
+        <div
+          className="absolute inset-0 z-20 flex items-center justify-center p-4"
+          onClick={() => setZoomed(null)}
+        >
+          <div className="absolute inset-0 bg-brand-navy/70 backdrop-blur-md" />
+          <div
+            className="animate-fade-in-up relative z-10 flex w-[min(20rem,calc(100%-2rem))] flex-col items-center rounded-3xl bg-white p-5 shadow-card ring-1 ring-black/10"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              type="button"
+              onClick={() => setZoomed(null)}
+              aria-label="Close"
+              className="absolute right-3 top-3 z-10 shrink-0 rounded-full bg-slate-100 px-2.5 py-1 text-sm font-bold text-slate-500 transition hover:bg-slate-200"
+            >
+              ✕
+            </button>
+
+            {cheer?.name === zoomed.name && (
+              <span
+                key={cheer.id}
+                className="egg-pop absolute -top-3 z-20 whitespace-nowrap rounded-full bg-brand-navy px-3 py-1 text-sm font-bold text-white shadow"
+              >
+                {cheer.text}
+              </span>
+            )}
+
+            <button
+              type="button"
+              onClick={() => rollCheer(zoomed)}
+              className="active:scale-95 transition"
+              aria-label={`${zoomed.name} cheer`}
+            >
+              {zoomed.avatarUrl ? (
+                <span
+                  className="block h-56 w-56 overflow-hidden rounded-full bg-white ring-4 ring-brand-sky/40 shadow-lg"
+                  style={{ aspectRatio: "1 / 1" }}
+                >
+                  <img
+                    src={zoomed.avatarUrl}
+                    className="h-full w-full object-cover"
+                    alt={zoomed.name}
+                    draggable={false}
+                  />
+                </span>
+              ) : (
+                <span
+                  className="flex h-56 w-56 items-center justify-center rounded-full bg-slate-50 text-8xl ring-4 ring-brand-sky/40 shadow-lg"
+                  aria-hidden
+                >
+                  {zoomed.emoji}
+                </span>
+              )}
+            </button>
+
+            <h3 className="mt-4 text-2xl font-extrabold text-brand-navy">
+              {zoomed.name}
+            </h3>
+            <p className="mt-1 text-center text-xs text-slate-400">
+              点头像换个口号 · 点空白处关闭
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
