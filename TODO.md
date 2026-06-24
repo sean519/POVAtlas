@@ -4,10 +4,10 @@
 > Full context lives in [HANDOFF.md](HANDOFF.md).
 
 ## 🔜 Next up (do first)
-- [ ] **Confirm avatar oval fix on user's device.** Code renders perfect circles
-      in tests; the user's oval was almost certainly browser cache. Ask them to
-      hard-refresh (Ctrl+Shift+R) and re-open the OC easter egg. Do **not**
-      re-edit the avatar CSS first — it's already provably correct.
+- [ ] **Confirm the new kid avatars + zoom on the user's device.** New 512×512
+      portraits and a tap-to-enlarge lightbox shipped (`77b65e1`); verified in
+      the preview browser. Ask the user to hard-refresh (Ctrl+Shift+R) and
+      re-open the OC easter egg to confirm on their device.
 
 ## ⬆️ High priority
 - [ ] **Optional: real cartoon avatars for the 6 adults** (Sean, Roy, Han,
@@ -32,6 +32,8 @@
       (`tsc --noEmit`) + manual browser verification.
 
 ## ✅ Done this session
+- [x] New 512×512 kid avatars + tap-to-enlarge zoom lightbox in the OC easter
+      egg (`EasterEggModal.tsx`, `public/avatars/*`) — `77b65e1`
 - [x] "📍 Must-see places" tourist attractions for all 48 countries
       (`countryFacts.ts`, `types.ts`, `CountryDetailPanel.tsx`) — `f3363df`
 - [x] Real cartoon PNG avatars for the 6 OC kids; removed hand-drawn

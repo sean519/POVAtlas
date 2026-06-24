@@ -1,6 +1,6 @@
 # POV GoalMap — Session Handoff
 
-> Last updated: 2026-06-24 (post final-cleanup pass) · Branch: `master` · Working tree: **clean** (all work committed)
+> Last updated: 2026-06-24 (new kid avatars + zoom) · Branch: `master` · Working tree: **clean** (all work committed) · HEAD `77b65e1`
 
 This document is the single source of truth for picking up work on this project
 in a fresh Claude Code session. Read it top-to-bottom before making changes.
@@ -85,7 +85,8 @@ F:\world map\
 ├─ public/
 │  ├─ CNAME                  ← povatlas.com (custom domain)
 │  ├─ favicon.svg
-│  └─ avatars/               ← 6 kid cartoon PNGs (160×160, ~30-40KB each)
+│  └─ avatars/               ← 6 kid cartoon PNGs (512×512, ~70-100KB each,
+│                                256-color quantized; tap to enlarge in the egg)
 │     ├─ Clark.png  Bradley.png  Ryland.png
 │     └─ Remi.png   Lucas.png    Lawrence.png
 └─ src/
@@ -249,6 +250,12 @@ See `TODO.md` for the live checklist. Summary, highest priority first:
 
 This session's commits (newest first):
 
+- `77b65e1` — **New 512×512 kid avatars + tap-to-enlarge zoom lightbox** →
+  replaced all 6 `public/avatars/*.png` with the user's new portraits
+  (center-cropped, 256-color quantized); `src/components/EasterEggModal.tsx`
+  (zoom lightbox: tap a member → enlarged 224px portrait + name, tap big
+  avatar to re-roll cheer; removed inline grid bubble; 🔍 hint badge);
+  gitignored `profile/` source originals
 - `2eaa5a6` — **Remove dead helpers** (`getContinents`, `getOpponentCode`) →
   `src/utils/dataHelpers.ts` (final-cleanup pass; bundle byte-identical)
 - `ead0328` — **Fix kid avatars rendering as ovals** → `src/components/EasterEggModal.tsx`
@@ -314,15 +321,22 @@ Immediately preceding context (from the continued session, already committed):
 
 ## 12. Recommended very next task
 
-**Confirm the kid-avatar fix on the user's actual device.** The fix is committed,
-built, and deployed, and the markup measures as a perfect circle at every tested
-width — so the most likely remaining cause of the oval the user saw is a stale
-browser cache. Ask the user to **hard-refresh (Ctrl+Shift+R / clear site cache)**
-and re-open the easter egg (zoom the map into Orange County). If it now shows
-clean circles, close this out. If it still looks oval, the issue is
-device/viewport-specific and worth a real screenshot from their browser DevTools
-— but do not re-touch the CSS first, since it is already provably correct.
+**Confirm the new kid avatars + zoom on the user's actual device.** The new
+512×512 portraits and the tap-to-enlarge lightbox are committed (`77b65e1`) and
+were verified in the preview browser (all 6 images load; tapping a member opens a
+clear 224px portrait; tapping the big avatar re-rolls a cheer; adults enlarge
+their emoji). Ask the user to **hard-refresh (Ctrl+Shift+R)** and re-open the OC
+easter egg to confirm on their device, then **deploy** (`npm run build` +
+robocopy mirror — see §10) so the change reaches povatlas.com.
 
-Good follow-on once confirmed: **optional adult cartoon avatars** (#2 in TODO) if
-the user provides images — it's a small, well-understood change using the path
-that already works for the kids.
+Good follow-on: **optional adult cartoon avatars** (#2 in TODO) if the user
+provides images — drop PNGs in `public/avatars/`, add `avatarUrl` to `OC_ADULTS`
+in `easterEgg.ts`; the enlarge path already works for both images and emoji.
+
+> Note: the easter egg **can** now be triggered from `preview_eval` — the Leaflet
+> map instance is reachable by walking the React fiber tree from the
+> `.leaflet-container` DOM node (DFS, deep-scan `memoizedState`/`memoizedProps`
+> for an object with `setView`/`getZoom`/`getContainer`). Call
+> `map.setView([33.7455,-117.8677],11)` to reveal the 🏡 marker, then dispatch a
+> `click` on `.oc-hq`'s `.leaflet-marker-icon` to open the modal. This makes the
+> "expose map on window" TODO lower priority.
