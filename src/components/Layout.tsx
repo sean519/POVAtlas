@@ -91,16 +91,16 @@ export default function Layout({
             type="button"
             onClick={() => setMobileTab(tab)}
             className={[
-              "flex-1 py-2.5 text-center text-xs font-bold capitalize transition",
+              "flex-1 py-2.5 text-center text-xs font-bold transition",
               mobileTab === tab
                 ? "bg-brand-blue/10 text-brand-blue"
                 : "text-slate-500",
             ].join(" ")}
           >
             <span className="mr-1" aria-hidden>
-              {tab === "schedule" ? "📅" : "🗺️"}
+              {tab === "schedule" ? "📋" : "🗺️"}
             </span>
-            {tab}
+            {tab === "schedule" ? "Browse" : "Map"}
           </button>
         ))}
       </nav>
