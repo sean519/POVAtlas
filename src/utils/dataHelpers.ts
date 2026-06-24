@@ -69,11 +69,6 @@ export function getTeamsByGroup(group: Group): Team[] {
   return teams.filter((t) => t.group === group);
 }
 
-/** The opponent team code in a match, relative to `code`. */
-export function getOpponentCode(match: Match, code: string): string {
-  return match.teamA === code ? match.teamB : match.teamA;
-}
-
 /**
  * Build a kid-friendly comparison between two teams' countries.
  */
@@ -147,11 +142,6 @@ function buildComparisonSummary(
 
 function capitalize(s: string): string {
   return s.charAt(0).toUpperCase() + s.slice(1);
-}
-
-/** Unique continents present among the teams (for the continent filter). */
-export function getContinents(): string[] {
-  return Array.from(new Set(teams.map((t) => t.continent))).sort();
 }
 
 /** Star players + strength rating for a team. */
