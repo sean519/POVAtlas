@@ -101,24 +101,25 @@ export default function SchedulePanel({
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className="nice-scroll flex gap-1 overflow-x-auto border-b border-slate-200 bg-slate-50 px-2 py-1.5">
+      {/* Tabs — equal-width grid, no horizontal scrolling */}
+      <div className="grid grid-cols-5 gap-1 border-b border-slate-200 bg-slate-50 px-1.5 py-1.5">
         {TABS.map((t) => (
           <button
             key={t.id}
             type="button"
             onClick={() => setTab(t.id)}
+            title={t.label}
             className={[
-              "shrink-0 rounded-lg px-3 py-1.5 text-xs font-bold transition",
+              "flex flex-col items-center gap-0.5 rounded-lg px-0.5 py-1.5 text-[10px] font-bold leading-none transition",
               tab === t.id
                 ? "bg-white text-brand-blue shadow ring-1 ring-brand-sky/40"
-                : "text-slate-500 hover:bg-white/60 hover:text-slate-700",
+                : "text-slate-500 hover:bg-white/70 hover:text-slate-700",
             ].join(" ")}
           >
-            <span className="mr-1" aria-hidden>
+            <span className="text-sm" aria-hidden>
               {t.icon}
             </span>
-            {t.label}
+            <span className="w-full truncate text-center">{t.label}</span>
           </button>
         ))}
       </div>

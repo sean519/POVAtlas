@@ -1,5 +1,4 @@
 import { useEffect, useState, type ReactNode } from "react";
-import Footer from "./Footer";
 import { formatLongDate, formatShortDate, todayISO } from "../utils/formatters";
 
 interface LayoutProps {
@@ -26,7 +25,7 @@ export default function Layout({
   return (
     <div className="flex h-[100dvh] flex-col overflow-hidden">
       {/* Header */}
-      <header className="z-20 bg-gradient-to-r from-brand-blue via-brand-lilac to-brand-peach text-white shadow-lg [text-shadow:0_1px_2px_rgba(0,0,0,0.18)]">
+      <header className="z-20 bg-gradient-to-r from-brand-blue via-brand-lilac to-brand-peach pt-[env(safe-area-inset-top)] text-white shadow-lg [text-shadow:0_1px_2px_rgba(0,0,0,0.18)]">
         <div className="flex items-center gap-2 px-3 py-2.5 sm:gap-3 sm:px-4 sm:py-3">
           <div className="flex min-w-0 items-center gap-2 sm:gap-3">
             <span
@@ -84,7 +83,7 @@ export default function Layout({
       </div>
 
       {/* Mobile tab bar */}
-      <nav className="sticky bottom-0 z-20 flex border-t border-slate-200 bg-white lg:hidden">
+      <nav className="sticky bottom-0 z-20 flex border-t border-slate-200 bg-white pb-[env(safe-area-inset-bottom)] lg:hidden">
         {(["schedule", "map"] as MobileTab[]).map((tab) => (
           <button
             key={tab}
@@ -104,8 +103,6 @@ export default function Layout({
           </button>
         ))}
       </nav>
-
-      <Footer />
     </div>
   );
 }
