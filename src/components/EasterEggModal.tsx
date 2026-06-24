@@ -61,17 +61,31 @@ export default function EasterEggModal({ open, onClose }: EasterEggModalProps) {
               {cheer.text}
             </span>
           )}
-          <span
-            className="text-4xl"
-            style={
-              waving
-                ? { animation: "egg-bounce 0.6s ease", animationDelay: `${(offset + i) * 0.06}s` }
-                : undefined
-            }
-            aria-hidden
-          >
-            {m.emoji}
-          </span>
+          {m.avatarSvg ? (
+            <img
+              src={`data:image/svg+xml,${encodeURIComponent(m.avatarSvg)}`}
+              className="h-14 w-14 rounded-full"
+              alt=""
+              aria-hidden
+              style={
+                waving
+                  ? { animation: "egg-bounce 0.6s ease", animationDelay: `${(offset + i) * 0.06}s` }
+                  : undefined
+              }
+            />
+          ) : (
+            <span
+              className="text-4xl"
+              style={
+                waving
+                  ? { animation: "egg-bounce 0.6s ease", animationDelay: `${(offset + i) * 0.06}s` }
+                  : undefined
+              }
+              aria-hidden
+            >
+              {m.emoji}
+            </span>
+          )}
           <span className="text-[11px] font-semibold text-slate-600">
             {m.name}
           </span>

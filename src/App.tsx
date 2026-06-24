@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState } from "react";
-import type { PointerEvent as ReactPointerEvent, ReactNode } from "react";
+import type { ReactNode } from "react";
 import Layout from "./components/Layout";
 import SchedulePanel from "./components/SchedulePanel";
 import WorldMap from "./components/WorldMap";
@@ -139,7 +139,7 @@ export default function App() {
 
   let mapInfoCard;
   if (!hasSelection) {
-    mapInfoCard = <WelcomeHint />;
+    mapInfoCard = null;
   } else if (infoCollapsed) {
     mapInfoCard = (
       <CollapsedBar
@@ -236,25 +236,13 @@ export default function App() {
   );
 }
 
-/** Compact hint shown in the map corner when nothing is selected. */
-function WelcomeHint() {
-  return (
-    <div className="animate-fade-in-up absolute bottom-4 right-4 z-[600] w-[min(20rem,calc(100%-1.5rem))] rounded-2xl border border-white/60 bg-white/95 p-4 shadow-card ring-1 ring-black/5 backdrop-blur">
-      <h2 className="text-sm font-extrabold text-brand-navy">
-        👋 Tap a team or a match
-      </h2>
-      <p className="mt-1 text-xs leading-relaxed text-slate-600">
-        Click a team for its country profile &amp; star players, or click a
-        match to compare both countries — the details appear right here.
-      </p>
-    </div>
-  );
-}
-
 /**
  * Wraps the floating info card. On mobile (the bottom-sheet layout) it shows a
- * grab handle at the top: drag it down to minimise the card to a pill. On
- * desktop the handle is hidden and the wrapper is a plain container.
+ * full-width grab handle at the top. Drag it down to minimise, or release
+ * before the threshold to snap back with a spring animation.
+ *
+ * Uses direct DOM manipulation (no React state during drag) so the card
+ * follows the finger at 60 fps without triggering re-renders.
  */
 function MapInfoSheet({
   className,
@@ -265,54 +253,51 @@ function MapInfoSheet({
   onCollapse: () => void;
   children: ReactNode;
 }) {
-  const [dragY, setDragY] = useState(0);
-  const [dragging, setDragging] = useState(false);
+  const sheetRef = useRef<HTMLDivElement>(null);
   const startY = useRef(0);
-  // Pull down past this many pixels (or a quick flick) to minimise.
-  const THRESHOLD = 90;
+  const isDragging = useRef(false);
+  const currentY = useRef(0);
+  const THRESHOLD = 100;
 
-  const isMobile = () =>
-    typeof window !== "undefined" && window.innerWidth < 640;
-
-  const onPointerDown = (e: ReactPointerEvent) => {
-    if (!isMobile()) return;
-    startY.current = e.clientY;
-    setDragging(true);
-    e.currentTarget.setPointerCapture?.(e.pointerId);
+  const applyTransform = (y: number, animate: boolean) => {
+    const el = sheetRef.current;
+    if (!el) return;
+    el.style.transition = animate
+      ? "transform 0.35s cubic-bezier(0.4, 0, 0.2, 1)"
+      : "none";
+    el.style.transform = y > 0 ? `translateY(${y}px)` : "";
   };
 
-  const onPointerMove = (e: ReactPointerEvent) => {
-    if (!dragging) return;
-    // Only allow dragging downward.
-    setDragY(Math.max(0, e.clientY - startY.current));
+  const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    startY.current = e.clientY;
+    isDragging.current = true;
+    currentY.current = 0;
+    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+  };
+
+  const onPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!isDragging.current) return;
+    const dy = Math.max(0, e.clientY - startY.current);
+    currentY.current = dy;
+    applyTransform(dy, false);
   };
 
   const endDrag = () => {
-    if (!dragging) return;
-    setDragging(false);
-    if (dragY > THRESHOLD) {
-      setDragY(0);
+    if (!isDragging.current) return;
+    isDragging.current = false;
+    if (currentY.current > THRESHOLD) {
+      applyTransform(0, false);
       onCollapse();
     } else {
-      setDragY(0); // snap back
+      applyTransform(0, true); // spring back
     }
   };
 
   return (
-    <div
-      className={className}
-      style={
-        dragY
-          ? {
-              transform: `translateY(${dragY}px)`,
-              transition: dragging ? "none" : "transform 0.2s ease",
-            }
-          : undefined
-      }
-    >
-      {/* Mobile-only drag handle (centred so it never overlaps header buttons) */}
+    <div ref={sheetRef} className={className}>
+      {/* Full-width grab handle — only visible on mobile (sm:hidden) */}
       <div
-        className="absolute left-1/2 top-0 z-20 flex h-7 w-28 -translate-x-1/2 cursor-grab touch-none items-start justify-center pt-2 active:cursor-grabbing sm:hidden"
+        className="absolute inset-x-0 top-0 z-20 flex h-9 cursor-grab touch-none items-start justify-center pt-2.5 active:cursor-grabbing sm:hidden"
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={endDrag}
@@ -320,7 +305,7 @@ function MapInfoSheet({
         aria-label="Drag down to minimise"
         role="button"
       >
-        <span className="h-1.5 w-10 rounded-full bg-white/60" />
+        <span className="h-1 w-10 rounded-full bg-slate-300" />
       </div>
       {children}
     </div>

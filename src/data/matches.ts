@@ -12,8 +12,8 @@ import { todayISO } from "../utils/formatters";
  * "updates" day to day: finished before today, live today, upcoming after.
  * Scores are attached to matches that have already been played.
  *
- * All kickoff times are expressed in US Pacific time (PST); the UI labels them
- * via `KICKOFF_TZ` / `formatKickoff` in utils/formatters.
+ * All kickoff times are expressed in US Pacific (PDT, UTC-7); the UI labels
+ * them via `KICKOFF_TZ` / `formatKickoff` in utils/formatters.
  */
 
 const TODAY = todayISO();
@@ -67,102 +67,108 @@ type Fixture = [
   number | null
 ];
 
+// All kickoff times are US Pacific (PDT, UTC-7). Converted from the official
+// Eastern schedule: subtract 3 h. Three late-night ET fixtures cross midnight
+// and land on the previous PT calendar date (noted inline).
 const FIXTURES: Fixture[] = [
   // ---- Group A (MEX, RSA, KOR, CZE) ----
-  ["A", 1, "2026-06-11", "19:00", "MEX", "RSA", "AZT", 2, 0],
-  ["A", 1, "2026-06-11", "22:00", "KOR", "CZE", "AKR", 2, 1],
-  ["A", 2, "2026-06-18", "15:00", "CZE", "RSA", "MBENZ", 1, 1],
-  ["A", 2, "2026-06-18", "21:00", "MEX", "KOR", "AKR", 1, 0],
-  ["A", 3, "2026-06-24", "17:00", "MEX", "CZE", "AZT", null, null],
-  ["A", 3, "2026-06-24", "17:00", "RSA", "KOR", "AKR", null, null],
+  ["A", 1, "2026-06-11", "09:00", "MEX", "RSA", "AZT",      2, 0],
+  ["A", 1, "2026-06-11", "12:00", "KOR", "CZE", "AKR",      2, 1],
+  ["A", 2, "2026-06-18", "09:00", "CZE", "RSA", "MBENZ",    1, 1],
+  ["A", 2, "2026-06-18", "18:00", "MEX", "KOR", "AKR",      1, 0],
+  ["A", 3, "2026-06-24", "18:00", "MEX", "CZE", "AZT",      null, null],
+  ["A", 3, "2026-06-24", "18:00", "RSA", "KOR", "AKR",      null, null],
 
   // ---- Group B (CAN, BIH, QAT, SUI) ----
-  ["B", 1, "2026-06-12", "18:00", "CAN", "BIH", "BMO", 1, 1],
-  ["B", 1, "2026-06-13", "15:00", "QAT", "SUI", "LEVIS", 1, 1],
-  ["B", 2, "2026-06-18", "18:00", "SUI", "BIH", "SOFI", 4, 1],
-  ["B", 2, "2026-06-18", "21:00", "CAN", "QAT", "BC", 6, 0],
-  ["B", 3, "2026-06-24", "14:00", "CAN", "SUI", "BMO", null, null],
-  ["B", 3, "2026-06-24", "14:00", "BIH", "QAT", "BC", null, null],
+  ["B", 1, "2026-06-12", "09:00", "CAN", "BIH", "BMO",      1, 1],
+  ["B", 1, "2026-06-13", "09:00", "QAT", "SUI", "LEVIS",    1, 1],
+  ["B", 2, "2026-06-18", "12:00", "SUI", "BIH", "SOFI",     4, 1],
+  ["B", 2, "2026-06-18", "15:00", "CAN", "QAT", "BC",       6, 0],
+  ["B", 3, "2026-06-24", "12:00", "CAN", "SUI", "BMO",      null, null],
+  ["B", 3, "2026-06-24", "12:00", "BIH", "QAT", "BC",       null, null],
 
   // ---- Group C (BRA, MAR, HTI, SCO) ----
-  ["C", 1, "2026-06-13", "18:00", "BRA", "MAR", "METLIFE", 1, 1],
+  ["C", 1, "2026-06-13", "12:00", "BRA", "MAR", "METLIFE",  1, 1],
   ["C", 1, "2026-06-13", "15:00", "HTI", "SCO", "GILLETTE", 0, 1],
-  ["C", 2, "2026-06-19", "15:00", "SCO", "MAR", "GILLETTE", 0, 1],
-  ["C", 2, "2026-06-19", "18:00", "BRA", "HTI", "LINC", 3, 0],
-  ["C", 3, "2026-06-24", "18:00", "SCO", "BRA", "HARDROCK", null, null],
-  ["C", 3, "2026-06-24", "18:00", "MAR", "HTI", "MBENZ", null, null],
+  ["C", 2, "2026-06-19", "12:00", "SCO", "MAR", "GILLETTE", 0, 1],
+  ["C", 2, "2026-06-19", "15:00", "BRA", "HTI", "LINC",     3, 0],
+  ["C", 3, "2026-06-24", "15:00", "SCO", "BRA", "HARDROCK", null, null],
+  ["C", 3, "2026-06-24", "15:00", "MAR", "HTI", "MBENZ",    null, null],
 
   // ---- Group D (USA, PAR, AUS, TUR) ----
-  ["D", 1, "2026-06-12", "21:00", "USA", "PAR", "SOFI", 4, 1],
-  ["D", 1, "2026-06-13", "18:00", "AUS", "TUR", "BC", 2, 0],
-  ["D", 2, "2026-06-19", "19:00", "USA", "AUS", "LUMEN", 2, 0],
-  ["D", 2, "2026-06-19", "16:00", "TUR", "PAR", "LEVIS", 0, 1],
-  ["D", 3, "2026-06-25", "18:00", "USA", "TUR", "SOFI", null, null],
-  ["D", 3, "2026-06-25", "18:00", "PAR", "AUS", "LEVIS", null, null],
+  ["D", 1, "2026-06-12", "12:00", "USA", "PAR", "SOFI",     4, 1],
+  ["D", 1, "2026-06-14", "09:00", "AUS", "TUR", "BC",       2, 0],
+  ["D", 2, "2026-06-19", "09:00", "USA", "AUS", "LUMEN",    2, 0],
+  ["D", 2, "2026-06-19", "18:00", "TUR", "PAR", "LEVIS",    0, 1],
+  ["D", 3, "2026-06-25", "19:00", "USA", "TUR", "SOFI",     null, null],
+  ["D", 3, "2026-06-25", "19:00", "PAR", "AUS", "LEVIS",    null, null],
 
   // ---- Group E (GER, CUW, CIV, ECU) ----
-  ["E", 1, "2026-06-14", "15:00", "GER", "CUW", "NRG", 7, 1],
-  ["E", 1, "2026-06-14", "18:00", "CIV", "ECU", "LINC", 1, 0],
-  ["E", 2, "2026-06-20", "15:00", "GER", "CIV", "BMO", 2, 1],
-  ["E", 2, "2026-06-20", "18:00", "ECU", "CUW", "ARROW", 0, 0],
-  ["E", 3, "2026-06-25", "16:00", "ECU", "GER", "METLIFE", null, null],
-  ["E", 3, "2026-06-25", "16:00", "CUW", "CIV", "LINC", null, null],
+  ["E", 1, "2026-06-14", "12:00", "GER", "CUW", "NRG",      7, 1],
+  ["E", 1, "2026-06-14", "18:00", "CIV", "ECU", "LINC",     1, 0],
+  ["E", 2, "2026-06-20", "12:00", "GER", "CIV", "BMO",      2, 1],
+  ["E", 2, "2026-06-20", "15:00", "ECU", "CUW", "ARROW",    0, 0],
+  ["E", 3, "2026-06-25", "13:00", "ECU", "GER", "METLIFE",  null, null],
+  ["E", 3, "2026-06-25", "13:00", "CUW", "CIV", "LINC",     null, null],
 
   // ---- Group F (NED, JPN, SWE, TUN) ----
-  ["F", 1, "2026-06-14", "21:00", "NED", "JPN", "ATT", 2, 2],
-  ["F", 1, "2026-06-14", "18:00", "SWE", "TUN", "BBVA", 5, 1],
-  ["F", 2, "2026-06-20", "21:00", "NED", "SWE", "NRG", 5, 1],
-  ["F", 2, "2026-06-20", "18:00", "TUN", "JPN", "BBVA", 0, 4],
-  ["F", 3, "2026-06-25", "19:00", "JPN", "SWE", "ATT", null, null],
-  ["F", 3, "2026-06-25", "19:00", "TUN", "NED", "ARROW", null, null],
+  // SWE-TUN: midnight ET Jun 14 → 21:00 PDT Jun 13
+  ["F", 1, "2026-06-13", "21:00", "SWE", "TUN", "BBVA",     5, 1],
+  ["F", 1, "2026-06-14", "15:00", "NED", "JPN", "ATT",      2, 2],
+  ["F", 2, "2026-06-20", "09:00", "NED", "SWE", "NRG",      5, 1],
+  ["F", 2, "2026-06-21", "09:00", "TUN", "JPN", "BBVA",     0, 4],
+  ["F", 3, "2026-06-25", "16:00", "JPN", "SWE", "ATT",      null, null],
+  ["F", 3, "2026-06-25", "16:00", "TUN", "NED", "ARROW",    null, null],
 
   // ---- Group G (BEL, EGY, IRI, NZL) ----
-  ["G", 1, "2026-06-15", "15:00", "BEL", "EGY", "LUMEN", 1, 1],
-  ["G", 1, "2026-06-15", "18:00", "IRI", "NZL", "SOFI", 2, 2],
-  ["G", 2, "2026-06-21", "18:00", "BEL", "IRI", "SOFI", 0, 0],
-  ["G", 2, "2026-06-21", "15:00", "NZL", "EGY", "BC", 1, 3],
-  ["G", 3, "2026-06-26", "18:00", "EGY", "IRI", "LUMEN", null, null],
-  ["G", 3, "2026-06-26", "18:00", "NZL", "BEL", "BC", null, null],
+  // NZL-EGY: midnight ET Jun 21 → 21:00 PDT Jun 20
+  ["G", 1, "2026-06-15", "12:00", "BEL", "EGY", "LUMEN",    1, 1],
+  ["G", 1, "2026-06-15", "18:00", "IRI", "NZL", "SOFI",     2, 2],
+  ["G", 2, "2026-06-20", "21:00", "NZL", "EGY", "BC",       1, 3],
+  ["G", 2, "2026-06-21", "15:00", "BEL", "IRI", "SOFI",     0, 0],
+  ["G", 3, "2026-06-26", "12:00", "EGY", "IRI", "LUMEN",    null, null],
+  ["G", 3, "2026-06-26", "20:00", "NZL", "BEL", "BC",       null, null],
 
   // ---- Group H (ESP, CPV, KSA, URU) ----
-  ["H", 1, "2026-06-15", "15:00", "ESP", "CPV", "MBENZ", 0, 0],
-  ["H", 1, "2026-06-15", "18:00", "KSA", "URU", "HARDROCK", 1, 1],
-  ["H", 2, "2026-06-21", "18:00", "ESP", "KSA", "MBENZ", 4, 0],
-  ["H", 2, "2026-06-21", "15:00", "URU", "CPV", "HARDROCK", 2, 2],
-  ["H", 3, "2026-06-26", "15:00", "CPV", "KSA", "NRG", null, null],
-  ["H", 3, "2026-06-26", "17:00", "URU", "ESP", "AKR", null, null],
+  ["H", 1, "2026-06-15", "09:00", "ESP", "CPV", "MBENZ",    0, 0],
+  ["H", 1, "2026-06-15", "15:00", "KSA", "URU", "HARDROCK", 1, 1],
+  ["H", 2, "2026-06-21", "12:00", "ESP", "KSA", "MBENZ",    4, 0],
+  ["H", 2, "2026-06-21", "18:00", "URU", "CPV", "HARDROCK", 2, 2],
+  ["H", 3, "2026-06-26", "17:00", "CPV", "KSA", "NRG",      null, null],
+  ["H", 3, "2026-06-26", "17:00", "URU", "ESP", "AKR",      null, null],
 
   // ---- Group I (FRA, SEN, IRQ, NOR) ----
-  ["I", 1, "2026-06-16", "18:00", "FRA", "SEN", "METLIFE", 3, 1],
-  ["I", 1, "2026-06-16", "15:00", "IRQ", "NOR", "GILLETTE", 1, 4],
-  ["I", 2, "2026-06-22", "18:00", "FRA", "IRQ", "LINC", 3, 0],
-  ["I", 2, "2026-06-22", "15:00", "NOR", "SEN", "METLIFE", 3, 2],
-  ["I", 3, "2026-06-26", "15:00", "NOR", "FRA", "GILLETTE", null, null],
-  ["I", 3, "2026-06-26", "15:00", "SEN", "IRQ", "BMO", null, null],
+  ["I", 1, "2026-06-16", "09:00", "FRA", "SEN", "METLIFE",  3, 1],
+  ["I", 1, "2026-06-16", "12:00", "IRQ", "NOR", "GILLETTE", 1, 4],
+  ["I", 2, "2026-06-22", "12:00", "FRA", "IRQ", "LINC",     3, 0],
+  ["I", 2, "2026-06-22", "15:00", "NOR", "SEN", "METLIFE",  3, 2],
+  ["I", 3, "2026-06-26", "12:00", "NOR", "FRA", "GILLETTE", null, null],
+  ["I", 3, "2026-06-26", "12:00", "SEN", "IRQ", "BMO",      null, null],
 
   // ---- Group J (ARG, DZA, AUT, JOR) ----
-  ["J", 1, "2026-06-16", "21:00", "ARG", "DZA", "ARROW", 3, 0],
-  ["J", 1, "2026-06-16", "18:00", "AUT", "JOR", "LEVIS", 3, 1],
-  ["J", 2, "2026-06-22", "21:00", "ARG", "AUT", "ATT", 2, 0],
-  ["J", 2, "2026-06-22", "18:00", "JOR", "DZA", "LEVIS", 1, 2],
-  ["J", 3, "2026-06-27", "21:00", "DZA", "AUT", "ARROW", null, null],
-  ["J", 3, "2026-06-27", "21:00", "JOR", "ARG", "ATT", null, null],
+  ["J", 1, "2026-06-16", "18:00", "ARG", "DZA", "ARROW",    3, 0],
+  ["J", 1, "2026-06-17", "09:00", "AUT", "JOR", "LEVIS",    3, 1],
+  ["J", 2, "2026-06-22", "09:00", "ARG", "AUT", "ATT",      2, 0],
+  ["J", 2, "2026-06-22", "18:00", "JOR", "DZA", "LEVIS",    1, 2],
+  ["J", 3, "2026-06-27", "19:00", "DZA", "AUT", "ARROW",    null, null],
+  ["J", 3, "2026-06-27", "19:00", "JOR", "ARG", "ATT",      null, null],
 
   // ---- Group K (POR, COD, UZB, COL) ----
-  ["K", 1, "2026-06-17", "18:00", "POR", "COD", "NRG", 1, 1],
-  ["K", 1, "2026-06-17", "15:00", "UZB", "COL", "AZT", 1, 3],
-  ["K", 2, "2026-06-23", "18:00", "POR", "UZB", "NRG", 5, 0],
-  ["K", 2, "2026-06-23", "15:00", "COL", "COD", "AKR", 1, 0],
-  ["K", 3, "2026-06-27", "19:30", "COL", "POR", "HARDROCK", null, null],
-  ["K", 3, "2026-06-27", "19:30", "COD", "UZB", "MBENZ", null, null],
+  // COL-UZB: midnight ET Jun 17 → 21:00 PDT Jun 16
+  ["K", 1, "2026-06-16", "21:00", "UZB", "COL", "AZT",      1, 3],
+  ["K", 1, "2026-06-17", "12:00", "POR", "COD", "NRG",      1, 1],
+  ["K", 2, "2026-06-23", "09:00", "POR", "UZB", "NRG",      5, 0],
+  ["K", 2, "2026-06-23", "18:00", "COL", "COD", "AKR",      1, 0],
+  ["K", 3, "2026-06-27", "16:30", "COL", "POR", "HARDROCK", null, null],
+  ["K", 3, "2026-06-27", "16:30", "COD", "UZB", "MBENZ",    null, null],
 
   // ---- Group L (ENG, CRO, GHA, PAN) ----
-  ["L", 1, "2026-06-17", "18:00", "ENG", "CRO", "ATT", 4, 2],
-  ["L", 1, "2026-06-17", "15:00", "GHA", "PAN", "BMO", 1, 0],
-  ["L", 2, "2026-06-23", "15:00", "ENG", "GHA", "GILLETTE", 0, 0],
-  ["L", 2, "2026-06-23", "18:00", "PAN", "CRO", "BMO", 0, 1],
-  ["L", 3, "2026-06-27", "17:00", "PAN", "ENG", "METLIFE", null, null],
-  ["L", 3, "2026-06-27", "17:00", "CRO", "GHA", "LINC", null, null],
+  ["L", 1, "2026-06-17", "15:00", "ENG", "CRO", "ATT",      4, 2],
+  ["L", 1, "2026-06-17", "18:00", "GHA", "PAN", "BMO",      1, 0],
+  ["L", 2, "2026-06-23", "12:00", "ENG", "GHA", "GILLETTE", 0, 0],
+  ["L", 2, "2026-06-23", "15:00", "PAN", "CRO", "BMO",      0, 1],
+  ["L", 3, "2026-06-27", "14:00", "PAN", "ENG", "METLIFE",  null, null],
+  ["L", 3, "2026-06-27", "14:00", "CRO", "GHA", "LINC",     null, null],
 ];
 
 function buildMatches(): Match[] {

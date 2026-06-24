@@ -73,11 +73,11 @@ export function formatShortDate(isoDate: string): string {
 }
 
 /**
- * Default timezone label shown next to every kickoff time. All kickoff times in
- * the schedule are expressed in this zone (US Pacific / PST). Change this one
- * constant to re-label the whole schedule.
+ * Timezone label shown next to every kickoff time. All kickoff times in the
+ * schedule are US Pacific Daylight Time (UTC-7). Change this one constant to
+ * re-label the whole schedule.
  */
-export const KICKOFF_TZ = "PST";
+export const KICKOFF_TZ = "PDT";
 
 /**
  * Format a kickoff time with its timezone label.
