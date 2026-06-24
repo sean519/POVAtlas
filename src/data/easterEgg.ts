@@ -33,31 +33,37 @@ export const OC_ADULTS: EggMember[] = [
   {
     name: "Sean",
     emoji: "🧔",
+    avatarUrl: "/avatars/Sean.png",
     cheers: ["加油! 🔥", "GOAL!! ⚽", "厉害!!", "我们赢了! 🏆"],
   },
   {
     name: "Roy",
     emoji: "🧑",
+    avatarUrl: "/avatars/Roy.png",
     cheers: ["必胜! ✊", "射门! 🥅", "Nice one! 👏", "冲!! 💪"],
   },
   {
     name: "Han",
     emoji: "👨",
+    avatarUrl: "/avatars/Han.png",
     cheers: ["太精彩了! 🌟", "Go go go!", "好球! ⚽", "哇哦!"],
   },
   {
     name: "Sharon",
     emoji: "👩",
+    avatarUrl: "/avatars/Sharon.png",
     cheers: ["亮了! ✨", "耶! 🎉", "加油宝贝们!", "漂亮! 👏"],
   },
   {
     name: "Emily",
     emoji: "🧑‍🦱",
+    avatarUrl: "/avatars/Emily.png",
     cheers: ["We can do it! 💫", "太厉害了!", "冲鸭! 🦆", "Amazing! 🌺"],
   },
   {
     name: "Clair",
     emoji: "👩‍🦰",
+    avatarUrl: "/avatars/Clair.png",
     cheers: ["完美! 🌟", "Yes!! 🙌", "棒棒的!", "超级赞! ⭐"],
   },
 ];
