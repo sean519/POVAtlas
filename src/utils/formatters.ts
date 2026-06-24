@@ -72,6 +72,21 @@ export function formatShortDate(isoDate: string): string {
   });
 }
 
+/**
+ * Default timezone label shown next to every kickoff time. All kickoff times in
+ * the schedule are expressed in this zone (US Pacific / PST). Change this one
+ * constant to re-label the whole schedule.
+ */
+export const KICKOFF_TZ = "PST";
+
+/**
+ * Format a kickoff time with its timezone label.
+ * e.g. "19:00" -> "19:00 PST"
+ */
+export function formatKickoff(time: string): string {
+  return `${time} ${KICKOFF_TZ}`;
+}
+
 /** Today's date as a local "YYYY-MM-DD" string. */
 export function todayISO(): string {
   const d = new Date();

@@ -11,6 +11,9 @@ import { todayISO } from "../utils/formatters";
  * Match status is derived from the device's current date, so the schedule
  * "updates" day to day: finished before today, live today, upcoming after.
  * Scores are attached to matches that have already been played.
+ *
+ * All kickoff times are expressed in US Pacific time (PST); the UI labels them
+ * via `KICKOFF_TZ` / `formatKickoff` in utils/formatters.
  */
 
 const TODAY = todayISO();

@@ -1,7 +1,7 @@
 import type { Match } from "../types";
 import { getTeamByCode, matchWinChance } from "../utils/dataHelpers";
 import { groupColors } from "../utils/groupColors";
-import { formatShortDate } from "../utils/formatters";
+import { formatKickoff, formatShortDate } from "../utils/formatters";
 import Flag from "./Flag";
 import WinChanceBar from "./WinChanceBar";
 
@@ -71,7 +71,7 @@ export default function MatchCard({
           Group {match.group}
         </span>
         <span className="text-slate-500">
-          {formatShortDate(match.date)} · {match.kickoffTime}
+          {formatShortDate(match.date)} · {formatKickoff(match.kickoffTime)}
         </span>
         <span className={`rounded-md px-1.5 py-0.5 font-semibold ${status.className}`}>
           {status.label}
