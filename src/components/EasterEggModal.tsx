@@ -15,7 +15,7 @@ const CONFETTI = ["🎉", "⚽", "⭐", "🎊", "🏡", "🥳"];
 
 /** Playful full-screen surprise for the hidden OC居委会 easter egg. */
 export default function EasterEggModal({ open, onClose }: EasterEggModalProps) {
-  const [cheer, setCheer] = useState<{ name: string; id: number } | null>(null);
+  const [cheer, setCheer] = useState<{ name: string; text: string; id: number } | null>(null);
   const [waving, setWaving] = useState(false);
   const timer = useRef<number | undefined>(undefined);
 
@@ -31,7 +31,8 @@ export default function EasterEggModal({ open, onClose }: EasterEggModalProps) {
   if (!open) return null;
 
   const onMemberClick = (m: EggMember) => {
-    setCheer({ name: m.name, id: Date.now() });
+    const text = m.cheers[Math.floor(Math.random() * m.cheers.length)];
+    setCheer({ name: m.name, text, id: Date.now() });
     window.clearTimeout(timer.current);
     timer.current = window.setTimeout(() => setCheer(null), 1300);
   };
@@ -57,7 +58,7 @@ export default function EasterEggModal({ open, onClose }: EasterEggModalProps) {
               key={cheer.id}
               className="egg-pop absolute -top-3 z-10 whitespace-nowrap rounded-full bg-brand-navy px-2 py-0.5 text-[11px] font-bold text-white shadow"
             >
-              {m.cheer}
+              {cheer.text}
             </span>
           )}
           <span
@@ -127,14 +128,14 @@ export default function EasterEggModal({ open, onClose }: EasterEggModalProps) {
 
         <section className="mt-4">
           <h3 className="mb-1.5 text-xs font-bold uppercase tracking-wide text-brand-blue">
-            大人 Players · 6
+            成年组 · 6
           </h3>
           {renderRow(OC_ADULTS, 0)}
         </section>
 
         <section className="mt-4">
           <h3 className="mb-1.5 text-xs font-bold uppercase tracking-wide text-brand-blue">
-            小朋友 Players · 6
+            少年组 · 6
           </h3>
           {renderRow(OC_KIDS, 6)}
         </section>

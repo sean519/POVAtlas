@@ -1,11 +1,6 @@
 import type { StarPlayer } from "../types";
 
 export interface TeamExtra {
-  /**
-   * Rough overall strength rating (~50–95) loosely based on footballing
-   * reputation / FIFA ranking. Used ONLY to compute a reference win-chance —
-   * it is an estimate for learning, not a betting odds.
-   */
   strength: number;
   starPlayers: StarPlayer[];
 }
@@ -13,20 +8,42 @@ export interface TeamExtra {
 /**
  * Star players + strength ratings, keyed by team `fifaCode`.
  *
- * Each player has a `fame` score (higher = more famous) used to rank the
- * Players tab, and the best-known players include approximate bio info
- * (age / marital status / children) plus a few light "buzz" lines.
- *
- * NOTE: bios are approximate and may be outdated; the buzz lines are light and
- * illustrative (for fun), not verified news. Refresh before a tournament.
+ * `fame` ranks players globally in the Players tab.
+ * Bios are approximate; buzz lines are light and illustrative, not verified news.
  */
 export const teamExtras: Record<string, TeamExtra> = {
   // ---- Group A ----
   MEX: {
     strength: 79,
     starPlayers: [
-      { name: "Santiago Giménez", position: "Forward", fame: 74, note: "Sharp goal-scorer who stars in Europe for AC Milan." },
-      { name: "Edson Álvarez", position: "Midfielder", fame: 72, note: "Tough defensive midfielder and team leader." },
+      {
+        name: "Santiago Giménez",
+        position: "Forward",
+        fame: 74,
+        note: "Sharp goal-scorer who stars in Europe for AC Milan.",
+        age: 24,
+        marital: "Single",
+        children: 0,
+        buzz: [
+          "AC Milan's clinical finisher nicknamed 'Bebote'.",
+          "Son of former Mexican defender Iván 'El Compás' Campeche.",
+          "Became one of Serie A's most exciting young strikers.",
+        ],
+      },
+      {
+        name: "Edson Álvarez",
+        position: "Midfielder",
+        fame: 72,
+        note: "Tough defensive midfielder and team leader.",
+        age: 28,
+        marital: "Single",
+        children: 0,
+        buzz: [
+          "Known as 'El Machín' for his relentless tackling.",
+          "A key figure in Mexico's defensive structure.",
+          "One of the most sought-after midfielders from CONCACAF.",
+        ],
+      },
     ],
   },
   RSA: {
@@ -48,8 +65,8 @@ export const teamExtras: Record<string, TeamExtra> = {
         children: 0,
         buzz: [
           "Captain of South Korea and a global icon.",
-          "Won the Premier League Golden Boot.",
-          "Hugely popular across Asia and a big sponsor draw.",
+          "Won the Premier League Golden Boot in 2021-22.",
+          "Hugely popular across Asia and a top sponsor draw.",
         ],
       },
     ],
@@ -57,7 +74,20 @@ export const teamExtras: Record<string, TeamExtra> = {
   CZE: {
     strength: 76,
     starPlayers: [
-      { name: "Patrik Schick", position: "Forward", fame: 73, note: "Tall striker famous for spectacular long-range goals." },
+      {
+        name: "Patrik Schick",
+        position: "Forward",
+        fame: 73,
+        note: "Tall striker famous for spectacular long-range goals.",
+        age: 30,
+        marital: "Married",
+        children: 1,
+        buzz: [
+          "Scored a jaw-dropping 50-yard lob against Scotland at Euro 2020.",
+          "Won the Bundesliga title with Bayer Leverkusen in 2024.",
+          "A technically gifted striker with an eye for the spectacular.",
+        ],
+      },
     ],
   },
 
@@ -74,9 +104,9 @@ export const teamExtras: Record<string, TeamExtra> = {
         marital: "In a relationship",
         children: 0,
         buzz: [
-          "Born in a refugee camp, now a Canadian icon.",
+          "Born in a Ghanaian refugee camp, now a Canadian icon.",
           "One of the fastest players in world football.",
-          "Also a popular gaming streamer.",
+          "Also a popular gaming streamer off the pitch.",
         ],
       },
     ],
@@ -84,7 +114,20 @@ export const teamExtras: Record<string, TeamExtra> = {
   BIH: {
     strength: 74,
     starPlayers: [
-      { name: "Edin Džeko", position: "Forward", fame: 76, note: "Legendary tall striker and the country's all-time top scorer." },
+      {
+        name: "Edin Džeko",
+        position: "Forward",
+        fame: 76,
+        note: "Legendary tall striker and the country's all-time top scorer.",
+        age: 39,
+        marital: "Married",
+        children: 3,
+        buzz: [
+          "Bosnia's all-time top scorer — still playing into his late 30s.",
+          "Played for top clubs including Man City, Roma, and Inter Milan.",
+          "A national hero who put Bosnian football on the map.",
+        ],
+      },
     ],
   },
   QAT: {
@@ -96,7 +139,20 @@ export const teamExtras: Record<string, TeamExtra> = {
   SUI: {
     strength: 81,
     starPlayers: [
-      { name: "Granit Xhaka", position: "Midfielder", fame: 76, note: "Commanding captain who controls the game's tempo." },
+      {
+        name: "Granit Xhaka",
+        position: "Midfielder",
+        fame: 76,
+        note: "Commanding captain who controls the game's tempo.",
+        age: 33,
+        marital: "Married to Leonita Lekaj",
+        children: 2,
+        buzz: [
+          "Lifted the Bundesliga title as Leverkusen's captain in 2024.",
+          "Transformed his career after a rocky spell at Arsenal.",
+          "Switzerland's trusted leader and set-piece specialist.",
+        ],
+      },
     ],
   },
 
@@ -118,7 +174,20 @@ export const teamExtras: Record<string, TeamExtra> = {
           "Runs a foundation supporting kids back in Brazil.",
         ],
       },
-      { name: "Rodrygo", position: "Forward", fame: 82, note: "Cool finisher who shines on the biggest stages." },
+      {
+        name: "Rodrygo",
+        position: "Forward",
+        fame: 82,
+        note: "Cool finisher who shines on the biggest stages.",
+        age: 24,
+        marital: "Single",
+        children: 0,
+        buzz: [
+          "Known for scoring crucial Champions League goals for Real Madrid.",
+          "A stylish, two-footed forward with excellent movement.",
+          "Brazil's trusted second option behind Vinícius.",
+        ],
+      },
     ],
   },
   MAR: {
@@ -134,7 +203,7 @@ export const teamExtras: Record<string, TeamExtra> = {
         buzz: [
           "PSG right-back and Morocco superstar.",
           "Helped Morocco reach the 2022 World Cup semi-finals.",
-          "Famous for his blistering pace down the wing.",
+          "Famous for his blistering pace down the right wing.",
         ],
       },
     ],
@@ -148,8 +217,34 @@ export const teamExtras: Record<string, TeamExtra> = {
   SCO: {
     strength: 75,
     starPlayers: [
-      { name: "Andrew Robertson", position: "Left-back", fame: 77, note: "Liverpool full-back known for non-stop running." },
-      { name: "Scott McTominay", position: "Midfielder", fame: 74, note: "Box-to-box midfielder with a knack for goals." },
+      {
+        name: "Andrew Robertson",
+        position: "Left-back",
+        fame: 77,
+        note: "Liverpool full-back known for non-stop running.",
+        age: 32,
+        marital: "Married",
+        children: 2,
+        buzz: [
+          "Liverpool's relentless left-back and Scotland captain.",
+          "Won every major trophy at Liverpool including the Premier League.",
+          "Famous for his incredible work rate up and down the wing.",
+        ],
+      },
+      {
+        name: "Scott McTominay",
+        position: "Midfielder",
+        fame: 74,
+        note: "Box-to-box midfielder with a knack for goals.",
+        age: 29,
+        marital: "Single",
+        children: 0,
+        buzz: [
+          "Scored multiple last-minute goals to keep Scotland alive in qualifying.",
+          "Made a bold career move to Napoli in Serie A.",
+          "Transformed from squad player to national hero.",
+        ],
+      },
     ],
   },
 
@@ -188,8 +283,34 @@ export const teamExtras: Record<string, TeamExtra> = {
   TUR: {
     strength: 80,
     starPlayers: [
-      { name: "Arda Güler", position: "Midfielder", fame: 80, note: "Young Real Madrid playmaker with a magical left foot." },
-      { name: "Hakan Çalhanoğlu", position: "Midfielder", fame: 78, note: "Master of free-kicks and long passes." },
+      {
+        name: "Arda Güler",
+        position: "Midfielder",
+        fame: 80,
+        note: "Young Real Madrid playmaker with a magical left foot.",
+        age: 20,
+        marital: "Single",
+        children: 0,
+        buzz: [
+          "Scored a stunning long-range goal on his Euros debut at just 19.",
+          "Real Madrid's next big thing — dubbed the 'Turkish Messi'.",
+          "The whole world is watching to see how far he can go.",
+        ],
+      },
+      {
+        name: "Hakan Çalhanoğlu",
+        position: "Midfielder",
+        fame: 78,
+        note: "Master of free-kicks and long passes.",
+        age: 31,
+        marital: "Divorced",
+        children: 1,
+        buzz: [
+          "Inter Milan's deep-lying playmaker and free-kick specialist.",
+          "One of Europe's best ball-playing midfielders.",
+          "Moved from AC Milan to rivals Inter — fans will never forget.",
+        ],
+      },
     ],
   },
 
@@ -211,7 +332,20 @@ export const teamExtras: Record<string, TeamExtra> = {
           "Nicknamed 'Bambi' for his elegant running style.",
         ],
       },
-      { name: "Florian Wirtz", position: "Midfielder", fame: 82, note: "Brilliant creator who sets up and scores goals." },
+      {
+        name: "Florian Wirtz",
+        position: "Midfielder",
+        fame: 82,
+        note: "Brilliant creator who sets up and scores goals.",
+        age: 22,
+        marital: "In a relationship",
+        children: 0,
+        buzz: [
+          "Won Germany's first league title with Leverkusen — never been done by a team before without losing a game.",
+          "Creative genius with an almost telepathic football brain.",
+          "Expected to join a top European club very soon.",
+        ],
+      },
     ],
   },
   CUW: {
@@ -229,7 +363,20 @@ export const teamExtras: Record<string, TeamExtra> = {
   ECU: {
     strength: 77,
     starPlayers: [
-      { name: "Moisés Caicedo", position: "Midfielder", fame: 76, note: "Powerful Chelsea midfielder who covers every blade of grass." },
+      {
+        name: "Moisés Caicedo",
+        position: "Midfielder",
+        fame: 76,
+        note: "Powerful Chelsea midfielder who covers every blade of grass.",
+        age: 24,
+        marital: "Single",
+        children: 0,
+        buzz: [
+          "Transferred to Chelsea for a then Premier League record fee.",
+          "Ecuador's midfield engine and a future global superstar.",
+          "Famous for his combination of brute strength and technical skill.",
+        ],
+      },
     ],
   },
 
@@ -251,20 +398,72 @@ export const teamExtras: Record<string, TeamExtra> = {
           "Known for his calm, commanding presence.",
         ],
       },
-      { name: "Cody Gakpo", position: "Forward", fame: 76, note: "Versatile Liverpool attacker with a powerful shot." },
+      {
+        name: "Cody Gakpo",
+        position: "Forward",
+        fame: 76,
+        note: "Versatile Liverpool attacker with a powerful shot.",
+        age: 26,
+        marital: "In a relationship",
+        children: 1,
+        buzz: [
+          "Scored three goals at the 2022 World Cup.",
+          "Versatile enough to play winger or centre-forward.",
+          "A rising superstar improving with every season at Liverpool.",
+        ],
+      },
     ],
   },
   JPN: {
     strength: 80,
     starPlayers: [
-      { name: "Kaoru Mitoma", position: "Winger", fame: 78, note: "Dribbling wizard who studied the science of beating defenders." },
-      { name: "Takefusa Kubo", position: "Forward", fame: 77, note: "Skilful playmaker nicknamed 'Japanese Messi'." },
+      {
+        name: "Kaoru Mitoma",
+        position: "Winger",
+        fame: 78,
+        note: "Dribbling wizard who studied the science of beating defenders.",
+        age: 28,
+        marital: "Single",
+        children: 0,
+        buzz: [
+          "Wrote his university thesis on the biomechanics of dribbling.",
+          "Brighton's most exciting attacker and one of the Premier League's best.",
+          "Uses data and video analysis to make his game even sharper.",
+        ],
+      },
+      {
+        name: "Takefusa Kubo",
+        position: "Forward",
+        fame: 77,
+        note: "Skilful playmaker nicknamed 'Japanese Messi'.",
+        age: 23,
+        marital: "Single",
+        children: 0,
+        buzz: [
+          "Was a Barcelona youth-team product before joining Real Madrid.",
+          "Now stars for Real Sociedad in La Liga.",
+          "Known for his lightning dribbles and flair.",
+        ],
+      },
     ],
   },
   SWE: {
     strength: 77,
     starPlayers: [
-      { name: "Alexander Isak", position: "Forward", fame: 80, note: "Elegant, deadly striker starring in the Premier League." },
+      {
+        name: "Alexander Isak",
+        position: "Forward",
+        fame: 80,
+        note: "Elegant, deadly striker starring in the Premier League.",
+        age: 26,
+        marital: "Single",
+        children: 0,
+        buzz: [
+          "Newcastle's star striker with some of the best touch in the league.",
+          "One of the Premier League's most clinical finishers.",
+          "Sweden's next Zlatan — with a very different, calmer style.",
+        ],
+      },
     ],
   },
   TUN: {
@@ -288,11 +487,24 @@ export const teamExtras: Record<string, TeamExtra> = {
         children: 3,
         buzz: [
           "A long-time Manchester City magician.",
-          "Famous for his pinpoint assists.",
+          "Famous for his pinpoint assists and vision.",
           "A respected leader for Belgium's golden generation.",
         ],
       },
-      { name: "Romelu Lukaku", position: "Forward", fame: 81, note: "Big, strong striker and Belgium's record scorer." },
+      {
+        name: "Romelu Lukaku",
+        position: "Forward",
+        fame: 81,
+        note: "Big, strong striker and Belgium's record scorer.",
+        age: 32,
+        marital: "Single",
+        children: 1,
+        buzz: [
+          "Belgium's all-time leading goal scorer.",
+          "A physical powerhouse playing in Italy's Serie A.",
+          "One of the most feared penalty-box strikers in world football.",
+        ],
+      },
     ],
   },
   EGY: {
@@ -309,7 +521,7 @@ export const teamExtras: Record<string, TeamExtra> = {
         buzz: [
           "Record-breaking Liverpool goal-scorer.",
           "A national hero across Egypt and Africa.",
-          "Known for his charity work back home.",
+          "Known for his charitable work back home.",
         ],
       },
     ],
@@ -317,7 +529,20 @@ export const teamExtras: Record<string, TeamExtra> = {
   IRI: {
     strength: 78,
     starPlayers: [
-      { name: "Mehdi Taremi", position: "Forward", fame: 70, note: "Clever striker who plays for Inter Milan." },
+      {
+        name: "Mehdi Taremi",
+        position: "Forward",
+        fame: 70,
+        note: "Clever striker who plays for Inter Milan.",
+        age: 33,
+        marital: "Married",
+        children: 2,
+        buzz: [
+          "Joined Inter Milan on a free transfer — a dream move.",
+          "Scored a stunning bicycle-kick in the Champions League.",
+          "Iran's most important forward for over a decade.",
+        ],
+      },
     ],
   },
   NZL: {
@@ -390,7 +615,20 @@ export const teamExtras: Record<string, TeamExtra> = {
           "A leader of Uruguay's new generation.",
         ],
       },
-      { name: "Darwin Núñez", position: "Forward", fame: 79, note: "Fast, fearless striker who never stops running." },
+      {
+        name: "Darwin Núñez",
+        position: "Forward",
+        fame: 79,
+        note: "Fast, fearless striker who never stops running.",
+        age: 26,
+        marital: "Married",
+        children: 1,
+        buzz: [
+          "Liverpool's electric striker signed for a club-record fee.",
+          "Known for his raw pace and never-say-die attitude.",
+          "A physical force who defenders hate facing.",
+        ],
+      },
     ],
   },
 
@@ -417,7 +655,20 @@ export const teamExtras: Record<string, TeamExtra> = {
   SEN: {
     strength: 80,
     starPlayers: [
-      { name: "Sadio Mané", position: "Forward", fame: 82, note: "Senegal's hero who won them the 2021 Africa Cup." },
+      {
+        name: "Sadio Mané",
+        position: "Forward",
+        fame: 82,
+        note: "Senegal's hero who won them the 2021 Africa Cup.",
+        age: 33,
+        marital: "Married",
+        children: 1,
+        buzz: [
+          "Led Senegal to their first-ever Africa Cup of Nations title.",
+          "Former Liverpool and Bayern Munich star, now in Saudi Arabia.",
+          "Famous for his incredible generosity — built a hospital in his home village.",
+        ],
+      },
     ],
   },
   IRQ: {
@@ -464,19 +715,58 @@ export const teamExtras: Record<string, TeamExtra> = {
           "One of the most followed athletes on the planet.",
         ],
       },
-      { name: "Julián Álvarez", position: "Forward", fame: 82, note: "Clever, hard-working striker who scores big goals." },
+      {
+        name: "Julián Álvarez",
+        position: "Forward",
+        fame: 82,
+        note: "Clever, hard-working striker who scores big goals.",
+        age: 25,
+        marital: "In a relationship",
+        children: 0,
+        buzz: [
+          "Won the World Cup with Argentina in 2022 and scored in the final.",
+          "Won the Golden Boot at the 2024 Copa America.",
+          "Moved from Man City to Atlético Madrid to get more minutes.",
+        ],
+      },
     ],
   },
   DZA: {
     strength: 76,
     starPlayers: [
-      { name: "Riyad Mahrez", position: "Winger", fame: 78, note: "Magical left foot and a Premier League title winner." },
+      {
+        name: "Riyad Mahrez",
+        position: "Winger",
+        fame: 78,
+        note: "Magical left foot and a Premier League title winner.",
+        age: 35,
+        marital: "Married",
+        children: 3,
+        buzz: [
+          "Won four Premier League titles at Manchester City.",
+          "Now plays in Saudi Arabia for Al-Ahli.",
+          "Algeria's greatest ever player — a club and country legend.",
+        ],
+      },
     ],
   },
   AUT: {
     strength: 79,
     starPlayers: [
-      { name: "David Alaba", position: "Defender", fame: 78, note: "Versatile Real Madrid star who can play anywhere at the back." },
+      {
+        name: "David Alaba",
+        position: "Defender",
+        fame: 78,
+        note: "Versatile Real Madrid star who can play anywhere at the back.",
+        age: 33,
+        marital: "Married",
+        children: 1,
+        buzz: [
+          "Won almost every major trophy in Europe at Bayern and Real Madrid.",
+          "Previously considered the best left-back in the world.",
+          "Austria's most capped and beloved player of his generation.",
+        ],
+      },
     ],
   },
   JOR: {
@@ -504,7 +794,20 @@ export const teamExtras: Record<string, TeamExtra> = {
           "Among the most followed people on Earth.",
         ],
       },
-      { name: "Bruno Fernandes", position: "Midfielder", fame: 83, note: "Creative captain who delivers assists and goals." },
+      {
+        name: "Bruno Fernandes",
+        position: "Midfielder",
+        fame: 83,
+        note: "Creative captain who delivers assists and goals.",
+        age: 31,
+        marital: "Married to Ana Pinho",
+        children: 2,
+        buzz: [
+          "Manchester United's captain and creative heartbeat.",
+          "One of the Premier League's most prolific goal-creating midfielders.",
+          "Known for his fiery passion and direct free-kick delivery.",
+        ],
+      },
     ],
   },
   COD: {
@@ -531,12 +834,25 @@ export const teamExtras: Record<string, TeamExtra> = {
         marital: "Married",
         children: 2,
         buzz: [
-          "An electric, fearless dribbler.",
-          "Colombia's attacking spark.",
-          "Rose from humble beginnings in northern Colombia.",
+          "An electric, fearless dribbler at Liverpool.",
+          "Colombia's attacking spark and crowd favourite.",
+          "Rose from humble beginnings in northern Colombia to world football.",
         ],
       },
-      { name: "James Rodríguez", position: "Midfielder", fame: 80, note: "Playmaker who won the Golden Boot back in 2014." },
+      {
+        name: "James Rodríguez",
+        position: "Midfielder",
+        fame: 80,
+        note: "Playmaker who won the Golden Boot in 2014.",
+        age: 34,
+        marital: "Divorced",
+        children: 1,
+        buzz: [
+          "Won the 2014 World Cup Golden Boot with 6 stunning goals.",
+          "Still influential for Colombia — led them to the 2024 Copa America final.",
+          "His famous volley vs. Uruguay is one of the greatest World Cup goals ever.",
+        ],
+      },
     ],
   },
 
@@ -553,9 +869,9 @@ export const teamExtras: Record<string, TeamExtra> = {
         marital: "Single",
         children: 0,
         buzz: [
-          "Star midfielder for Real Madrid.",
-          "Wears the iconic No. 5 shirt.",
-          "His brother Jobe is also a professional footballer.",
+          "Star midfielder for Real Madrid wearing the iconic No. 5.",
+          "His brother Jobe is also a rising professional footballer.",
+          "Already one of the most complete midfielders in world football.",
         ],
       },
       {
@@ -569,7 +885,7 @@ export const teamExtras: Record<string, TeamExtra> = {
         buzz: [
           "Bayern Munich striker and England captain.",
           "England's all-time leading scorer.",
-          "Famous for his deep, pinpoint passing.",
+          "Famous for his deep, pinpoint passing and leadership.",
         ],
       },
     ],
@@ -596,7 +912,20 @@ export const teamExtras: Record<string, TeamExtra> = {
   GHA: {
     strength: 75,
     starPlayers: [
-      { name: "Mohammed Kudus", position: "Midfielder", fame: 76, note: "Dynamic, skilful attacker who can score from anywhere." },
+      {
+        name: "Mohammed Kudus",
+        position: "Midfielder",
+        fame: 76,
+        note: "Dynamic, skilful attacker who can score from anywhere.",
+        age: 25,
+        marital: "Single",
+        children: 0,
+        buzz: [
+          "West Ham's dynamic box-to-box forward and crowd favourite.",
+          "Moved from Ajax to England's top flight and immediately shone.",
+          "Ghana's most technically gifted player in a generation.",
+        ],
+      },
     ],
   },
   PAN: {
