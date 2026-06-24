@@ -29,6 +29,16 @@ export interface StarPlayer {
   position: string;
   /** One short, kid-friendly line about the player. */
   note: string;
+  /** Popularity score (higher = more famous) used to rank the Players tab. */
+  fame: number;
+  /** Approximate age (as of 2026). */
+  age?: number;
+  /** Marital status, e.g. "Married", "In a relationship", "Single". */
+  marital?: string;
+  /** Number of children (omit if unknown / private). */
+  children?: number;
+  /** A few light, illustrative "buzz" lines (not verified news). */
+  buzz?: string[];
 }
 
 /** Win-chance estimate for a single match (percentages, sum ~100). */

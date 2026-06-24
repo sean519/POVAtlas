@@ -157,6 +157,16 @@ body {
   }
 }
 
+/* Spinning soccer-ball logo in the header */
+.ball-spin {
+  animation: ball-spin 3.5s linear infinite;
+}
+@keyframes ball-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 /* Easter egg: glowing OC HQ marker */
 .oc-hq {
   display: grid;
@@ -240,7 +250,8 @@ body {
   .match-ball,
   .oc-hq,
   .egg-confetti,
-  .egg-pop {
+  .egg-pop,
+  .ball-spin {
     animation: none;
   }
 }

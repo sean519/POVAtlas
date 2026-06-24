@@ -35,14 +35,14 @@ export default function Layout({
               className="grid h-9 w-9 shrink-0 place-items-center rounded-2xl bg-white/25 text-xl shadow-inner sm:h-11 sm:w-11 sm:text-2xl"
               aria-hidden
             >
-              🌍
+              <span className="ball-spin inline-block">⚽</span>
             </span>
             <div className="min-w-0">
               <h1 className="truncate text-base font-extrabold leading-tight sm:text-xl">
-                FIFA World Cup 2026 ⚽
+                POV GoalMap
               </h1>
               <p className="hidden text-xs text-white/90 sm:block sm:text-sm">
-                Explore every nation on the map · POV Atlas
+                FIFA World Cup 2026 · explore every nation on the map
               </p>
             </div>
           </div>

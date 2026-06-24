@@ -5,7 +5,9 @@ import WorldMap from "./components/WorldMap";
 import CountryDetailPanel from "./components/CountryDetailPanel";
 import CountryComparisonCard from "./components/CountryComparisonCard";
 import EasterEggModal from "./components/EasterEggModal";
+import PlayerModal from "./components/PlayerModal";
 import Flag from "./components/Flag";
+import type { StarPlayer, Team } from "./types";
 import { teams } from "./data/teams";
 import { matches } from "./data/matches";
 import {
@@ -28,6 +30,12 @@ export default function App() {
 
   // Hidden Orange County easter egg modal.
   const [eggOpen, setEggOpen] = useState(false);
+
+  // Player profile modal.
+  const [selectedPlayer, setSelectedPlayer] = useState<{
+    team: Team;
+    player: StarPlayer;
+  } | null>(null);
 
   // ---- Mobile: bump to switch to the map tab (so the info card is visible) ----
   const [focusMapSignal, setFocusMapSignal] = useState(0);
@@ -185,6 +193,7 @@ export default function App() {
           onSelectTeam={selectTeam}
           onHoverMatch={setHoveredMatchId}
           onSelectMatch={selectMatch}
+          onSelectPlayer={(team, player) => setSelectedPlayer({ team, player })}
           searchTerm={searchTerm}
           onSearchChange={setSearchTerm}
         />
@@ -203,7 +212,17 @@ export default function App() {
           {mapInfoCard}
         </div>
       }
-      overlay={<EasterEggModal open={eggOpen} onClose={() => setEggOpen(false)} />}
+      overlay={
+        <>
+          <EasterEggModal open={eggOpen} onClose={() => setEggOpen(false)} />
+          <PlayerModal
+            team={selectedPlayer?.team ?? null}
+            player={selectedPlayer?.player ?? null}
+            onClose={() => setSelectedPlayer(null)}
+            onViewCountry={selectTeam}
+          />
+        </>
+      }
     />
   );
 }

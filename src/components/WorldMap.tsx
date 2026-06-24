@@ -81,7 +81,7 @@ export default function WorldMap({
         center={[25, 5]}
         zoom={2}
         minZoom={2}
-        maxZoom={7}
+        maxZoom={12}
         zoomSnap={0.25}
         zoomDelta={0.5}
         wheelPxPerZoomLevel={120}

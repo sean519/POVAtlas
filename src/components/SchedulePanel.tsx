@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import type { Group, Match, Team } from "../types";
+import type { Group, Match, StarPlayer, Team } from "../types";
 import MatchCard from "./MatchCard";
 import TeamBadge from "./TeamBadge";
 import StandingsView from "./StandingsView";
@@ -30,6 +30,7 @@ interface SchedulePanelProps {
   onSelectTeam: (code: string) => void;
   onHoverMatch: (id: string | null) => void;
   onSelectMatch: (id: string) => void;
+  onSelectPlayer: (team: Team, player: StarPlayer) => void;
   searchTerm: string;
   onSearchChange: (v: string) => void;
 }
@@ -45,6 +46,7 @@ export default function SchedulePanel({
   onSelectTeam,
   onHoverMatch,
   onSelectMatch,
+  onSelectPlayer,
   searchTerm,
   onSearchChange,
 }: SchedulePanelProps) {
@@ -235,9 +237,8 @@ export default function SchedulePanel({
         {tab === "players" && (
           <PlayersView
             searchTerm={searchTerm}
-            selectedTeamCode={selectedTeamCode}
             hoveredTeamCode={hoveredTeamCode}
-            onSelectTeam={onSelectTeam}
+            onSelectPlayer={onSelectPlayer}
             onHoverTeam={onHoverTeam}
           />
         )}
