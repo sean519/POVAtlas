@@ -1,6 +1,6 @@
 # POV GoalMap — Session Handoff
 
-> Last updated: 2026-06-24 (new kid avatars + zoom) · Branch: `master` · Working tree: **clean** (all work committed) · HEAD `77b65e1`
+> Last updated: 2026-06-24 (new kid avatars + zoom, **deployed**) · Branch: `master` · Working tree: **clean** (all work committed) · HEAD `f5d881c`
 
 This document is the single source of truth for picking up work on this project
 in a fresh Claude Code session. Read it top-to-bottom before making changes.
@@ -250,6 +250,13 @@ See `TODO.md` for the live checklist. Summary, highest priority first:
 
 This session's commits (newest first):
 
+- `f5d881c` — **Lighten avatar zoom: soft scrim + spring-from-tap animation** →
+  `src/components/EasterEggModal.tsx` (scrim `navy/70 blur-md`→`navy/25 blur-[2px]`;
+  enlarged card springs out of the tapped avatar's screen position via WAAPI
+  `translate(origin) scale(0.25)`→settled, overshoot easing, 420ms,
+  respects `prefers-reduced-motion`); `src/index.css` (`egg-zoom-scrim` fade).
+  **Built + deployed** to povatlas.com (Resilio mirror; assets verified
+  consistent; new 512² avatars live).
 - `77b65e1` — **New 512×512 kid avatars + tap-to-enlarge zoom lightbox** →
   replaced all 6 `public/avatars/*.png` with the user's new portraits
   (center-cropped, 256-color quantized); `src/components/EasterEggModal.tsx`
@@ -315,19 +322,19 @@ Immediately preceding context (from the continued session, already committed):
 - `dist/`, `node_modules/`, and TS build artifacts (`*.tsbuildinfo`,
   `vite.config.js`, `vite.config.d.ts`, `.vite-*.log`, `.claude/`) are
   git-ignored. They may exist on disk after a build but are never committed.
-- HEAD: `2eaa5a6 Remove dead helpers getContinents and getOpponentCode`
+- HEAD: `f5d881c Lighten avatar zoom: soft scrim + spring-from-tap animation`
 
 ---
 
 ## 12. Recommended very next task
 
-**Confirm the new kid avatars + zoom on the user's actual device.** The new
-512×512 portraits and the tap-to-enlarge lightbox are committed (`77b65e1`) and
-were verified in the preview browser (all 6 images load; tapping a member opens a
-clear 224px portrait; tapping the big avatar re-rolls a cheer; adults enlarge
-their emoji). Ask the user to **hard-refresh (Ctrl+Shift+R)** and re-open the OC
-easter egg to confirm on their device, then **deploy** (`npm run build` +
-robocopy mirror — see §10) so the change reaches povatlas.com.
+**Confirm the new kid avatars + zoom on the user's live site.** The new 512×512
+portraits and the lightened spring-zoom lightbox are committed (`f5d881c`),
+verified in the preview browser, and **already built + deployed** to
+povatlas.com (Resilio mirror; deployed `index.html` asset refs and the 6 new
+avatars verified consistent). Nothing left to ship — just ask the user to
+**hard-refresh (Ctrl+Shift+R)** and re-open the OC easter egg to confirm the live
+result on their device.
 
 Good follow-on: **optional adult cartoon avatars** (#2 in TODO) if the user
 provides images — drop PNGs in `public/avatars/`, add `avatarUrl` to `OC_ADULTS`

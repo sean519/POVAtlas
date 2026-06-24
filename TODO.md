@@ -4,10 +4,10 @@
 > Full context lives in [HANDOFF.md](HANDOFF.md).
 
 ## 🔜 Next up (do first)
-- [ ] **Confirm the new kid avatars + zoom on the user's device.** New 512×512
-      portraits and a tap-to-enlarge lightbox shipped (`77b65e1`); verified in
-      the preview browser. Ask the user to hard-refresh (Ctrl+Shift+R) and
-      re-open the OC easter egg to confirm on their device.
+- [ ] **Confirm the new kid avatars + zoom on the live site.** New 512×512
+      portraits + lightened spring-zoom lightbox shipped (`f5d881c`); verified in
+      the preview browser and **deployed** to povatlas.com. Ask the user to
+      hard-refresh (Ctrl+Shift+R) and re-open the OC easter egg to confirm live.
 
 ## ⬆️ High priority
 - [ ] **Optional: real cartoon avatars for the 6 adults** (Sean, Roy, Han,
@@ -32,6 +32,8 @@
       (`tsc --noEmit`) + manual browser verification.
 
 ## ✅ Done this session
+- [x] Lighten the avatar zoom: soft scrim + spring-from-tap animation; built &
+      deployed to povatlas.com — `f5d881c`
 - [x] New 512×512 kid avatars + tap-to-enlarge zoom lightbox in the OC easter
       egg (`EasterEggModal.tsx`, `public/avatars/*`) — `77b65e1`
 - [x] "📍 Must-see places" tourist attractions for all 48 countries
