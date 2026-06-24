@@ -61,12 +61,12 @@ export default function EasterEggModal({ open, onClose }: EasterEggModalProps) {
               {cheer.text}
             </span>
           )}
-          {m.avatarSvg ? (
+          {m.avatarUrl ? (
             <img
-              src={`data:image/svg+xml,${encodeURIComponent(m.avatarSvg)}`}
-              className="h-14 w-14 rounded-full"
-              alt=""
-              aria-hidden
+              src={m.avatarUrl}
+              className="h-14 w-14 rounded-full object-cover ring-2 ring-white shadow-sm"
+              alt={m.name}
+              draggable={false}
               style={
                 waving
                   ? { animation: "egg-bounce 0.6s ease", animationDelay: `${(offset + i) * 0.06}s` }
