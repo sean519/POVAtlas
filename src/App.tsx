@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
+import type { PointerEvent as ReactPointerEvent, ReactNode } from "react";
 import Layout from "./components/Layout";
 import SchedulePanel from "./components/SchedulePanel";
 import WorldMap from "./components/WorldMap";
@@ -150,7 +151,11 @@ export default function App() {
     );
   } else if (comparison) {
     mapInfoCard = (
-      <div key={`cmp-${selectedMatchId}`} className={cardShell}>
+      <MapInfoSheet
+        key={`cmp-${selectedMatchId}`}
+        className={cardShell}
+        onCollapse={() => setInfoCollapsed(true)}
+      >
         <CountryComparisonCard
           comparison={comparison}
           onClose={() => setSelectedMatchId(null)}
@@ -158,11 +163,15 @@ export default function App() {
           onSelectTeam={selectTeam}
           onHoverTeam={setHoveredTeamCode}
         />
-      </div>
+      </MapInfoSheet>
     );
   } else if (selectedTeam) {
     mapInfoCard = (
-      <div key={`team-${selectedTeamCode}`} className={cardShell}>
+      <MapInfoSheet
+        key={`team-${selectedTeamCode}`}
+        className={cardShell}
+        onCollapse={() => setInfoCollapsed(true)}
+      >
         <CountryDetailPanel
           team={selectedTeam}
           facts={getFactsForTeam(selectedTeam.fifaCode)}
@@ -174,7 +183,7 @@ export default function App() {
           onHoverMatch={setHoveredMatchId}
           onSelectMatch={selectMatch}
         />
-      </div>
+      </MapInfoSheet>
     );
   }
 
@@ -238,6 +247,82 @@ function WelcomeHint() {
         Click a team for its country profile &amp; star players, or click a
         match to compare both countries — the details appear right here.
       </p>
+    </div>
+  );
+}
+
+/**
+ * Wraps the floating info card. On mobile (the bottom-sheet layout) it shows a
+ * grab handle at the top: drag it down to minimise the card to a pill. On
+ * desktop the handle is hidden and the wrapper is a plain container.
+ */
+function MapInfoSheet({
+  className,
+  onCollapse,
+  children,
+}: {
+  className: string;
+  onCollapse: () => void;
+  children: ReactNode;
+}) {
+  const [dragY, setDragY] = useState(0);
+  const [dragging, setDragging] = useState(false);
+  const startY = useRef(0);
+  // Pull down past this many pixels (or a quick flick) to minimise.
+  const THRESHOLD = 90;
+
+  const isMobile = () =>
+    typeof window !== "undefined" && window.innerWidth < 640;
+
+  const onPointerDown = (e: ReactPointerEvent) => {
+    if (!isMobile()) return;
+    startY.current = e.clientY;
+    setDragging(true);
+    e.currentTarget.setPointerCapture?.(e.pointerId);
+  };
+
+  const onPointerMove = (e: ReactPointerEvent) => {
+    if (!dragging) return;
+    // Only allow dragging downward.
+    setDragY(Math.max(0, e.clientY - startY.current));
+  };
+
+  const endDrag = () => {
+    if (!dragging) return;
+    setDragging(false);
+    if (dragY > THRESHOLD) {
+      setDragY(0);
+      onCollapse();
+    } else {
+      setDragY(0); // snap back
+    }
+  };
+
+  return (
+    <div
+      className={className}
+      style={
+        dragY
+          ? {
+              transform: `translateY(${dragY}px)`,
+              transition: dragging ? "none" : "transform 0.2s ease",
+            }
+          : undefined
+      }
+    >
+      {/* Mobile-only drag handle (centred so it never overlaps header buttons) */}
+      <div
+        className="absolute left-1/2 top-0 z-20 flex h-7 w-28 -translate-x-1/2 cursor-grab touch-none items-start justify-center pt-2 active:cursor-grabbing sm:hidden"
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={endDrag}
+        onPointerCancel={endDrag}
+        aria-label="Drag down to minimise"
+        role="button"
+      >
+        <span className="h-1.5 w-10 rounded-full bg-white/60" />
+      </div>
+      {children}
     </div>
   );
 }
