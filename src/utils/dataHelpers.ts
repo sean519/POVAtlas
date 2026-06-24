@@ -245,11 +245,20 @@ export function computeTournamentStats(): TournamentStats {
 
   let biggestWin: Match | null = null;
   let biggestMargin = -1;
+  let highestScoring: Match | null = null;
+  let mostGoals = -1;
   for (const m of played) {
-    const margin = Math.abs((m.scoreA as number) - (m.scoreB as number));
+    const sa = m.scoreA as number;
+    const sb = m.scoreB as number;
+    const margin = Math.abs(sa - sb);
     if (margin > biggestMargin) {
       biggestMargin = margin;
       biggestWin = m;
+    }
+    const total = sa + sb;
+    if (total > mostGoals) {
+      mostGoals = total;
+      highestScoring = m;
     }
   }
 
@@ -258,11 +267,12 @@ export function computeTournamentStats(): TournamentStats {
     goalsByTeam.set(m.teamA, (goalsByTeam.get(m.teamA) ?? 0) + (m.scoreA as number));
     goalsByTeam.set(m.teamB, (goalsByTeam.get(m.teamB) ?? 0) + (m.scoreB as number));
   }
-  const topScorers = Array.from(goalsByTeam.entries())
+  const scoredEntries = Array.from(goalsByTeam.entries())
     .map(([code, goals]) => ({ team: getTeamByCode(code), goals }))
     .filter((x): x is { team: Team; goals: number } => Boolean(x.team) && x.goals > 0)
-    .sort((a, b) => b.goals - a.goals)
-    .slice(0, 6);
+    .sort((a, b) => b.goals - a.goals);
+  const teamsScored = scoredEntries.length;
+  const topScorers = scoredEntries.slice(0, 6);
 
   return {
     totalMatches: matches.length,
@@ -270,6 +280,8 @@ export function computeTournamentStats(): TournamentStats {
     totalGoals,
     avgGoals: played.length ? totalGoals / played.length : 0,
     biggestWin,
+    highestScoring,
+    teamsScored,
     topScorers,
   };
 }

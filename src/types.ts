@@ -68,6 +68,10 @@ export interface TournamentStats {
   totalGoals: number;
   avgGoals: number;
   biggestWin: Match | null;
+  /** Match with the most combined goals. */
+  highestScoring: Match | null;
+  /** Number of distinct teams that have scored at least one goal. */
+  teamsScored: number;
   topScorers: { team: Team; goals: number }[];
 }
 
