@@ -7,11 +7,13 @@ import {
   TileLayer,
   Tooltip,
   useMap,
+  useMapEvents,
 } from "react-leaflet";
 import L from "leaflet";
 import type { Team } from "../types";
 import { getTeamByCode } from "../utils/dataHelpers";
 import { flagUrl } from "../utils/flags";
+import { OC_HQ, OC_TRIGGER } from "../data/easterEgg";
 
 interface WorldMapProps {
   teams: Team[];
@@ -23,6 +25,8 @@ interface WorldMapProps {
   fitCodes: string[] | null;
   onTeamClick: (code: string) => void;
   onTeamHover: (code: string | null) => void;
+  /** Fired when the hidden Orange County easter egg marker is clicked. */
+  onEasterEgg: () => void;
 }
 
 // A compact world GeoJSON keyed by ISO A3 in feature.id.
@@ -38,6 +42,7 @@ export default function WorldMap({
   fitCodes,
   onTeamClick,
   onTeamHover,
+  onEasterEgg,
 }: WorldMapProps) {
   const [geo, setGeo] = useState<GeoData | null>(null);
   const [geoError, setGeoError] = useState(false);
@@ -122,18 +127,11 @@ export default function WorldMap({
         {/* Animated arc linking the two teams of a selected match */}
         <MatchArc codes={fitCodes} />
 
+        {/* Hidden easter egg — only shows when zoomed into Orange County */}
+        <OcEasterEgg onOpen={onEasterEgg} />
+
         <MapController focusCode={focusCode} fitCodes={fitCodes} />
       </MapContainer>
-
-      {/* Legend (top-right, out of the way of the comparison card) */}
-      <div className="pointer-events-none absolute right-3 top-3 z-[500] rounded-lg bg-white/90 px-3 py-2 text-[11px] text-slate-600 shadow-card backdrop-blur">
-        <p className="mb-1 font-bold text-brand-navy">Map key</p>
-        <p>
-          <span className="mr-1 inline-block h-2 w-2 rounded-full bg-brand-gold align-middle" />
-          Selected / highlighted team
-        </p>
-        <p>🚩 Marker = team location · click to explore</p>
-      </div>
 
       {geoError && (
         <div className="absolute left-1/2 top-3 z-[500] -translate-x-1/2 rounded-lg bg-amber-50 px-3 py-1.5 text-[11px] text-amber-800 shadow">
@@ -208,11 +206,12 @@ function GeoLayer({
         fillOpacity: 0.3,
       };
     }
+    // Resting state (nothing selected): subtle, so nothing looks "highlighted".
     return {
-      weight: 1,
-      color: "#1f9e6b",
-      fillColor: "#1f9e6b",
-      fillOpacity: 0.45,
+      weight: 0.6,
+      color: "#bcd9cb",
+      fillColor: "#bcd9cb",
+      fillOpacity: 0.22,
     };
   };
 
@@ -389,6 +388,61 @@ function MatchArc({ codes }: { codes: string[] | null }) {
         zIndexOffset={1500}
       />
     </>
+  );
+}
+
+/* ---------------- Hidden Orange County easter egg ----------------------- */
+
+function OcEasterEgg({ onOpen }: { onOpen: () => void }) {
+  const [visible, setVisible] = useState(false);
+
+  const map = useMapEvents({
+    zoomend: () => check(),
+    moveend: () => check(),
+  });
+
+  function check() {
+    const z = map.getZoom();
+    const c = map.getCenter();
+    setVisible(
+      z >= OC_TRIGGER.minZoom &&
+        c.lat > OC_TRIGGER.latMin &&
+        c.lat < OC_TRIGGER.latMax &&
+        c.lng > OC_TRIGGER.lngMin &&
+        c.lng < OC_TRIGGER.lngMax
+    );
+  }
+
+  // Check once after mount too, in case the map already rests over OC.
+  useEffect(() => {
+    check();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const icon = useMemo(
+    () =>
+      L.divIcon({
+        className: "",
+        html: '<div class="oc-hq">🏡</div>',
+        iconSize: [40, 40],
+        iconAnchor: [20, 20],
+      }),
+    []
+  );
+
+  if (!visible) return null;
+
+  return (
+    <Marker
+      position={[OC_HQ.lat, OC_HQ.lng]}
+      icon={icon}
+      zIndexOffset={2000}
+      eventHandlers={{ click: onOpen }}
+    >
+      <Tooltip direction="top" offset={[0, -16]} opacity={1}>
+        <span className="font-bold">🎁 {OC_HQ.title} — 点我!</span>
+      </Tooltip>
+    </Marker>
   );
 }
 

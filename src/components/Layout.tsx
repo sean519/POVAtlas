@@ -4,6 +4,8 @@ import { formatLongDate, formatShortDate, todayISO } from "../utils/formatters";
 interface LayoutProps {
   schedule: ReactNode;
   map: ReactNode;
+  /** Full-screen overlay (e.g. the easter-egg modal) rendered above everything. */
+  overlay?: ReactNode;
   /** Increment to ask the mobile view to jump to the Map tab. */
   focusMapSignal: number;
 }
@@ -13,6 +15,7 @@ type MobileTab = "schedule" | "map";
 export default function Layout({
   schedule,
   map,
+  overlay,
   focusMapSignal,
 }: LayoutProps) {
   const [mobileTab, setMobileTab] = useState<MobileTab>("schedule");
@@ -36,10 +39,10 @@ export default function Layout({
             </span>
             <div className="min-w-0">
               <h1 className="truncate text-base font-extrabold leading-tight sm:text-xl">
-                World Cup Geography Map ⚽
+                FIFA World Cup 2026 ⚽
               </h1>
               <p className="hidden text-xs text-white/90 sm:block sm:text-sm">
-                Learn where every World Cup team is on the map.
+                Explore every nation on the map · POV Atlas
               </p>
             </div>
           </div>
@@ -103,6 +106,8 @@ export default function Layout({
           </button>
         ))}
       </nav>
+
+      {overlay}
     </div>
   );
 }

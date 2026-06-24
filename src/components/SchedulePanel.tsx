@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { Group, Match, Team } from "../types";
 import MatchCard from "./MatchCard";
 import TeamBadge from "./TeamBadge";
@@ -51,21 +51,33 @@ export default function SchedulePanel({
   const [tab, setTab] = useState<Tab>("matches");
   const today = todayISO();
 
-  const todayMatches = useMemo(
-    () => matches.filter((m) => m.date === today),
-    [matches, today]
-  );
-
+  // Whole schedule in chronological order, grouped by date (today included).
   const matchesByDate = useMemo(() => {
     const map = new Map<string, Match[]>();
     for (const m of matches) {
-      if (m.date === today) continue;
       const list = map.get(m.date) ?? [];
       list.push(m);
       map.set(m.date, list);
     }
     return Array.from(map.entries());
-  }, [matches, today]);
+  }, [matches]);
+
+  // The date section to auto-scroll to: today, or the next upcoming date.
+  const anchorDate = useMemo(() => {
+    const dates = matchesByDate.map(([d]) => d);
+    if (dates.includes(today)) return today;
+    return dates.find((d) => d >= today) ?? dates[dates.length - 1] ?? null;
+  }, [matchesByDate, today]);
+
+  const anchorRef = useRef<HTMLDivElement>(null);
+
+  // When the Matches tab opens, jump to the current/upcoming date.
+  useEffect(() => {
+    if (tab !== "matches") return;
+    const el = anchorRef.current;
+    if (el) el.scrollIntoView({ block: "start" });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tab, anchorDate]);
 
   const teamsByGroup = useMemo(() => {
     const map = new Map<Group, Team[]>();
@@ -127,53 +139,47 @@ export default function SchedulePanel({
       {/* Content */}
       <div className="nice-scroll flex-1 overflow-y-auto p-3">
         {tab === "matches" &&
-          (matchesByDate.length === 0 && todayMatches.length === 0 ? (
+          (matchesByDate.length === 0 ? (
             <EmptyState label="No matches match your search." />
           ) : (
             <div className="space-y-5">
-              {todayMatches.length > 0 && (
-                <section>
-                  <h3 className="sticky top-0 z-10 mb-2 flex items-center gap-2 rounded-lg bg-brand-peach/15 px-2 py-1.5 text-xs font-extrabold uppercase tracking-wide text-brand-peach backdrop-blur">
-                    <span className="relative flex h-2 w-2">
-                      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-brand-peach opacity-75" />
-                      <span className="relative inline-flex h-2 w-2 rounded-full bg-brand-peach" />
-                    </span>
-                    Today · {formatLongDate(today)}
-                  </h3>
-                  <div className="space-y-2">
-                    {todayMatches.map((m) => (
-                      <MatchCard
-                        key={m.matchId}
-                        match={m}
-                        selected={selectedMatchId === m.matchId}
-                        hovered={hoveredMatchId === m.matchId}
-                        onHover={onHoverMatch}
-                        onClick={onSelectMatch}
-                      />
-                    ))}
-                  </div>
-                </section>
-              )}
-
-              {matchesByDate.map(([date, dayMatches]) => (
-                <section key={date}>
-                  <h3 className="sticky top-0 z-10 mb-2 bg-white/90 py-1 text-xs font-bold uppercase tracking-wide text-brand-blue backdrop-blur">
-                    {formatLongDate(date)}
-                  </h3>
-                  <div className="space-y-2">
-                    {dayMatches.map((m) => (
-                      <MatchCard
-                        key={m.matchId}
-                        match={m}
-                        selected={selectedMatchId === m.matchId}
-                        hovered={hoveredMatchId === m.matchId}
-                        onHover={onHoverMatch}
-                        onClick={onSelectMatch}
-                      />
-                    ))}
-                  </div>
-                </section>
-              ))}
+              {matchesByDate.map(([date, dayMatches]) => {
+                const isToday = date === today;
+                const isAnchor = date === anchorDate;
+                return (
+                  <section key={date} ref={isAnchor ? anchorRef : undefined}>
+                    <h3
+                      className={[
+                        "sticky top-0 z-10 mb-2 flex items-center gap-2 py-1 text-xs font-bold uppercase tracking-wide backdrop-blur",
+                        isToday
+                          ? "rounded-lg bg-brand-peach/15 px-2 py-1.5 font-extrabold text-brand-peach"
+                          : "bg-white/90 text-brand-blue",
+                      ].join(" ")}
+                    >
+                      {isToday && (
+                        <span className="relative flex h-2 w-2">
+                          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-brand-peach opacity-75" />
+                          <span className="relative inline-flex h-2 w-2 rounded-full bg-brand-peach" />
+                        </span>
+                      )}
+                      {isToday ? "Today · " : ""}
+                      {formatLongDate(date)}
+                    </h3>
+                    <div className="space-y-2">
+                      {dayMatches.map((m) => (
+                        <MatchCard
+                          key={m.matchId}
+                          match={m}
+                          selected={selectedMatchId === m.matchId}
+                          hovered={hoveredMatchId === m.matchId}
+                          onHover={onHoverMatch}
+                          onClick={onSelectMatch}
+                        />
+                      ))}
+                    </div>
+                  </section>
+                );
+              })}
             </div>
           ))}
 

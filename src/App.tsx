@@ -4,6 +4,7 @@ import SchedulePanel from "./components/SchedulePanel";
 import WorldMap from "./components/WorldMap";
 import CountryDetailPanel from "./components/CountryDetailPanel";
 import CountryComparisonCard from "./components/CountryComparisonCard";
+import EasterEggModal from "./components/EasterEggModal";
 import Flag from "./components/Flag";
 import { teams } from "./data/teams";
 import { matches } from "./data/matches";
@@ -24,6 +25,9 @@ export default function App() {
 
   // Whether the floating info card is collapsed to a small pill.
   const [infoCollapsed, setInfoCollapsed] = useState(false);
+
+  // Hidden Orange County easter egg modal.
+  const [eggOpen, setEggOpen] = useState(false);
 
   // ---- Mobile: bump to switch to the map tab (so the info card is visible) ----
   const [focusMapSignal, setFocusMapSignal] = useState(0);
@@ -194,10 +198,12 @@ export default function App() {
             fitCodes={fitCodes}
             onTeamClick={selectTeam}
             onTeamHover={setHoveredTeamCode}
+            onEasterEgg={() => setEggOpen(true)}
           />
           {mapInfoCard}
         </div>
       }
+      overlay={<EasterEggModal open={eggOpen} onClose={() => setEggOpen(false)} />}
     />
   );
 }
