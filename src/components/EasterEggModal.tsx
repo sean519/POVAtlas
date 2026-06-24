@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { type MouseEvent as ReactMouseEvent, useEffect, useRef, useState } from "react";
 import {
   OC_ADULTS,
   OC_HQ,
@@ -19,6 +19,10 @@ export default function EasterEggModal({ open, onClose }: EasterEggModalProps) {
   const [waving, setWaving] = useState(false);
   const [zoomed, setZoomed] = useState<EggMember | null>(null);
   const timer = useRef<number | undefined>(undefined);
+  // Screen-space centre of the avatar that was tapped, so the enlarged card can
+  // spring out of that exact spot rather than just appearing in the middle.
+  const originRef = useRef<{ x: number; y: number } | null>(null);
+  const cardRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!open) {
@@ -30,6 +34,26 @@ export default function EasterEggModal({ open, onClose }: EasterEggModalProps) {
 
   useEffect(() => () => window.clearTimeout(timer.current), []);
 
+  // Spring the enlarged portrait out from the tapped avatar's position.
+  useEffect(() => {
+    const card = cardRef.current;
+    const from = originRef.current;
+    if (!zoomed || !card) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const r = card.getBoundingClientRect();
+    const cx = r.left + r.width / 2;
+    const cy = r.top + r.height / 2;
+    const dx = from ? from.x - cx : 0;
+    const dy = from ? from.y - cy : 0;
+    card.animate(
+      [
+        { transform: `translate(${dx}px, ${dy}px) scale(0.25)`, opacity: 0 },
+        { transform: "translate(0, 0) scale(1)", opacity: 1 },
+      ],
+      { duration: 420, easing: "cubic-bezier(0.34, 1.56, 0.64, 1)", fill: "both" }
+    );
+  }, [zoomed]);
+
   if (!open) return null;
 
   const rollCheer = (m: EggMember) => {
@@ -40,7 +64,9 @@ export default function EasterEggModal({ open, onClose }: EasterEggModalProps) {
   };
 
   // Tapping a member opens an enlarged portrait so the avatar is clearly visible.
-  const onMemberClick = (m: EggMember) => {
+  const onMemberClick = (m: EggMember, e: ReactMouseEvent<HTMLButtonElement>) => {
+    const r = e.currentTarget.getBoundingClientRect();
+    originRef.current = { x: r.left + r.width / 2, y: r.top + r.height / 2 };
     setZoomed(m);
     rollCheer(m);
   };
@@ -58,7 +84,7 @@ export default function EasterEggModal({ open, onClose }: EasterEggModalProps) {
         <button
           key={m.name}
           type="button"
-          onClick={() => onMemberClick(m)}
+          onClick={(e) => onMemberClick(m, e)}
           className="relative flex flex-col items-center gap-1 rounded-2xl bg-slate-50 py-3 transition hover:bg-brand-sky/10"
         >
           {m.avatarUrl ? (
@@ -180,9 +206,10 @@ export default function EasterEggModal({ open, onClose }: EasterEggModalProps) {
           className="absolute inset-0 z-20 flex items-center justify-center p-4"
           onClick={() => setZoomed(null)}
         >
-          <div className="absolute inset-0 bg-brand-navy/70 backdrop-blur-md" />
+          <div className="egg-zoom-scrim absolute inset-0 bg-brand-navy/25 backdrop-blur-[2px]" />
           <div
-            className="animate-fade-in-up relative z-10 flex w-[min(20rem,calc(100%-2rem))] flex-col items-center rounded-3xl bg-white p-5 shadow-card ring-1 ring-black/10"
+            ref={cardRef}
+            className="relative z-10 flex w-[min(20rem,calc(100%-2rem))] flex-col items-center rounded-3xl bg-white p-5 shadow-card ring-1 ring-black/10"
             onClick={(e) => e.stopPropagation()}
           >
             <button

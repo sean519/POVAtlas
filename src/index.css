@@ -239,6 +239,19 @@ body {
   }
 }
 
+/* Soft, light scrim behind the enlarged avatar portrait. */
+.egg-zoom-scrim {
+  animation: egg-zoom-scrim 0.28s ease both;
+}
+@keyframes egg-zoom-scrim {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 /* Respect users who prefer reduced motion */
 @media (prefers-reduced-motion: reduce) {
   html {
@@ -251,6 +264,7 @@ body {
   .oc-hq,
   .egg-confetti,
   .egg-pop,
+  .egg-zoom-scrim,
   .ball-spin {
     animation: none;
   }
