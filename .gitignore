@@ -1,0 +1,17 @@
+node_modules
+dist
+dist-ssr
+*.local
+.vite
+.DS_Store
+*.log
+
+# Editor / tooling
+.claude
+.vscode
+.idea
+.vite-out.log
+.vite-err.log
+
+# Vercel
+.vercel
