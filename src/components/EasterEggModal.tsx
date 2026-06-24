@@ -62,17 +62,22 @@ export default function EasterEggModal({ open, onClose }: EasterEggModalProps) {
             </span>
           )}
           {m.avatarUrl ? (
-            <img
-              src={m.avatarUrl}
-              className="h-14 w-14 rounded-full object-cover ring-2 ring-white shadow-sm"
-              alt={m.name}
-              draggable={false}
-              style={
-                waving
+            <span
+              className="block h-14 w-14 shrink-0 overflow-hidden rounded-full bg-white ring-2 ring-white shadow-sm"
+              style={{
+                aspectRatio: "1 / 1",
+                ...(waving
                   ? { animation: "egg-bounce 0.6s ease", animationDelay: `${(offset + i) * 0.06}s` }
-                  : undefined
-              }
-            />
+                  : {}),
+              }}
+            >
+              <img
+                src={m.avatarUrl}
+                className="h-full w-full object-cover"
+                alt={m.name}
+                draggable={false}
+              />
+            </span>
           ) : (
             <span
               className="text-4xl"
