@@ -1,6 +1,11 @@
 # POV GoalMap — Session Handoff
 
-> Last updated: 2026-06-24 (live score auto-fetch, **deployed**) · Branch: `master` · Working tree: **clean** (all work committed) · HEAD `efef041`
+> Last updated: 2026-06-24 (live-scores backend + API-Football, frontend **deployed**) · Branch: `master` · Working tree: **clean** (all work committed) · HEAD `f711b18`
+>
+> ⚠️ The `/api/live-scores` **backend only runs on Vercel** — the current static
+> Resilio host can't execute it, so the frontend falls back to direct TheSportsDB
+> there. To activate API-Football: deploy to Vercel + set `API_FOOTBALL_KEY`
+> (DEPLOY.md §E). DNS migration to Vercel is the user's to do.
 >
 > **Deploy policy:** the user wants every completed change auto-deployed (build +
 > robocopy mirror — §10) without being asked each time. Do it after committing.
@@ -82,7 +87,9 @@ F:\world map\
 ├─ HANDOFF.md                ← this file
 ├─ TODO.md                   ← prioritized remaining work
 ├─ README.md
-├─ DEPLOY.md                 ← Vercel + custom-domain instructions
+├─ DEPLOY.md                 ← Vercel + custom-domain + §E live-scores backend
+├─ api/
+│  └─ live-scores.ts         ← Vercel Edge fn: provider chain + 60s cache (needs Vercel)
 ├─ index.html
 ├─ package.json / package-lock.json
 ├─ vite.config.ts            ← dev server on port 5180
@@ -122,9 +129,14 @@ F:\world map\
    │  ├─ topScorers.ts       ← Golden Boot leaderboard (illustrative)
    │  ├─ teamExtras.ts       ← star players + bios per team
    │  └─ easterEgg.ts        ← OC roster (adults emoji, kids avatarUrl) + trigger geo box
+   ├─ providers/             ← live-score providers (pure mappers + fetch)
+   │  ├─ apiFootball.ts      ← API-Football (primary; key passed in, server-only fetch)
+   │  └─ theSportsDb.ts      ← TheSportsDB (free fallback; also the frontend direct fallback)
    └─ utils/
       ├─ dataHelpers.ts      ← selectors: getTeamByCode, compareCountries, standings, stats, win chance
       ├─ formatters.ts       ← number/date formatting; KICKOFF_TZ + formatKickoff
+      ├─ liveScores.ts       ← frontend loader: /api/live-scores → direct-TheSportsDB fallback
+      ├─ teamNameMatch.ts    ← shared provider-name → fifaCode resolver + alias table
       ├─ flags.ts            ← flagcdn.com URL builder
       └─ groupColors.ts      ← per-group color classes
 ```
@@ -275,6 +287,15 @@ See `TODO.md` for the live checklist. Summary, highest priority first:
 
 This session's commits (newest first):
 
+- `f711b18` — **Add `/api/live-scores` backend with API-Football + fallback** →
+  new `api/live-scores.ts` (Vercel Edge fn: provider chain, 60s cache, key from
+  `API_FOOTBALL_KEY`, stale-cache on failure); `src/providers/{apiFootball,
+  theSportsDb}.ts` (pure mappers + fetch); `src/utils/teamNameMatch.ts` (shared
+  name→fifaCode); `liveScores.ts` calls the route then falls back to direct
+  TheSportsDB; `App.tsx` polls 30s only while live (`isLiveWindowNow`) else 5min,
+  keeps last-good on failure; `MatchCard` shows minute/HT/red-cards; `SchedulePanel`
+  shows "Last updated"; `types.ts` adds `LiveInfo`/`LiveMatchWire`/`Match.live`.
+  Frontend deployed (uses fallback until Vercel). See DEPLOY.md §E.
 - `efef041` — **Auto-fetch live World Cup scores (front-end, free API)** →
   new `src/utils/liveScores.ts` (polls TheSportsDB free key "3", CORS-OK; maps
   team names→fifaCode; yesterday/today/tomorrow UTC, sequential to dodge rate
@@ -376,7 +397,7 @@ Immediately preceding context (from the continued session, already committed):
 - `dist/`, `node_modules/`, and TS build artifacts (`*.tsbuildinfo`,
   `vite.config.js`, `vite.config.d.ts`, `.vite-*.log`, `.claude/`) are
   git-ignored. They may exist on disk after a build but are never committed.
-- HEAD: `efef041 Auto-fetch live World Cup scores (front-end, free API)`
+- HEAD: `f711b18 Add /api/live-scores backend with API-Football + provider fallback`
 
 ---
 

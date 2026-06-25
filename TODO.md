@@ -4,9 +4,11 @@
 > Full context lives in [HANDOFF.md](HANDOFF.md).
 
 ## 🔜 Next up (do first)
-- [ ] **Nothing pending.** Latest changes (adult avatars `e6903c5`, map/mobile UI
-      fixes `5cc2b84`) are verified and **deployed**. Ask the user to hard-refresh
-      (Ctrl+Shift+R) to confirm live, then pick the next item below.
+- [ ] **Activate the live-scores backend on Vercel.** Code is shipped (`f711b18`);
+      it only runs once the site is on Vercel. User steps: deploy to Vercel (B/C
+      in DEPLOY.md), set env var `API_FOOTBALL_KEY` (DEPLOY.md §E), point
+      povatlas.com DNS at Vercel. Until then the frontend uses the TheSportsDB
+      fallback (already live).
 
 > ⚙️ **Deploy policy:** auto build + deploy after every completed change (don't
 > ask each time) — `npm run build` + robocopy mirror (HANDOFF §10).
@@ -20,16 +22,20 @@
       with real data if desired (currently labelled illustrative in the UI).
 
 ## 🧊 Low priority / stretch
-- [ ] **Improve live data (optional).** Client-side auto-fetch is live
-      (`liveScores.ts`, TheSportsDB free key). Follow-ups: serverless proxy for a
-      paid/reliable key + better coverage; auto-fetch Golden Boot scorers; grow
-      the team-name alias table if a fixture fails to map.
+- [ ] **Improve live data (optional).** Backend `/api/live-scores` (API-Football +
+      TheSportsDB fallback) is built. Follow-ups: auto-fetch Golden Boot scorers;
+      surface goal-scorer events (already in `Match.live.events`) in the match
+      detail; grow the alias table if a fixture fails to map; add a 3rd provider.
 - [ ] **Expose the Leaflet map on `window` in dev** so the easter egg can be
       triggered from `preview_eval` (see Known bug #1 in HANDOFF).
 - [ ] **Add tests / ESLint.** Currently the only check is `npm run lint`
       (`tsc --noEmit`) + manual browser verification.
 
 ## ✅ Done this session
+- [x] `/api/live-scores` backend (Vercel Edge): API-Football primary +
+      TheSportsDB fallback, 60s cache, key via env, pluggable providers; frontend
+      shows minute/red-cards/HT-FT + "Last updated", polls 30s only when live;
+      graceful fallback to direct TheSportsDB on the static host — `f711b18`
 - [x] Auto-fetch live World Cup scores client-side (TheSportsDB free API);
       overlay onto fixtures; standings/stats recompute from live data; deployed
       — `efef041`
