@@ -4,16 +4,12 @@
 > Full context lives in [HANDOFF.md](HANDOFF.md).
 
 ## 🔜 Next up (do first)
-- [ ] **Confirm the new kid avatars + zoom on the live site.** New 512×512
-      portraits + lightened spring-zoom lightbox shipped (`f5d881c`); verified in
-      the preview browser and **deployed** to povatlas.com. Ask the user to
-      hard-refresh (Ctrl+Shift+R) and re-open the OC easter egg to confirm live.
+- [ ] **Nothing pending.** Latest changes (adult avatars `e6903c5`, map/mobile UI
+      fixes `5cc2b84`) are verified and **deployed**. Ask the user to hard-refresh
+      (Ctrl+Shift+R) to confirm live, then pick the next item below.
 
-## ⬆️ High priority
-- [ ] **Optional: real cartoon avatars for the 6 adults** (Sean, Roy, Han,
-      Sharon, Emily, Clair). They still use emoji. If the user supplies images:
-      drop PNGs in `public/avatars/`, add `avatarUrl` to `OC_ADULTS` in
-      `src/data/easterEgg.ts`. `EasterEggModal` already renders `avatarUrl`.
+> ⚙️ **Deploy policy:** auto build + deploy after every completed change (don't
+> ask each time) — `npm run build` + robocopy mirror (HANDOFF §10).
 
 ## 📦 Medium priority
 - [ ] **Knockout stage** (Round of 32 → Final). Only the 72-match group stage is
@@ -32,6 +28,10 @@
       (`tsc --noEmit`) + manual browser verification.
 
 ## ✅ Done this session
+- [x] Soften country highlight (light gold), remove the focus-box rectangle, fix
+      mobile info-card collapse/close buttons; deployed — `5cc2b84`
+- [x] Real photo avatars for the 6 OC adults (all 12 members now have avatars);
+      deployed — `e6903c5`
 - [x] Lighten the avatar zoom: soft scrim + spring-from-tap animation; built &
       deployed to povatlas.com — `f5d881c`
 - [x] New 512×512 kid avatars + tap-to-enlarge zoom lightbox in the OC easter

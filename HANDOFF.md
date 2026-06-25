@@ -1,6 +1,9 @@
 # POV GoalMap — Session Handoff
 
-> Last updated: 2026-06-24 (new kid avatars + zoom, **deployed**) · Branch: `master` · Working tree: **clean** (all work committed) · HEAD `f5d881c`
+> Last updated: 2026-06-24 (adult avatars + map/mobile UI fixes, **deployed**) · Branch: `master` · Working tree: **clean** (all work committed) · HEAD `5cc2b84`
+>
+> **Deploy policy:** the user wants every completed change auto-deployed (build +
+> robocopy mirror — §10) without being asked each time. Do it after committing.
 
 This document is the single source of truth for picking up work on this project
 in a fresh Claude Code session. Read it top-to-bottom before making changes.
@@ -250,6 +253,16 @@ See `TODO.md` for the live checklist. Summary, highest priority first:
 
 This session's commits (newest first):
 
+- `5cc2b84` — **Soften country highlight, drop focus box, fix mobile card buttons**
+  → `src/components/WorldMap.tsx` (focus fill `#f6c453`@0.85→`#fbe2a0`@0.6, amber
+  border); `src/index.css` (`.leaflet-interactive:focus{outline:none}` kills the
+  rectangle around clicked countries); `src/App.tsx` (drag handle full-width→
+  centred 112px so the mobile card's collapse/close buttons aren't covered).
+  **Deployed.**
+- `e6903c5` — **Real cartoon avatars for the six OC adults** →
+  added `public/avatars/{Sean,Roy,Han,Sharon,Emily,Clair}.png` (512², quantized);
+  `src/data/easterEgg.ts` (avatarUrl on `OC_ADULTS`). All 12 OC members now have
+  photo avatars. **Deployed.**
 - `f5d881c` — **Lighten avatar zoom: soft scrim + spring-from-tap animation** →
   `src/components/EasterEggModal.tsx` (scrim `navy/70 blur-md`→`navy/25 blur-[2px]`;
   enlarged card springs out of the tapped avatar's screen position via WAAPI
@@ -322,23 +335,22 @@ Immediately preceding context (from the continued session, already committed):
 - `dist/`, `node_modules/`, and TS build artifacts (`*.tsbuildinfo`,
   `vite.config.js`, `vite.config.d.ts`, `.vite-*.log`, `.claude/`) are
   git-ignored. They may exist on disk after a build but are never committed.
-- HEAD: `f5d881c Lighten avatar zoom: soft scrim + spring-from-tap animation`
+- HEAD: `5cc2b84 Soften country highlight, drop focus box, fix mobile card buttons`
 
 ---
 
 ## 12. Recommended very next task
 
-**Confirm the new kid avatars + zoom on the user's live site.** The new 512×512
-portraits and the lightened spring-zoom lightbox are committed (`f5d881c`),
-verified in the preview browser, and **already built + deployed** to
-povatlas.com (Resilio mirror; deployed `index.html` asset refs and the 6 new
-avatars verified consistent). Nothing left to ship — just ask the user to
-**hard-refresh (Ctrl+Shift+R)** and re-open the OC easter egg to confirm the live
-result on their device.
+**Nothing outstanding — the backlog is at a clean stopping point.** All 12 OC
+members now have photo avatars, the zoom is lightened, and the three reported map/
+mobile issues (heavy yellow, focus-box rectangle, dead mobile card buttons) are
+fixed, verified, committed (`5cc2b84`), and **deployed** to povatlas.com. Just ask
+the user to **hard-refresh (Ctrl+Shift+R)** to see the live result.
 
-Good follow-on: **optional adult cartoon avatars** (#2 in TODO) if the user
-provides images — drop PNGs in `public/avatars/`, add `avatarUrl` to `OC_ADULTS`
-in `easterEgg.ts`; the enlarge path already works for both images and emoji.
+Pick the next item from `TODO.md` when the user is ready — the biggest remaining
+feature is the **knockout stage** (Round of 32 → Final), not yet modelled in
+`src/data/matches.ts` or standings/stats. Remember to **auto-deploy** after any
+change (see the deploy-policy note at the top).
 
 > Note: the easter egg **can** now be triggered from `preview_eval` — the Leaflet
 > map instance is reachable by walking the React fiber tree from the
