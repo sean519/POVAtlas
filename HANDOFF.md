@@ -1,6 +1,6 @@
 # POV GoalMap — Session Handoff
 
-> Last updated: 2026-06-24 (adult avatars + map/mobile UI fixes, **deployed**) · Branch: `master` · Working tree: **clean** (all work committed) · HEAD `5cc2b84`
+> Last updated: 2026-06-24 (border-only country highlight, **deployed**) · Branch: `master` · Working tree: **clean** (all work committed) · HEAD `c5835fc`
 >
 > **Deploy policy:** the user wants every completed change auto-deployed (build +
 > robocopy mirror — §10) without being asked each time. Do it after committing.
@@ -253,6 +253,9 @@ See `TODO.md` for the live checklist. Summary, highest priority first:
 
 This session's commits (newest first):
 
+- `c5835fc` — **Selected-country highlight: border only, no fill** →
+  `src/components/WorldMap.tsx` (focus `fillOpacity` 0.6→0, border weight 3; the
+  transparent fill keeps the interior clickable). **Deployed.**
 - `5cc2b84` — **Soften country highlight, drop focus box, fix mobile card buttons**
   → `src/components/WorldMap.tsx` (focus fill `#f6c453`@0.85→`#fbe2a0`@0.6, amber
   border); `src/index.css` (`.leaflet-interactive:focus{outline:none}` kills the
@@ -335,7 +338,7 @@ Immediately preceding context (from the continued session, already committed):
 - `dist/`, `node_modules/`, and TS build artifacts (`*.tsbuildinfo`,
   `vite.config.js`, `vite.config.d.ts`, `.vite-*.log`, `.claude/`) are
   git-ignored. They may exist on disk after a build but are never committed.
-- HEAD: `5cc2b84 Soften country highlight, drop focus box, fix mobile card buttons`
+- HEAD: `c5835fc Selected-country highlight: border only, no fill`
 
 ---
 

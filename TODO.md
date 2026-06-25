@@ -28,6 +28,8 @@
       (`tsc --noEmit`) + manual browser verification.
 
 ## ✅ Done this session
+- [x] Selected-country highlight is now border-only (no gold fill); deployed
+      — `c5835fc`
 - [x] Soften country highlight (light gold), remove the focus-box rectangle, fix
       mobile info-card collapse/close buttons; deployed — `5cc2b84`
 - [x] Real photo avatars for the 6 OC adults (all 12 members now have avatars);
