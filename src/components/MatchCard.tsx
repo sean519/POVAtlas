@@ -1,7 +1,11 @@
 import type { Match } from "../types";
 import { getTeamByCode, matchWinChance } from "../utils/dataHelpers";
 import { groupColors } from "../utils/groupColors";
-import { formatKickoff, formatShortDate } from "../utils/formatters";
+import {
+  formatKickoff,
+  formatShortDate,
+  todayInKickoffTz,
+} from "../utils/formatters";
 import Flag from "./Flag";
 import WinChanceBar from "./WinChanceBar";
 
@@ -13,7 +17,10 @@ interface MatchCardProps {
   onClick?: (matchId: string) => void;
 }
 
-const statusStyles: Record<Match["status"], { label: string; className: string }> = {
+const statusStyles: Record<
+  Match["status"],
+  { label: string; className: string }
+> = {
   scheduled: {
     label: "Upcoming",
     className: "bg-slate-100 text-slate-600",
@@ -27,6 +34,16 @@ const statusStyles: Record<Match["status"], { label: string; className: string }
     className: "bg-emerald-100 text-emerald-700",
   },
 };
+
+function statusLabel(match: Match, hasScore: boolean): string {
+  if (match.status === "scheduled" && match.date === todayInKickoffTz()) {
+    return "Today";
+  }
+  if (match.status === "live" && !hasScore) {
+    return "● In progress";
+  }
+  return statusStyles[match.status].label;
+}
 
 /**
  * A single match row: both teams, group, kickoff, venue, score and status.
@@ -74,7 +91,7 @@ export default function MatchCard({
           {formatShortDate(match.date)} · {formatKickoff(match.kickoffTime)}
         </span>
         <span className={`rounded-md px-1.5 py-0.5 font-semibold ${status.className}`}>
-          {status.label}
+          {statusLabel(match, hasScore)}
         </span>
       </div>
 
@@ -93,9 +110,16 @@ export default function MatchCard({
 
         <div className="px-1 text-center">
           {hasScore ? (
-            <span className="rounded-lg bg-brand-navy px-2 py-0.5 text-sm font-bold text-white">
+            <span
+              className={[
+                "rounded-lg px-2 py-0.5 text-sm font-bold text-white",
+                match.status === "live" ? "bg-red-600 animate-pulse" : "bg-brand-navy",
+              ].join(" ")}
+            >
               {match.scoreA} – {match.scoreB}
             </span>
+          ) : match.status === "live" ? (
+            <span className="text-xs font-bold text-red-600 animate-pulse">—</span>
           ) : (
             <span className="text-xs font-bold text-slate-400">vs</span>
           )}

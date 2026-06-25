@@ -1,5 +1,10 @@
 import type { Group, Match, MatchStatus } from "../types";
-import { todayISO } from "../utils/formatters";
+import {
+  kickoffToMinutes,
+  MATCH_DURATION_MINUTES,
+  nowMinutesInKickoffTz,
+  todayInKickoffTz,
+} from "../utils/formatters";
 
 /**
  * 2026 FIFA World Cup group-stage schedule (USA · Canada · Mexico).
@@ -8,20 +13,33 @@ import { todayISO } from "../utils/formatters";
  * pairings, venues and scorelines follow the published tournament schedule
  * and results. Matchday 3 of the early groups (A/B/C) falls on June 24.
  *
- * Match status is derived from the device's current date, so the schedule
- * "updates" day to day: finished before today, live today, upcoming after.
- * Scores are attached to matches that have already been played.
+ * Match status uses the kickoff timezone (PDT): finished after full time,
+ * live between kickoff and ~115 min later, scheduled before kickoff or on
+ * future dates. Scores from the fixture table are kept for finished and
+ * live matches when present.
  *
  * All kickoff times are expressed in US Pacific (PDT, UTC-7); the UI labels
  * them via `KICKOFF_TZ` / `formatKickoff` in utils/formatters.
  */
 
-const TODAY = todayISO();
+const TODAY = todayInKickoffTz();
 
-function statusFor(date: string): MatchStatus {
+function statusFor(date: string, kickoffTime: string): MatchStatus {
   if (date < TODAY) return "finished";
-  if (date === TODAY) return "live";
-  return "scheduled";
+  if (date > TODAY) return "scheduled";
+
+  const kickoff = kickoffToMinutes(kickoffTime);
+  const now = nowMinutesInKickoffTz();
+  if (now < kickoff) return "scheduled";
+  if (now < kickoff + MATCH_DURATION_MINUTES) return "live";
+  return "finished";
+}
+
+function fixtureHasScore(
+  scoreA: number | null,
+  scoreB: number | null
+): scoreA is number {
+  return scoreA !== null && scoreB !== null;
 }
 
 // ---- Host venues (stadium + city) keyed by short code ----
@@ -174,10 +192,11 @@ const FIXTURES: Fixture[] = [
 function buildMatches(): Match[] {
   const result: Match[] = FIXTURES.map(
     ([group, md, date, time, teamA, teamB, venueKey, scoreA, scoreB]) => {
-      const status = statusFor(date);
+      const status = statusFor(date, time);
       const place = VENUES[venueKey];
-      // Only keep scores for matches that have actually been played.
-      const played = status === "finished";
+      const showScore =
+        (status === "finished" || status === "live") &&
+        fixtureHasScore(scoreA, scoreB);
       return {
         matchId: `${group}-MD${md}-${teamA}`,
         date,
@@ -188,8 +207,8 @@ function buildMatches(): Match[] {
         venue: place.venue,
         city: place.city,
         status,
-        scoreA: played ? scoreA : null,
-        scoreB: played ? scoreB : null,
+        scoreA: showScore ? scoreA : null,
+        scoreB: showScore ? scoreB : null,
       };
     }
   );

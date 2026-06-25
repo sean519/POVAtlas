@@ -7,7 +7,7 @@ import StatsView from "./StatsView";
 import PlayersView from "./PlayersView";
 import { ALL_GROUPS } from "../utils/dataHelpers";
 import { groupColors } from "../utils/groupColors";
-import { formatLongDate, todayISO } from "../utils/formatters";
+import { formatLongDate, todayInKickoffTz } from "../utils/formatters";
 
 type Tab = "matches" | "teams" | "standings" | "stats" | "players";
 
@@ -51,7 +51,7 @@ export default function SchedulePanel({
   onSearchChange,
 }: SchedulePanelProps) {
   const [tab, setTab] = useState<Tab>("matches");
-  const today = todayISO();
+  const today = todayInKickoffTz();
 
   // Whole schedule in chronological order, grouped by date (today included).
   const matchesByDate = useMemo(() => {

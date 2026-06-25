@@ -87,12 +87,49 @@ export function formatKickoff(time: string): string {
   return `${time} ${KICKOFF_TZ}`;
 }
 
+/** UTC offset for kickoff times (PDT = UTC-7). Must stay in sync with `KICKOFF_TZ`. */
+const KICKOFF_UTC_OFFSET_HOURS = -7;
+
+/** Typical group-stage window from kickoff to full time (minutes). */
+export const MATCH_DURATION_MINUTES = 115;
+
 /** Today's date as a local "YYYY-MM-DD" string. */
 export function todayISO(): string {
   const d = new Date();
   const m = String(d.getMonth() + 1).padStart(2, "0");
   const day = String(d.getDate()).padStart(2, "0");
   return `${d.getFullYear()}-${m}-${day}`;
+}
+
+/** Current calendar date in the kickoff timezone (YYYY-MM-DD). */
+export function todayInKickoffTz(): string {
+  return clockInKickoffTz().date;
+}
+
+/** Minutes since midnight in the kickoff timezone (0–1439). */
+export function nowMinutesInKickoffTz(): number {
+  return clockInKickoffTz().minutes;
+}
+
+/** Parse "HH:MM" kickoff into minutes since midnight. */
+export function kickoffToMinutes(time: string): number {
+  const [h, m] = time.split(":").map(Number);
+  return h * 60 + m;
+}
+
+function clockInKickoffTz(): { date: string; minutes: number } {
+  // `getTime()` is already absolute (UTC) ms, so shifting by the kickoff
+  // offset and reading the UTC fields yields the kickoff-zone wall clock —
+  // on any machine, regardless of its own timezone.
+  const now = new Date();
+  const tz = new Date(now.getTime() + KICKOFF_UTC_OFFSET_HOURS * 3_600_000);
+  const y = tz.getUTCFullYear();
+  const mo = String(tz.getUTCMonth() + 1).padStart(2, "0");
+  const day = String(tz.getUTCDate()).padStart(2, "0");
+  return {
+    date: `${y}-${mo}-${day}`,
+    minutes: tz.getUTCHours() * 60 + tz.getUTCMinutes(),
+  };
 }
 
 /** Round to at most 2 significant decimals and drop trailing zeros. */
