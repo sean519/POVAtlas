@@ -295,9 +295,11 @@ function MapInfoSheet({
 
   return (
     <div ref={sheetRef} className={className}>
-      {/* Full-width grab handle — only visible on mobile (sm:hidden) */}
+      {/* Centred grab handle — only visible on mobile (sm:hidden). Kept narrow
+          and centred so it never covers the header's collapse/close buttons
+          (top-right) or the flag (top-left), which a full-width strip did. */}
       <div
-        className="absolute inset-x-0 top-0 z-20 flex h-9 cursor-grab touch-none items-start justify-center pt-2.5 active:cursor-grabbing sm:hidden"
+        className="absolute left-1/2 top-0 z-20 flex h-9 w-28 -translate-x-1/2 cursor-grab touch-none items-start justify-center pt-2.5 active:cursor-grabbing sm:hidden"
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={endDrag}

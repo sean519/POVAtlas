@@ -38,6 +38,13 @@ body {
   z-index: 5;
 }
 
+/* Kill the browser's default focus outline on clicked country polygons —
+   otherwise an SVG path shows a rectangular box around its bounding box. */
+.leaflet-container svg path.leaflet-interactive:focus,
+.leaflet-interactive:focus {
+  outline: none;
+}
+
 /* Custom scrollbar for side panels */
 .nice-scroll {
   scrollbar-width: thin;

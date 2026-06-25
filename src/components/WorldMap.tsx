@@ -183,11 +183,13 @@ function GeoLayer({
     const isFocus = focusCode === team.fifaCode;
     const isActive = highlightSet.has(team.fifaCode);
     if (isFocus) {
+      // Soft, warm gold — clearly the primary selection without the heavy,
+      // over-saturated yellow + near-black outline it used to have.
       return {
-        weight: 2.5,
-        color: "#0b1f3a",
-        fillColor: "#f6c453",
-        fillOpacity: 0.85,
+        weight: 2,
+        color: "#dca42f",
+        fillColor: "#fbe2a0",
+        fillOpacity: 0.6,
       };
     }
     if (isActive) {
