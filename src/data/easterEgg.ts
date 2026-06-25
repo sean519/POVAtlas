@@ -17,7 +17,6 @@ export const OC_HQ = {
   lat: 33.7455,
   lng: -117.8677,
   title: "OC居委会 大本营",
-  subtitle: "你发现了隐藏彩蛋! 🎉",
 };
 
 // Trigger: zoom in past this level AND centre the map on OC.

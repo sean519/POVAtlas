@@ -159,7 +159,6 @@ export default function EasterEggModal({ open, onClose }: EasterEggModalProps) {
             <h2 className="text-lg font-extrabold text-brand-navy">
               🏡 {OC_HQ.title}
             </h2>
-            <p className="text-sm text-brand-peach">{OC_HQ.subtitle}</p>
             <p className="mt-0.5 text-[11px] text-slate-400">
               Orange County, California
             </p>
