@@ -1,5 +1,6 @@
 import type { LiveEvent, LiveInfo, LiveMatchWire, MatchStatus } from "../types";
 import { codeForName } from "../utils/teamNameMatch";
+import { utcDate } from "./providerUtils";
 
 /**
  * API-Football (v3, api-sports.io) provider — the primary source. The API key
@@ -97,10 +98,6 @@ export function mapApiFootballFixtures(
     out.push({ teamA, teamB, scoreA, scoreB, status, live });
   }
   return out;
-}
-
-function utcDate(offsetDays: number): string {
-  return new Date(Date.now() + offsetDays * 86_400_000).toISOString().slice(0, 10);
 }
 
 async function afGet<T>(path: string, key: string): Promise<T | null> {

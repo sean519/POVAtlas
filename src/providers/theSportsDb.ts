@@ -1,5 +1,6 @@
 import type { LiveMatchWire, MatchStatus } from "../types";
 import { codeForName } from "../utils/teamNameMatch";
+import { utcDate } from "./providerUtils";
 
 /**
  * TheSportsDB provider — free JSON API (test key "3", CORS-enabled). Used as a
@@ -72,10 +73,6 @@ export function mapTheSportsDbEvents(events: TsdbEvent[]): LiveMatchWire[] {
 }
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
-
-function utcDate(offsetDays: number): string {
-  return new Date(Date.now() + offsetDays * 86_400_000).toISOString().slice(0, 10);
-}
 
 async function fetchDay(dateUtc: string): Promise<TsdbEvent[]> {
   try {

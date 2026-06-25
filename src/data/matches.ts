@@ -279,16 +279,3 @@ export function isLiveWindowNow(): boolean {
     return now >= ko && now < ko + MATCH_DURATION_MINUTES;
   });
 }
-
-/**
- * Integration point for a REAL live schedule / scores.
- *
- * A pure front-end app cannot scrape fifa.com directly (CORS + no public API),
- * so production should call your own small backend / proxy that fetches an
- * official or licensed feed and returns the same `Match[]` shape.
- */
-export async function fetchLiveSchedule(endpoint: string): Promise<Match[]> {
-  const res = await fetch(endpoint);
-  if (!res.ok) throw new Error(`Schedule fetch failed: HTTP ${res.status}`);
-  return (await res.json()) as Match[];
-}
