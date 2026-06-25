@@ -1,11 +1,15 @@
 # POV GoalMap — Session Handoff
 
-> Last updated: 2026-06-24 (live-scores backend + API-Football, frontend **deployed**) · Branch: `master` · Working tree: **clean** (all work committed) · HEAD `f711b18`
+> Last updated: 2026-06-25 (Vercel-from-source live; canonical folder moved) · Branch: `main` · Working tree: **clean** · Live on povatlas.com
 >
-> ✅ **Deploy is now Vercel-builds-from-source (since 2026-06-25).** `F:\world map`
-> has remote `origin = github.com/sean519/POVAtlas` (branch **main**); `git push`
+> 📂 **Canonical project folder: `C:\Resilio Sync\Alltek-Sean\Github\POVAtlas`**
+> (Resilio-synced across machines AND the git clone Vercel builds). Work here, not
+> in `F:\world map` (a retired duplicate clone).
+>
+> ✅ **Deploy is Vercel-builds-from-source (since 2026-06-25).** This folder has
+> remote `origin = github.com/sean519/POVAtlas` (branch **main**); `git push`
 > → Vercel builds (`npm run build`) + runs the `api/` Edge functions → povatlas.com
-> (DNS on Cloudflare). **The old robocopy→Resilio static flow is retired.**
+> (DNS on Cloudflare). **The old robocopy→static flow is retired.**
 > `/api/live-scores` is **live**; it currently uses the TheSportsDB fallback —
 > set `API_FOOTBALL_KEY` in Vercel env to switch the primary to API-Football
 > (DEPLOY.md §E).
@@ -86,7 +90,7 @@ Tone throughout: **kid-friendly, bilingual (English + Simplified Chinese)**.
 ## 3. Current directory structure
 
 ```
-F:\world map\
+C:\Resilio Sync\Alltek-Sean\Github\POVAtlas\   (canonical; F:\world map is a retired clone)
 ├─ HANDOFF.md                ← this file
 ├─ TODO.md                   ← prioritized remaining work
 ├─ README.md
@@ -379,11 +383,14 @@ Immediately preceding context (from the continued session, already committed):
   type defs (dev). See `package.json`.
 
 ### Deployment — Vercel builds from source (current, since 2026-06-25)
-- This repo (`F:\world map`) has remote **`origin = github.com/sean519/POVAtlas`**,
-  production branch **`main`**. Deploy by pushing source:
+- Work in **`C:\Resilio Sync\Alltek-Sean\Github\POVAtlas`** (remote
+  **`origin = github.com/sean519/POVAtlas`**, production branch **`main`**).
+  Deploy by pushing source:
   ```powershell
-  cd "F:\world map"; git add -A; git commit -m "…"; git push
+  cd "C:\Resilio Sync\Alltek-Sean\Github\POVAtlas"; git add -A; git commit -m "…"; git push
   ```
+  Resilio should ignore `node_modules`, `dist`, `.vercel`, `*.tsbuildinfo` so they
+  don't sync across machines.
   Vercel auto-builds (`npm run build`, via `vercel.json`), deploys the `api/`
   Edge function, and serves povatlas.com (DNS managed on **Cloudflare**, already
   pointed at Vercel). Verify a deploy at `https://povatlas.com/api/live-scores`
