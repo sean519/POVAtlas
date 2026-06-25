@@ -2,13 +2,16 @@
 
 > Last updated: 2026-06-24 (live-scores backend + API-Football, frontend **deployed**) · Branch: `master` · Working tree: **clean** (all work committed) · HEAD `f711b18`
 >
-> ⚠️ The `/api/live-scores` **backend only runs on Vercel** — the current static
-> Resilio host can't execute it, so the frontend falls back to direct TheSportsDB
-> there. To activate API-Football: deploy to Vercel + set `API_FOOTBALL_KEY`
-> (DEPLOY.md §E). DNS migration to Vercel is the user's to do.
+> ✅ **Deploy is now Vercel-builds-from-source (since 2026-06-25).** `F:\world map`
+> has remote `origin = github.com/sean519/POVAtlas` (branch **main**); `git push`
+> → Vercel builds (`npm run build`) + runs the `api/` Edge functions → povatlas.com
+> (DNS on Cloudflare). **The old robocopy→Resilio static flow is retired.**
+> `/api/live-scores` is **live**; it currently uses the TheSportsDB fallback —
+> set `API_FOOTBALL_KEY` in Vercel env to switch the primary to API-Football
+> (DEPLOY.md §E).
 >
-> **Deploy policy:** the user wants every completed change auto-deployed (build +
-> robocopy mirror — §10) without being asked each time. Do it after committing.
+> **Deploy policy:** the user wants every completed change auto-deployed without
+> being asked each time — now just `git push` (Vercel builds it; §10).
 
 This document is the single source of truth for picking up work on this project
 in a fresh Claude Code session. Read it top-to-bottom before making changes.
@@ -375,29 +378,36 @@ Immediately preceding context (from the continued session, already committed):
   typescript, vite, tailwindcss, postcss, autoprefixer, @vitejs/plugin-react,
   type defs (dev). See `package.json`.
 
-### Deployment (two paths)
-- **Resilio Sync (current live path):** after `npm run build`, mirror `dist/`
-  into the Resilio folder, then it propagates to the host:
+### Deployment — Vercel builds from source (current, since 2026-06-25)
+- This repo (`F:\world map`) has remote **`origin = github.com/sean519/POVAtlas`**,
+  production branch **`main`**. Deploy by pushing source:
   ```powershell
-  robocopy "F:\world map\dist" "C:\Resilio Sync\Alltek-Sean\Github\POVAtlas" /MIR /XD ".git" /NJH /NJS /NC /NS /NFL
+  cd "F:\world map"; git add -A; git commit -m "…"; git push
   ```
-  robocopy exit codes 0–7 are **success** (3 = files copied + extras removed).
-  After syncing, verify `index.html`'s hashed JS/CSS refs match the files in the
-  deployed `assets/` folder.
-- **Vercel + povatlas.com:** see `DEPLOY.md` (Git remote not yet configured;
-  `public/CNAME` already set).
+  Vercel auto-builds (`npm run build`, via `vercel.json`), deploys the `api/`
+  Edge function, and serves povatlas.com (DNS managed on **Cloudflare**, already
+  pointed at Vercel). Verify a deploy at `https://povatlas.com/api/live-scores`
+  (should return JSON) and by loading the site.
+- **`API_FOOTBALL_KEY`** is a Vercel env var (Settings → Environment Variables);
+  it is the only secret. Without it the live feed uses the TheSportsDB fallback.
+  See `DEPLOY.md` §E.
+- **RETIRED:** the old `robocopy "…\dist" "…\Github\POVAtlas"` flow. That mirrored
+  built static files into a separate git repo; the site is no longer served that
+  way. Do **not** robocopy — it conflicts with the source build. The
+  `C:\Resilio Sync\…\Github\POVAtlas` clone is now stale.
 
 ---
 
 ## 11. Current git status
 
-- Branch: **`master`** (note: PRs would normally target `main`, but this repo's
-  working branch is `master` and there is no configured remote yet).
+- Branch: **`main`** · remote **`origin = github.com/sean519/POVAtlas`** (Vercel's
+  production branch). `git push` deploys. (Renamed from `master` on 2026-06-25
+  when wiring up Vercel-from-source; force-pushed source over the old static repo.)
 - Working tree: **clean** — nothing uncommitted.
 - `dist/`, `node_modules/`, and TS build artifacts (`*.tsbuildinfo`,
   `vite.config.js`, `vite.config.d.ts`, `.vite-*.log`, `.claude/`) are
   git-ignored. They may exist on disk after a build but are never committed.
-- HEAD: `f711b18 Add /api/live-scores backend with API-Football + provider fallback`
+- HEAD: latest doc/infra commit (run `git log --oneline -1`). Backend live on Vercel.
 
 ---
 

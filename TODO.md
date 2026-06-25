@@ -4,11 +4,13 @@
 > Full context lives in [HANDOFF.md](HANDOFF.md).
 
 ## 🔜 Next up (do first)
-- [ ] **Activate the live-scores backend on Vercel.** Code is shipped (`f711b18`);
-      it only runs once the site is on Vercel. User steps: deploy to Vercel (B/C
-      in DEPLOY.md), set env var `API_FOOTBALL_KEY` (DEPLOY.md §E), point
-      povatlas.com DNS at Vercel. Until then the frontend uses the TheSportsDB
-      fallback (already live).
+- [ ] **(Optional) Switch live primary to API-Football.** The backend is LIVE at
+      povatlas.com/api/live-scores (Vercel-from-source), currently using the
+      TheSportsDB fallback (`"source":"thesportsdb"`). To make API-Football the
+      primary, set the `API_FOOTBALL_KEY` env var in Vercel + Redeploy (DEPLOY.md
+      §E). Until then TheSportsDB works fine.
+- Deploy is now **`git push`** (branch `main` → `sean519/POVAtlas` → Vercel).
+  Robocopy flow is retired — see HANDOFF §10.
 
 > ⚙️ **Deploy policy:** auto build + deploy after every completed change (don't
 > ask each time) — `npm run build` + robocopy mirror (HANDOFF §10).
