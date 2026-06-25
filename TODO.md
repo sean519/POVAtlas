@@ -28,6 +28,9 @@
       (`tsc --noEmit`) + manual browser verification.
 
 ## ✅ Done this session
+- [x] Kickoff-aware match status (PDT date+time): no more false "Live" before
+      kickoff; scheduled→live→finished; live scores feed standings; fixed a tz
+      double-offset bug; deployed — `e8b45ae`
 - [x] Selected-country highlight is now border-only (no gold fill); deployed
       — `c5835fc`
 - [x] Soften country highlight (light gold), remove the focus-box rectangle, fix

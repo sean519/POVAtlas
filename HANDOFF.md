@@ -1,6 +1,6 @@
 # POV GoalMap — Session Handoff
 
-> Last updated: 2026-06-24 (border-only country highlight, **deployed**) · Branch: `master` · Working tree: **clean** (all work committed) · HEAD `c5835fc`
+> Last updated: 2026-06-24 (kickoff-aware match status, **deployed**) · Branch: `master` · Working tree: **clean** (all work committed) · HEAD `e8b45ae`
 >
 > **Deploy policy:** the user wants every completed change auto-deployed (build +
 > robocopy mirror — §10) without being asked each time. Do it after committing.
@@ -206,9 +206,16 @@ See `TODO.md` for the live checklist. Summary, highest priority first:
    noted in inline comments). There is no `Intl`/Date tz math; if the schedule
    source changes, times must be re-edited by hand. (Note: earlier commits said
    "PST"; it was corrected to "PDT" since June is daylight time.)
-3. **Match status depends on the device clock.** `statusFor()` compares fixture
-   dates to `todayISO()`. On 2026-06-24 (the date used while building), Groups
-   A/B/C matchday 3 show as "live". Behaviour shifts with the real date.
+3. **Match status is derived from the device clock (kickoff-aware).**
+   `statusFor(date, time)` now uses the PDT wall clock (`todayInKickoffTz()` /
+   `nowMinutesInKickoffTz()` in `formatters.ts`): finished before match day,
+   scheduled after, and on match day scheduled→live (kickoff..+115 min)→finished.
+   So it still shifts with the real date/time, but no longer falsely marks a
+   whole day "live" before kickoff. Live matches show their score if one is set
+   in `FIXTURES`, and standings/stats count any match with a score (`hasScore`).
+   The tz math lives in `clockInKickoffTz()` — it shifts the absolute time by the
+   `KICKOFF_UTC_OFFSET_HOURS` and reads `getUTC*` (don't re-add
+   `getTimezoneOffset()`; that double-shift returned UTC and broke "today").
 4. **Avatar PNGs are committed to the repo** (~210KB total). Fine for now, but
    they are binary assets in git.
 5. **No automated tests / no ESLint.** `npm run lint` is just `tsc --noEmit`.
@@ -253,6 +260,14 @@ See `TODO.md` for the live checklist. Summary, highest priority first:
 
 This session's commits (newest first):
 
+- `e8b45ae` — **Kickoff-aware match status (fix everything-shows-Live bug)** →
+  `src/data/matches.ts` (`statusFor(date, time)` scheduled→live→finished on the
+  PDT clock; scores kept for live too); `src/utils/formatters.ts` (new
+  `todayInKickoffTz`/`nowMinutesInKickoffTz`/`kickoffToMinutes`/
+  `MATCH_DURATION_MINUTES`; **fixed** `clockInKickoffTz` double-offset that
+  returned UTC); `src/components/MatchCard.tsx` ("Today"/"● In progress"/"● Live"/
+  "Full time" labels + red live styling); `src/components/SchedulePanel.tsx`
+  (Today section uses PDT). **Deployed.**
 - `c5835fc` — **Selected-country highlight: border only, no fill** →
   `src/components/WorldMap.tsx` (focus `fillOpacity` 0.6→0, border weight 3; the
   transparent fill keeps the interior clickable). **Deployed.**
@@ -338,7 +353,7 @@ Immediately preceding context (from the continued session, already committed):
 - `dist/`, `node_modules/`, and TS build artifacts (`*.tsbuildinfo`,
   `vite.config.js`, `vite.config.d.ts`, `.vite-*.log`, `.claude/`) are
   git-ignored. They may exist on disk after a build but are never committed.
-- HEAD: `c5835fc Selected-country highlight: border only, no fill`
+- HEAD: `e8b45ae Kickoff-aware match status (fix everything-shows-Live bug)`
 
 ---
 
