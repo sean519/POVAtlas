@@ -69,6 +69,23 @@ export interface LiveScoresResponse {
   matches: LiveMatchWire[];
 }
 
+/** Outfield position bucket used to group a full match-day squad. */
+export type SquadPosition = "GK" | "DF" | "MF" | "FW";
+
+/**
+ * One member of a national team's full 26-player World Cup squad.
+ * Lighter than `StarPlayer`: just the roster facts (no fame/buzz). A member who
+ * is also a curated star is linked to their `StarPlayer` profile by name.
+ */
+export interface SquadMember {
+  /** Shirt number (1-26). */
+  number: number;
+  name: string;
+  position: SquadPosition;
+  /** Club the player was at when the squad was announced. */
+  club: string;
+}
+
 export interface StarPlayer {
   name: string;
   position: string;

@@ -2,11 +2,13 @@ import { teams } from "../data/teams";
 import { matches } from "../data/matches";
 import { countryFacts } from "../data/countryFacts";
 import { teamExtras, type TeamExtra } from "../data/teamExtras";
+import { squads } from "../data/squads";
 import type {
   CountryComparison,
   CountryFacts,
   Group,
   Match,
+  SquadMember,
   StandingRow,
   StarPlayer,
   Team,
@@ -158,6 +160,15 @@ export function getTeamExtras(
 /** Star players for a team (empty array if none). */
 export function getStarPlayers(code: string | null | undefined): StarPlayer[] {
   return getTeamExtras(code)?.starPlayers ?? [];
+}
+
+/**
+ * Full 26-player squad for a team (empty array if not curated yet). The Squad
+ * tab uses this; when empty it falls back to the curated star players.
+ */
+export function getSquad(code: string | null | undefined): SquadMember[] {
+  if (!code) return [];
+  return squads[code] ?? [];
 }
 
 /** True once a match has a usable score (finished or live in progress). */
