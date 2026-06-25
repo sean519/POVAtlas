@@ -183,13 +183,14 @@ function GeoLayer({
     const isFocus = focusCode === team.fifaCode;
     const isActive = highlightSet.has(team.fifaCode);
     if (isFocus) {
-      // Soft, warm gold — clearly the primary selection without the heavy,
-      // over-saturated yellow + near-black outline it used to have.
+      // Outline-only highlight: a clear gold border, no fill — so the selected
+      // country is marked without the heavy yellow wash. fillOpacity 0 keeps a
+      // transparent fill so the interior stays clickable.
       return {
-        weight: 2,
+        weight: 3,
         color: "#dca42f",
         fillColor: "#fbe2a0",
-        fillOpacity: 0.6,
+        fillOpacity: 0,
       };
     }
     if (isActive) {
