@@ -1,12 +1,30 @@
-# World Cup Geography Map 🌍⚽
+# POV Atlas 🌍⚽
 
-An interactive, educational web app that pairs the World Cup schedule with a
-world map so you can **learn where every team's country is** and explore facts
-like population, GDP, capital, language, area, region and fun facts.
+An interactive atlas that turns global **events** into gateways for discovering
+the world. The first event lens is the **2026 FIFA World Cup**: pair the schedule
+with an interactive world map and explore every nation's geography, culture, and
+data — population, GDP, capital, languages, area, region, fun facts, must-see
+places, and squads.
 
 Built with **React + TypeScript + Vite + Tailwind CSS + React-Leaflet**.
 
 ![Layout: schedule on the left, interactive map in the middle, country info on the right.](https://img.shields.io/badge/stack-React%20%7C%20TypeScript%20%7C%20Vite%20%7C%20Tailwind%20%7C%20Leaflet-11487f)
+
+---
+
+## Mission & Vision
+
+**Mission:** POV Atlas helps people understand the world through sports,
+geography, culture, and data.
+
+**Vision:** Build the world's most engaging interactive atlas, where every event
+becomes a gateway to discovering countries, cultures, history, and the stories
+that connect our world.
+
+> POV Atlas is **not** only a kids' website. It's an interactive atlas for anyone
+> curious about the world — the optional **Learn Mode** simply makes the same
+> content approachable for younger readers. The 2026 World Cup is the first event
+> lens; the platform is designed to extend to other global events over time.
 
 ---
 

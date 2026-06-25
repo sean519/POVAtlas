@@ -32,9 +32,20 @@ in a fresh Claude Code session. Read it top-to-bottom before making changes.
 
 ## 1. Project overview
 
-**POV GoalMap** (a.k.a. "World Cup Geography Map", product/domain name **POVatlas.com**)
-is a kid-friendly, single-page web app that teaches world geography through the
-**2026 FIFA World Cup** (USA · Canada · Mexico).
+**POV Atlas** (formerly "POV GoalMap" / "World Cup Geography Map", domain
+**POVatlas.com**) is an interactive atlas that turns global **events** into
+gateways for exploring the world. The first event lens is the **2026 FIFA World
+Cup** (USA · Canada · Mexico).
+
+> **Mission:** POV Atlas helps people understand the world through sports,
+> geography, culture, and data.
+> **Vision:** Build the world's most engaging interactive atlas, where every event
+> becomes a gateway to discovering countries, cultures, history, and the stories
+> that connect our world.
+
+It is **not** only a kids' site — it's for anyone curious about the world; the
+optional Learn Mode just makes the same content approachable for younger readers.
+The platform is designed to extend to other global events over time.
 
 The user explores an interactive world map where every qualified nation is
 clickable. Selecting a team opens a country profile (facts, fun facts, must-see
@@ -55,7 +66,8 @@ reveals the "OC居委会 大本营" — a card of the real friend group (6 adult
 kids) with cartoon avatars and tappable cheers. This is a personal touch for the
 intended audience.
 
-Tone throughout: **kid-friendly, bilingual (English + Simplified Chinese)**.
+Tone throughout: **welcoming and accessible, bilingual (English + Simplified
+Chinese)** — clear enough for kids (via Learn Mode) but substantive for adults.
 
 ---
 
