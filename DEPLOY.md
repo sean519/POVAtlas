@@ -79,9 +79,33 @@ Every future `git push` to `main` redeploys automatically.
 
 ---
 
+## E. Live scores backend (`/api/live-scores`)
+
+The app auto-fetches live World Cup scores. There is a serverless route at
+`api/live-scores.ts` (a Vercel **Edge function**) that calls **API-Football**
+first and falls back to the free **TheSportsDB**. Vercel auto-detects the
+`api/` folder — no extra config.
+
+To turn it on:
+
+1. Get an **API-Football** key (https://www.api-football.com — free tier
+   available; for sustained live polling a paid tier is recommended).
+2. In your Vercel project → **Settings → Environment Variables**, add:
+   - **Name:** `API_FOOTBALL_KEY`  **Value:** your key  (all environments)
+3. Redeploy (push, or **Deployments → Redeploy**).
+
+The key is read **only** server-side (`process.env.API_FOOTBALL_KEY`) and never
+reaches the browser. **Until this is set up** (e.g. while the site is still
+served as a plain static build), the front-end automatically falls back to
+calling TheSportsDB directly, so scores still work — just without the
+API-Football data quality / events.
+
+> Local test: `npm i -g vercel`, then `vercel dev` runs the function at
+> `http://localhost:3000/api/live-scores` (set `API_FOOTBALL_KEY` in `.env`).
+
 ## Notes
 
-- The app loads flags (flagcdn), map tiles (CARTO/OpenStreetMap) and country
-  borders (GitHub) over HTTPS at runtime — they work from any host, no config.
+- The app loads flags (flagcdn), map tiles (CARTO/OpenStreetMap), country
+  borders (GitHub) and live scores (see §E) over HTTPS at runtime.
 - To change the browser tab title, edit `<title>` in `index.html`.
-- No environment variables or secrets are needed.
+- Only secret needed is `API_FOOTBALL_KEY` (optional — see §E).

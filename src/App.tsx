@@ -8,9 +8,9 @@ import CountryComparisonCard from "./components/CountryComparisonCard";
 import EasterEggModal from "./components/EasterEggModal";
 import PlayerModal from "./components/PlayerModal";
 import Flag from "./components/Flag";
-import type { Match, StarPlayer, Team } from "./types";
+import type { LiveScoresResponse, Match, StarPlayer, Team } from "./types";
 import { teams } from "./data/teams";
-import { matches, mergeLiveScores } from "./data/matches";
+import { matches, mergeLiveScores, isLiveWindowNow } from "./data/matches";
 import { fetchLiveScores } from "./utils/liveScores";
 import {
   compareCountries,
@@ -43,23 +43,39 @@ export default function App() {
   const [focusMapSignal, setFocusMapSignal] = useState(0);
   const surfaceMap = () => setFocusMapSignal((n) => n + 1);
 
-  // ---- Live scores: poll a free feed and overlay onto the bundled fixtures ----
+  // ---- Live scores: poll the backend (/api/live-scores) and overlay results ----
   const [liveMatches, setLiveMatches] = useState<Match[]>(matches);
+  const [liveMeta, setLiveMeta] = useState<{
+    updatedAt: string;
+    source: string;
+    stale: boolean;
+  } | null>(null);
   useEffect(() => {
     let cancelled = false;
-    const poll = async () => {
+    let timer: number | undefined;
+    const tick = async () => {
+      let res: LiveScoresResponse | null = null;
       try {
-        const live = await fetchLiveScores();
-        if (!cancelled) setLiveMatches(mergeLiveScores(matches, live));
+        res = await fetchLiveScores();
       } catch {
-        // Unofficial/rate-limited feed — keep the last good data on failure.
+        res = null; // total failure → keep last good scores + last meta (req #9)
       }
+      if (cancelled) return;
+      if (res && res.matches.length > 0) {
+        setLiveMatches(mergeLiveScores(matches, res.matches));
+        setLiveMeta({ updatedAt: res.updatedAt, source: res.source, stale: res.stale });
+      } else if (res) {
+        setLiveMeta((prev) => prev ?? { updatedAt: res.updatedAt, source: res.source, stale: res.stale });
+      }
+      // Poll every 30s only while a match is live; otherwise a slow heartbeat.
+      const liveNow =
+        isLiveWindowNow() || (res?.matches.some((m) => m.status === "live") ?? false);
+      timer = window.setTimeout(tick, liveNow ? 30_000 : 5 * 60_000);
     };
-    poll();
-    const id = window.setInterval(poll, 60_000);
+    tick();
     return () => {
       cancelled = true;
-      window.clearInterval(id);
+      if (timer) window.clearTimeout(timer);
     };
   }, []);
 
@@ -215,6 +231,7 @@ export default function App() {
         <SchedulePanel
           matches={filteredMatches}
           allMatches={liveMatches}
+          liveMeta={liveMeta}
           teams={filteredTeams}
           hoveredTeamCode={hoveredTeamCode}
           selectedTeamCode={selectedTeamCode}

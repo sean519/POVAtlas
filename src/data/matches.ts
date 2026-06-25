@@ -1,4 +1,4 @@
-import type { Group, Match, MatchStatus } from "../types";
+import type { Group, LiveInfo, LiveMatchWire, Match, MatchStatus } from "../types";
 import {
   kickoffToMinutes,
   MATCH_DURATION_MINUTES,
@@ -223,40 +223,61 @@ function buildMatches(): Match[] {
 
 export const matches: Match[] = buildMatches();
 
-/** A live result for one fixture, keyed by the two team fifaCodes. */
-export interface LiveResult {
-  teamA: string;
-  teamB: string;
-  scoreA: number;
-  scoreB: number;
-  status: MatchStatus;
-}
-
 /**
  * Overlay live/finished results onto the base fixtures, returning a NEW array
  * (only changed matches get new objects, so React memoisation stays cheap).
  * Matches are keyed by the unordered team pair — each pair meets once in the
- * group stage — and scores are oriented to our home/away ordering.
+ * group stage — and scores/live detail are oriented to our home/away ordering.
  */
-export function mergeLiveScores(base: Match[], live: LiveResult[]): Match[] {
+export function mergeLiveScores(base: Match[], live: LiveMatchWire[]): Match[] {
   if (live.length === 0) return base;
-  const byPair = new Map<string, LiveResult>();
+  const byPair = new Map<string, LiveMatchWire>();
   for (const r of live) byPair.set([r.teamA, r.teamB].sort().join("|"), r);
 
   let changed = false;
   const next = base.map((m) => {
     const r = byPair.get([m.teamA, m.teamB].sort().join("|"));
-    if (!r) return m;
-    // Orient the live scores to this fixture's teamA/teamB.
-    const scoreA = r.teamA === m.teamA ? r.scoreA : r.scoreB;
-    const scoreB = r.teamA === m.teamA ? r.scoreB : r.scoreA;
-    if (m.scoreA === scoreA && m.scoreB === scoreB && m.status === r.status) {
+    if (r?.scoreA == null || r.scoreB == null) return m;
+    // Orient the live values to this fixture's teamA/teamB.
+    const flip = r.teamA !== m.teamA;
+    const scoreA = flip ? r.scoreB : r.scoreA;
+    const scoreB = flip ? r.scoreA : r.scoreB;
+    const live = r.live ? orientLive(r.live, flip) : undefined;
+    if (
+      m.scoreA === scoreA &&
+      m.scoreB === scoreB &&
+      m.status === r.status &&
+      JSON.stringify(m.live) === JSON.stringify(live)
+    ) {
       return m;
     }
     changed = true;
-    return { ...m, scoreA, scoreB, status: r.status };
+    return { ...m, scoreA, scoreB, status: r.status, live };
   });
   return changed ? next : base;
+}
+
+/** Swap the A/B-specific live fields when the provider's home/away is reversed. */
+function orientLive(live: LiveInfo, flip: boolean): LiveInfo {
+  if (!flip) return live;
+  return {
+    ...live,
+    halftimeA: live.halftimeB,
+    halftimeB: live.halftimeA,
+    redCardsA: live.redCardsB,
+    redCardsB: live.redCardsA,
+  };
+}
+
+/** True if any fixture is currently inside its live window (fresh clock read). */
+export function isLiveWindowNow(): boolean {
+  const today = todayInKickoffTz();
+  const now = nowMinutesInKickoffTz();
+  return FIXTURES.some(([, , date, time]) => {
+    if (date !== today) return false;
+    const ko = kickoffToMinutes(time);
+    return now >= ko && now < ko + MATCH_DURATION_MINUTES;
+  });
 }
 
 /**

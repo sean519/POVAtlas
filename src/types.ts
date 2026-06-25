@@ -24,6 +24,51 @@ export type Continent =
 
 export type MatchStatus = "scheduled" | "live" | "finished";
 
+/** A single in-match event surfaced from a live provider. */
+export interface LiveEvent {
+  /** fifaCode of the team involved. */
+  team: string;
+  type: "goal" | "red-card";
+  /** Minute it happened (best-effort). */
+  minute: number | null;
+  player?: string;
+}
+
+/** Live detail for an in-progress / just-finished match. */
+export interface LiveInfo {
+  /** Provider's stage, normalised: e.g. "1H","HT","2H","ET","PEN","FT". */
+  stage: string;
+  /** Elapsed minutes while in play (null otherwise). */
+  minute: number | null;
+  halftimeA: number | null;
+  halftimeB: number | null;
+  redCardsA: number;
+  redCardsB: number;
+  events: LiveEvent[];
+}
+
+/** Provider-agnostic live result for one fixture (the API wire shape). */
+export interface LiveMatchWire {
+  /** fifaCode of each side (already matched to our team data). */
+  teamA: string;
+  teamB: string;
+  scoreA: number | null;
+  scoreB: number | null;
+  status: MatchStatus;
+  live?: LiveInfo;
+}
+
+/** Response shape of the `/api/live-scores` route. */
+export interface LiveScoresResponse {
+  /** ISO timestamp the data was produced/cached. */
+  updatedAt: string;
+  /** Which provider served it (e.g. "api-football", "thesportsdb", "cache"). */
+  source: string;
+  /** True when served from cache after a live fetch failed. */
+  stale: boolean;
+  matches: LiveMatchWire[];
+}
+
 export interface StarPlayer {
   name: string;
   position: string;
@@ -115,6 +160,8 @@ export interface Match {
   status: MatchStatus;
   scoreA: number | null;
   scoreB: number | null;
+  /** Present when a live provider has in-match detail for this fixture. */
+  live?: LiveInfo;
 }
 
 export interface CountryFacts {

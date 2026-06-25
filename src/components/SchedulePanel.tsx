@@ -23,6 +23,8 @@ interface SchedulePanelProps {
   matches: Match[];
   /** Full (unfiltered) match list with live scores — for standings/stats. */
   allMatches: Match[];
+  /** Live-feed status line ("Last updated …"); null until the first fetch. */
+  liveMeta: { updatedAt: string; source: string; stale: boolean } | null;
   teams: Team[];
   hoveredTeamCode: string | null;
   selectedTeamCode: string | null;
@@ -37,9 +39,22 @@ interface SchedulePanelProps {
   onSearchChange: (v: string) => void;
 }
 
+/** Local clock label (HH:MM:SS) for the "Last updated" line. */
+function formatClock(iso: string): string {
+  const d = new Date(iso);
+  return Number.isNaN(d.getTime())
+    ? ""
+    : d.toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+      });
+}
+
 export default function SchedulePanel({
   matches,
   allMatches,
+  liveMeta,
   teams,
   hoveredTeamCode,
   selectedTeamCode,
@@ -143,6 +158,12 @@ export default function SchedulePanel({
 
       {/* Content */}
       <div className="nice-scroll flex-1 overflow-y-auto p-3">
+        {tab === "matches" && liveMeta && (
+          <p className="mb-2 text-center text-[10px] text-slate-400">
+            Last updated: {formatClock(liveMeta.updatedAt)}
+            {liveMeta.stale && " · showing last cached"}
+          </p>
+        )}
         {tab === "matches" &&
           (matchesByDate.length === 0 ? (
             <EmptyState label="No matches match your search." />

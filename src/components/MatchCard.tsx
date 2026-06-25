@@ -39,10 +39,24 @@ function statusLabel(match: Match, hasScore: boolean): string {
   if (match.status === "scheduled" && match.date === todayInKickoffTz()) {
     return "Today";
   }
-  if (match.status === "live" && !hasScore) {
-    return "● In progress";
+  if (match.status === "live") {
+    const stage = match.live?.stage;
+    const minute = match.live?.minute;
+    if (stage === "HT") return "● HT";
+    if (typeof minute === "number") return `● ${minute}'`;
+    return hasScore ? "● Live" : "● In progress";
   }
   return statusStyles[match.status].label;
+}
+
+/** Small red-card chip, e.g. 🟥2, shown next to a team that has red cards. */
+function RedCards({ n }: { n: number | undefined }) {
+  if (!n) return null;
+  return (
+    <span className="ml-1 inline-flex items-center rounded-sm bg-red-50 px-1 text-[10px] font-bold text-red-600">
+      🟥{n > 1 ? n : ""}
+    </span>
+  );
 }
 
 /**
@@ -101,6 +115,7 @@ export default function MatchCard({
           <span className="min-w-0 leading-tight">
             <span className="block truncate text-sm font-semibold">
               {teamA.teamName}
+              <RedCards n={match.live?.redCardsA} />
             </span>
             <span className="block truncate text-[11px] text-slate-400">
               {teamA.nameZh}
@@ -129,6 +144,7 @@ export default function MatchCard({
           <span className="min-w-0 leading-tight">
             <span className="block truncate text-sm font-semibold">
               {teamB.teamName}
+              <RedCards n={match.live?.redCardsB} />
             </span>
             <span className="block truncate text-[11px] text-slate-400">
               {teamB.nameZh}
