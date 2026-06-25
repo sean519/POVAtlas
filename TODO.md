@@ -20,14 +20,19 @@
       with real data if desired (currently labelled illustrative in the UI).
 
 ## 🧊 Low priority / stretch
-- [ ] **Live data integration.** `fetchLiveSchedule(endpoint)` seam exists in
-      `matches.ts` but is unused; needs a backend/proxy (no free CORS FIFA API).
+- [ ] **Improve live data (optional).** Client-side auto-fetch is live
+      (`liveScores.ts`, TheSportsDB free key). Follow-ups: serverless proxy for a
+      paid/reliable key + better coverage; auto-fetch Golden Boot scorers; grow
+      the team-name alias table if a fixture fails to map.
 - [ ] **Expose the Leaflet map on `window` in dev** so the easter egg can be
       triggered from `preview_eval` (see Known bug #1 in HANDOFF).
 - [ ] **Add tests / ESLint.** Currently the only check is `npm run lint`
       (`tsc --noEmit`) + manual browser verification.
 
 ## ✅ Done this session
+- [x] Auto-fetch live World Cup scores client-side (TheSportsDB free API);
+      overlay onto fixtures; standings/stats recompute from live data; deployed
+      — `efef041`
 - [x] Kickoff-aware match status (PDT date+time): no more false "Live" before
       kickoff; scheduled→live→finished; live scores feed standings; fixed a tz
       double-offset bug; deployed — `e8b45ae`

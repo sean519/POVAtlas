@@ -1,6 +1,6 @@
 # POV GoalMap — Session Handoff
 
-> Last updated: 2026-06-24 (kickoff-aware match status, **deployed**) · Branch: `master` · Working tree: **clean** (all work committed) · HEAD `e8b45ae`
+> Last updated: 2026-06-24 (live score auto-fetch, **deployed**) · Branch: `master` · Working tree: **clean** (all work committed) · HEAD `efef041`
 >
 > **Deploy policy:** the user wants every completed change auto-deployed (build +
 > robocopy mirror — §10) without being asked each time. Do it after committing.
@@ -30,9 +30,13 @@ tourist sights, star players); selecting a match opens a head-to-head country
 comparison with an estimated win chance. There are also tabs for the full match
 schedule, group standings, tournament stats, and a ranked players list.
 
-It is a **pure front-end static app** — no backend, no database, no API keys.
-All data is hand-curated in `src/data/*.ts`. Flag images come from the public
-`flagcdn.com` CDN; everything else is bundled.
+It is a **front-end static app** — no backend, no database, no API keys. Data is
+hand-curated in `src/data/*.ts`, but **live match scores are now auto-fetched**
+client-side from TheSportsDB's free CORS API (`src/utils/liveScores.ts`, polled
+every 60s) and overlaid onto the bundled fixtures. Flag images come from the
+public `flagcdn.com` CDN; everything else is bundled. (Aside from those two
+public CDNs the app is self-contained — if the score feed is down it silently
+keeps the bundled fixture data.)
 
 There is a **hidden easter egg**: zooming the map deep into Orange County, CA
 reveals the "OC居委会 大本营" — a card of the real friend group (6 adults + 6
@@ -185,8 +189,12 @@ See `TODO.md` for the live checklist. Summary, highest priority first:
    a snapshot and several are illustrative.
 5. **Replace illustrative Golden Boot tallies** (`topScorers.ts`) with real data
    if/when desired — currently labelled as illustrative in the UI.
-6. **Live data integration (stretch).** `fetchLiveSchedule(endpoint)` exists in
-   `matches.ts` as an integration point but is unused; would need a backend/proxy.
+6. **Live data integration — DONE (client-side).** Implemented via
+   `src/utils/liveScores.ts` (TheSportsDB free API, polled every 60s, overlaid by
+   `mergeLiveScores`). Possible follow-ups: a serverless proxy to hide a paid key
+   / improve reliability and coverage; auto-fetch Golden Boot scorers too; expand
+   the team-name alias table if a fixture fails to map. The older
+   `fetchLiveSchedule(endpoint)` seam in `matches.ts` is still unused.
 
 ---
 
@@ -221,7 +229,14 @@ See `TODO.md` for the live checklist. Summary, highest priority first:
 5. **No automated tests / no ESLint.** `npm run lint` is just `tsc --noEmit`.
    Type-check + manual browser verification is the only safety net.
 6. **Scores/scorers are partly illustrative**, clearly labelled as such in the
-   Stats UI, but worth remembering they are not all official.
+   Stats UI, but worth remembering they are not all official. Live auto-fetched
+   results override the bundled fixture scores for matches the feed covers.
+7. **Live score feed is unofficial + best-effort.** TheSportsDB's free shared key
+   "3" is rate-limited (requests are sequenced to cope) and coverage is partial —
+   some fixtures never appear (e.g. on 2026-06-24, MEX-CZE and BIH-QAT were
+   missing) and those keep the bundled data. Team names are matched by an alias
+   table (`liveScores.ts`); a new spelling would silently fail to map. Topscorers
+   (Golden Boot) are NOT fetched — still the static `topScorers.ts`.
 
 ---
 
@@ -260,6 +275,14 @@ See `TODO.md` for the live checklist. Summary, highest priority first:
 
 This session's commits (newest first):
 
+- `efef041` — **Auto-fetch live World Cup scores (front-end, free API)** →
+  new `src/utils/liveScores.ts` (polls TheSportsDB free key "3", CORS-OK; maps
+  team names→fifaCode; yesterday/today/tomorrow UTC, sequential to dodge rate
+  limits); `src/data/matches.ts` (`mergeLiveScores` overlay by unordered pair);
+  `src/App.tsx` (poll every 60s into `liveMatches` state, threaded everywhere +
+  `allMatches` prop); `dataHelpers` standings/stats/getMatchesForTeam take an
+  optional matches arg; `SchedulePanel`/`StandingsView`/`StatsView` recompute
+  from the live list. **Deployed.** This is the app's first network dependency.
 - `e8b45ae` — **Kickoff-aware match status (fix everything-shows-Live bug)** →
   `src/data/matches.ts` (`statusFor(date, time)` scheduled→live→finished on the
   PDT clock; scores kept for live too); `src/utils/formatters.ts` (new
@@ -353,7 +376,7 @@ Immediately preceding context (from the continued session, already committed):
 - `dist/`, `node_modules/`, and TS build artifacts (`*.tsbuildinfo`,
   `vite.config.js`, `vite.config.d.ts`, `.vite-*.log`, `.claude/`) are
   git-ignored. They may exist on disk after a build but are never committed.
-- HEAD: `e8b45ae Kickoff-aware match status (fix everything-shows-Live bug)`
+- HEAD: `efef041 Auto-fetch live World Cup scores (front-end, free API)`
 
 ---
 
