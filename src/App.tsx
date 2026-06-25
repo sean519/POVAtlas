@@ -219,6 +219,7 @@ export default function App() {
           onCollapse={() => setInfoCollapsed(true)}
           onHoverMatch={setHoveredMatchId}
           onSelectMatch={selectMatch}
+          onSelectPlayer={(team, player) => setSelectedPlayer({ team, player })}
         />
       </MapInfoSheet>
     );

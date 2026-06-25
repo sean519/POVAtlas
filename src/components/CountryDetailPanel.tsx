@@ -1,10 +1,10 @@
-import type { ReactNode } from "react";
-import type { CountryFacts, Match, Team } from "../types";
+import { useState, type ReactNode } from "react";
+import type { CountryFacts, Match, StarPlayer, Team } from "../types";
 import { groupColors } from "../utils/groupColors";
 import { getStarPlayers } from "../utils/dataHelpers";
 import MatchCard from "./MatchCard";
 import Flag from "./Flag";
-import StarPlayers from "./StarPlayers";
+import Squad from "./Squad";
 import {
   formatArea,
   formatGDP,
@@ -22,7 +22,10 @@ interface CountryDetailPanelProps {
   onCollapse?: () => void;
   onHoverMatch: (id: string | null) => void;
   onSelectMatch: (id: string) => void;
+  onSelectPlayer: (team: Team, player: StarPlayer) => void;
 }
+
+type DetailTab = "country" | "squad";
 
 export default function CountryDetailPanel({
   team,
@@ -34,9 +37,11 @@ export default function CountryDetailPanel({
   onCollapse,
   onHoverMatch,
   onSelectMatch,
+  onSelectPlayer,
 }: CountryDetailPanelProps) {
   const c = groupColors[team.group];
   const stars = getStarPlayers(team.fifaCode);
+  const [tab, setTab] = useState<DetailTab>("country");
 
   return (
     <div className="flex h-full flex-col">
@@ -88,56 +93,109 @@ export default function CountryDetailPanel({
         </div>
       </div>
 
+      {/* Tabs */}
+      <div className="flex border-b border-slate-200 bg-white px-2">
+        <TabButton
+          active={tab === "country"}
+          onClick={() => setTab("country")}
+          icon="🌍"
+          label="Country"
+        />
+        <TabButton
+          active={tab === "squad"}
+          onClick={() => setTab("squad")}
+          icon="👕"
+          label="Squad"
+          count={stars.length || undefined}
+        />
+      </div>
+
       <div className="nice-scroll flex-1 overflow-y-auto p-4">
-        {team.specialBoundaryNote && (
-          <p className="mb-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
-            ⚠️ {team.specialBoundaryNote}
-          </p>
-        )}
+        {tab === "country" ? (
+          <>
+            {team.specialBoundaryNote && (
+              <p className="mb-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+                ⚠️ {team.specialBoundaryNote}
+              </p>
+            )}
 
-        {!facts ? (
-          <p className="rounded-lg bg-slate-50 px-3 py-4 text-center text-sm text-slate-500">
-            Detailed facts for this country are not available in the sample data
-            yet.
-          </p>
+            {!facts ? (
+              <p className="rounded-lg bg-slate-50 px-3 py-4 text-center text-sm text-slate-500">
+                Detailed facts for this country are not available in the sample
+                data yet.
+              </p>
+            ) : (
+              <StandardFacts facts={facts} />
+            )}
+
+            {/* Matches */}
+            <section className="mt-5">
+              <h3 className="mb-2 text-xs font-bold uppercase tracking-wide text-brand-blue">
+                {team.teamName}&rsquo;s matches
+              </h3>
+              {matches.length === 0 ? (
+                <p className="text-sm text-slate-400">
+                  No matches in the schedule yet.
+                </p>
+              ) : (
+                <div className="space-y-2">
+                  {matches.map((m) => (
+                    <MatchCard
+                      key={m.matchId}
+                      match={m}
+                      selected={selectedMatchId === m.matchId}
+                      hovered={hoveredMatchId === m.matchId}
+                      onHover={onHoverMatch}
+                      onClick={onSelectMatch}
+                    />
+                  ))}
+                </div>
+              )}
+            </section>
+          </>
         ) : (
-          <StandardFacts facts={facts} />
+          <Squad team={team} players={stars} onSelectPlayer={onSelectPlayer} />
         )}
-
-        {/* Star players */}
-        {stars.length > 0 && (
-          <section className="mt-4 rounded-xl border border-brand-gold/40 bg-brand-gold/10 p-3">
-            <h3 className="mb-2 text-xs font-bold uppercase tracking-wide text-brand-blue">
-              ⭐ Star players
-            </h3>
-            <StarPlayers players={stars} />
-          </section>
-        )}
-
-        {/* Matches */}
-        <section className="mt-5">
-          <h3 className="mb-2 text-xs font-bold uppercase tracking-wide text-brand-blue">
-            {team.teamName}&rsquo;s matches
-          </h3>
-          {matches.length === 0 ? (
-            <p className="text-sm text-slate-400">No matches in the schedule yet.</p>
-          ) : (
-            <div className="space-y-2">
-              {matches.map((m) => (
-                <MatchCard
-                  key={m.matchId}
-                  match={m}
-                  selected={selectedMatchId === m.matchId}
-                  hovered={hoveredMatchId === m.matchId}
-                  onHover={onHoverMatch}
-                  onClick={onSelectMatch}
-                />
-              ))}
-            </div>
-          )}
-        </section>
       </div>
     </div>
+  );
+}
+
+function TabButton({
+  active,
+  onClick,
+  icon,
+  label,
+  count,
+}: {
+  active: boolean;
+  onClick: () => void;
+  icon: string;
+  label: string;
+  count?: number;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={[
+        "relative flex flex-1 items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-bold transition",
+        active
+          ? "text-brand-blue"
+          : "text-slate-400 hover:text-slate-600",
+      ].join(" ")}
+    >
+      <span aria-hidden>{icon}</span>
+      {label}
+      {count != null && (
+        <span className="rounded-full bg-brand-gold/20 px-1.5 text-[10px] font-bold text-amber-600">
+          {count}
+        </span>
+      )}
+      {active && (
+        <span className="absolute inset-x-2 bottom-0 h-0.5 rounded-full bg-brand-blue" />
+      )}
+    </button>
   );
 }
 
