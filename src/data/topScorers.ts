@@ -1,9 +1,9 @@
 /**
- * Golden Boot race — leading goal-scorers of the 2026 group stage.
+ * Golden Boot race — leading goal-scorers of the 2026 World Cup.
  *
- * Player goal tallies are illustrative and consistent with the simulated
- * scorelines in `matches.ts` (not verified official data). `teamCode` is a
- * team `fifaCode` so the UI can render the right flag.
+ * Real tournament data parsed from Wikipedia's goalscorers module
+ * (Module:Goalscorers/data/2026 FIFA World Cup), current to 2026-06-25.
+ * `teamCode` is a team `fifaCode` so the UI can render the right flag.
  */
 export interface ScorerEntry {
   name: string;
@@ -12,14 +12,14 @@ export interface ScorerEntry {
 }
 
 export const topScorers: ScorerEntry[] = [
-  { name: "Harry Kane", teamCode: "ENG", goals: 4 },
+  { name: "Lionel Messi", teamCode: "ARG", goals: 5 },
+  { name: "Vinícius Júnior", teamCode: "BRA", goals: 4 },
+  { name: "Kylian Mbappé", teamCode: "FRA", goals: 4 },
   { name: "Erling Haaland", teamCode: "NOR", goals: 4 },
-  { name: "Kylian Mbappé", teamCode: "FRA", goals: 3 },
-  { name: "Cristiano Ronaldo", teamCode: "POR", goals: 3 },
-  { name: "Florian Wirtz", teamCode: "GER", goals: 3 },
-  { name: "Alexander Isak", teamCode: "SWE", goals: 3 },
-  { name: "Cody Gakpo", teamCode: "NED", goals: 3 },
-  { name: "Christian Pulisic", teamCode: "USA", goals: 2 },
-  { name: "Kaoru Mitoma", teamCode: "JPN", goals: 2 },
-  { name: "Luis Díaz", teamCode: "COL", goals: 2 },
+  { name: "Matheus Cunha", teamCode: "BRA", goals: 3 },
+  { name: "Jonathan David", teamCode: "CAN", goals: 3 },
+  { name: "Deniz Undav", teamCode: "GER", goals: 3 },
+  { name: "Ismael Saibari", teamCode: "MAR", goals: 3 },
+  { name: "Johan Manzambi", teamCode: "SUI", goals: 3 },
+  { name: "Ermin Mahmić", teamCode: "BIH", goals: 2 },
 ];

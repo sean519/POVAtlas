@@ -97,7 +97,7 @@ export default function StatsView({
           ))}
         </div>
         <p className="mt-1 text-[10px] text-slate-400">
-          Scorer tallies are illustrative, matching the simulated results.
+          Goal tallies from official tournament data (through the group stage so far).
         </p>
       </section>
 
