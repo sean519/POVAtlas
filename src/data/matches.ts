@@ -223,6 +223,42 @@ function buildMatches(): Match[] {
 
 export const matches: Match[] = buildMatches();
 
+/** A live result for one fixture, keyed by the two team fifaCodes. */
+export interface LiveResult {
+  teamA: string;
+  teamB: string;
+  scoreA: number;
+  scoreB: number;
+  status: MatchStatus;
+}
+
+/**
+ * Overlay live/finished results onto the base fixtures, returning a NEW array
+ * (only changed matches get new objects, so React memoisation stays cheap).
+ * Matches are keyed by the unordered team pair — each pair meets once in the
+ * group stage — and scores are oriented to our home/away ordering.
+ */
+export function mergeLiveScores(base: Match[], live: LiveResult[]): Match[] {
+  if (live.length === 0) return base;
+  const byPair = new Map<string, LiveResult>();
+  for (const r of live) byPair.set([r.teamA, r.teamB].sort().join("|"), r);
+
+  let changed = false;
+  const next = base.map((m) => {
+    const r = byPair.get([m.teamA, m.teamB].sort().join("|"));
+    if (!r) return m;
+    // Orient the live scores to this fixture's teamA/teamB.
+    const scoreA = r.teamA === m.teamA ? r.scoreA : r.scoreB;
+    const scoreB = r.teamA === m.teamA ? r.scoreB : r.scoreA;
+    if (m.scoreA === scoreA && m.scoreB === scoreB && m.status === r.status) {
+      return m;
+    }
+    changed = true;
+    return { ...m, scoreA, scoreB, status: r.status };
+  });
+  return changed ? next : base;
+}
+
 /**
  * Integration point for a REAL live schedule / scores.
  *

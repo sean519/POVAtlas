@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import Layout from "./components/Layout";
 import SchedulePanel from "./components/SchedulePanel";
@@ -8,9 +8,10 @@ import CountryComparisonCard from "./components/CountryComparisonCard";
 import EasterEggModal from "./components/EasterEggModal";
 import PlayerModal from "./components/PlayerModal";
 import Flag from "./components/Flag";
-import type { StarPlayer, Team } from "./types";
+import type { Match, StarPlayer, Team } from "./types";
 import { teams } from "./data/teams";
-import { matches } from "./data/matches";
+import { matches, mergeLiveScores } from "./data/matches";
+import { fetchLiveScores } from "./utils/liveScores";
 import {
   compareCountries,
   getFactsForTeam,
@@ -42,6 +43,26 @@ export default function App() {
   const [focusMapSignal, setFocusMapSignal] = useState(0);
   const surfaceMap = () => setFocusMapSignal((n) => n + 1);
 
+  // ---- Live scores: poll a free feed and overlay onto the bundled fixtures ----
+  const [liveMatches, setLiveMatches] = useState<Match[]>(matches);
+  useEffect(() => {
+    let cancelled = false;
+    const poll = async () => {
+      try {
+        const live = await fetchLiveScores();
+        if (!cancelled) setLiveMatches(mergeLiveScores(matches, live));
+      } catch {
+        // Unofficial/rate-limited feed — keep the last good data on failure.
+      }
+    };
+    poll();
+    const id = window.setInterval(poll, 60_000);
+    return () => {
+      cancelled = true;
+      window.clearInterval(id);
+    };
+  }, []);
+
   const term = searchTerm.trim().toLowerCase();
 
   // ---- Search-filtered lists ----
@@ -56,8 +77,8 @@ export default function App() {
   }, [term]);
 
   const filteredMatches = useMemo(() => {
-    if (!term) return matches;
-    return matches.filter((m) => {
+    if (!term) return liveMatches;
+    return liveMatches.filter((m) => {
       const a = getTeamByCode(m.teamA);
       const b = getTeamByCode(m.teamB);
       return [
@@ -75,12 +96,12 @@ export default function App() {
         .toLowerCase()
         .includes(term);
     });
-  }, [term]);
+  }, [term, liveMatches]);
 
   // ---- Selection objects ----
   const selectedTeam = getTeamByCode(selectedTeamCode);
   const selectedMatch = selectedMatchId
-    ? matches.find((m) => m.matchId === selectedMatchId) ?? null
+    ? liveMatches.find((m) => m.matchId === selectedMatchId) ?? null
     : null;
   const comparison = selectedMatch
     ? compareCountries(selectedMatch.teamA, selectedMatch.teamB)
@@ -175,7 +196,7 @@ export default function App() {
         <CountryDetailPanel
           team={selectedTeam}
           facts={getFactsForTeam(selectedTeam.fifaCode)}
-          matches={getMatchesForTeam(selectedTeam.fifaCode)}
+          matches={getMatchesForTeam(selectedTeam.fifaCode, liveMatches)}
           selectedMatchId={selectedMatchId}
           hoveredMatchId={hoveredMatchId}
           onClose={() => setSelectedTeamCode(null)}
@@ -193,6 +214,7 @@ export default function App() {
       schedule={
         <SchedulePanel
           matches={filteredMatches}
+          allMatches={liveMatches}
           teams={filteredTeams}
           hoveredTeamCode={hoveredTeamCode}
           selectedTeamCode={selectedTeamCode}

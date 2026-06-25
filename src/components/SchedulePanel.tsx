@@ -21,6 +21,8 @@ const TABS: { id: Tab; label: string; icon: string }[] = [
 
 interface SchedulePanelProps {
   matches: Match[];
+  /** Full (unfiltered) match list with live scores — for standings/stats. */
+  allMatches: Match[];
   teams: Team[];
   hoveredTeamCode: string | null;
   selectedTeamCode: string | null;
@@ -37,6 +39,7 @@ interface SchedulePanelProps {
 
 export default function SchedulePanel({
   matches,
+  allMatches,
   teams,
   hoveredTeamCode,
   selectedTeamCode,
@@ -219,6 +222,7 @@ export default function SchedulePanel({
 
         {tab === "standings" && (
           <StandingsView
+            matches={allMatches}
             selectedTeamCode={selectedTeamCode}
             hoveredTeamCode={hoveredTeamCode}
             onSelectTeam={onSelectTeam}
@@ -228,6 +232,7 @@ export default function SchedulePanel({
 
         {tab === "stats" && (
           <StatsView
+            matches={allMatches}
             onSelectTeam={onSelectTeam}
             onSelectMatch={onSelectMatch}
             onHoverTeam={onHoverTeam}

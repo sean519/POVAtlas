@@ -1,9 +1,11 @@
 import { useMemo } from "react";
+import type { Match } from "../types";
 import { computeTournamentStats, getTeamByCode } from "../utils/dataHelpers";
 import { topScorers } from "../data/topScorers";
 import Flag from "./Flag";
 
 interface StatsViewProps {
+  matches: Match[];
   onSelectTeam: (code: string) => void;
   onSelectMatch: (id: string) => void;
   onHoverTeam: (code: string | null) => void;
@@ -11,11 +13,12 @@ interface StatsViewProps {
 
 /** Tournament-wide statistics, Google-style: hero numbers + leaderboards. */
 export default function StatsView({
+  matches,
   onSelectTeam,
   onSelectMatch,
   onHoverTeam,
 }: StatsViewProps) {
-  const stats = useMemo(() => computeTournamentStats(), []);
+  const stats = useMemo(() => computeTournamentStats(matches), [matches]);
 
   const bw = stats.biggestWin;
   const bwA = bw ? getTeamByCode(bw.teamA) : undefined;

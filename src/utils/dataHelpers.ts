@@ -59,9 +59,12 @@ export function getFactsForTeam(
 }
 
 /** All matches involving a given team code (either side). */
-export function getMatchesForTeam(code: string | null | undefined): Match[] {
+export function getMatchesForTeam(
+  code: string | null | undefined,
+  ms: Match[] = matches
+): Match[] {
   if (!code) return [];
-  return matches.filter((m) => m.teamA === code || m.teamB === code);
+  return ms.filter((m) => m.teamA === code || m.teamB === code);
 }
 
 /** All teams in a given group. */
@@ -166,7 +169,9 @@ function hasScore(m: Match): boolean {
  * Group standings (W/D/L, goals, points) computed from played matches.
  * One entry per group; rows sorted by points, then goal difference, then GF.
  */
-export function computeGroupStandings(): { group: Group; rows: StandingRow[] }[] {
+export function computeGroupStandings(
+  ms: Match[] = matches
+): { group: Group; rows: StandingRow[] }[] {
   return ALL_GROUPS.map((group) => {
     const rows = new Map<string, StandingRow>();
     for (const t of getTeamsByGroup(group)) {
@@ -183,7 +188,7 @@ export function computeGroupStandings(): { group: Group; rows: StandingRow[] }[]
       });
     }
 
-    for (const m of matches) {
+    for (const m of ms) {
       if (m.group !== group || !hasScore(m)) continue;
       const a = rows.get(m.teamA);
       const b = rows.get(m.teamB);
@@ -226,8 +231,10 @@ export function computeGroupStandings(): { group: Group; rows: StandingRow[] }[]
 }
 
 /** Tournament-wide aggregate stats computed from played matches. */
-export function computeTournamentStats(): TournamentStats {
-  const played = matches.filter(hasScore);
+export function computeTournamentStats(
+  ms: Match[] = matches
+): TournamentStats {
+  const played = ms.filter(hasScore);
   const totalGoals = played.reduce(
     (sum, m) => sum + (m.scoreA as number) + (m.scoreB as number),
     0
@@ -265,7 +272,7 @@ export function computeTournamentStats(): TournamentStats {
   const topScorers = scoredEntries.slice(0, 6);
 
   return {
-    totalMatches: matches.length,
+    totalMatches: ms.length,
     playedMatches: played.length,
     totalGoals,
     avgGoals: played.length ? totalGoals / played.length : 0,

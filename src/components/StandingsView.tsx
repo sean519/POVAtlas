@@ -1,9 +1,11 @@
 import { useMemo } from "react";
+import type { Match } from "../types";
 import { computeGroupStandings } from "../utils/dataHelpers";
 import { groupColors } from "../utils/groupColors";
 import Flag from "./Flag";
 
 interface StandingsViewProps {
+  matches: Match[];
   selectedTeamCode: string | null;
   hoveredTeamCode: string | null;
   onSelectTeam: (code: string) => void;
@@ -12,12 +14,13 @@ interface StandingsViewProps {
 
 /** Group-by-group standings tables computed from played matches. */
 export default function StandingsView({
+  matches,
   selectedTeamCode,
   hoveredTeamCode,
   onSelectTeam,
   onHoverTeam,
 }: StandingsViewProps) {
-  const standings = useMemo(() => computeGroupStandings(), []);
+  const standings = useMemo(() => computeGroupStandings(matches), [matches]);
 
   return (
     <div className="space-y-4">
