@@ -1,6 +1,6 @@
 # POV GoalMap — TODO
 
-> Status as of 2026-06-24. Branch `master`, working tree clean.
+> Status as of 2026-06-25. Branch `main`, working tree clean.
 > Full context lives in [HANDOFF.md](HANDOFF.md).
 
 ## 🔜 Next up (do first)
@@ -12,8 +12,8 @@
 - Deploy is now **`git push`** (branch `main` → `sean519/POVAtlas` → Vercel).
   Robocopy flow is retired — see HANDOFF §10.
 
-> ⚙️ **Deploy policy:** auto build + deploy after every completed change (don't
-> ask each time) — `npm run build` + robocopy mirror (HANDOFF §10).
+> ⚙️ **Deploy policy:** auto-deploy after every completed change (don't ask each
+> time) — just `git push` from the canonical folder; Vercel builds it (HANDOFF §10).
 
 ## 📦 Medium priority
 - [ ] **Knockout stage** (Round of 32 → Final). Only the 72-match group stage is
@@ -34,6 +34,13 @@
       (`tsc --noEmit`) + manual browser verification.
 
 ## ✅ Done this session
+- [x] **Mission & Vision** recorded; reframed POV Atlas as an interactive atlas
+      for everyone (not a kids-only site) in README + HANDOFF §1 — `f716a20`
+- [x] **Full 26-player squads for all 48 teams** (`src/data/squads.ts`, 1,248
+      players, official WC2026 data parsed from Wikipedia wikitext). New
+      `SquadMember` type + `getSquad()`; Squad tab shows the full roster grouped
+      GK/DF/MF/FW with number + club, stars tappable into profiles; Players tab
+      unchanged — `9f42829` (infra+Group A), `a9697ce` (all 48)
 - [x] `/api/live-scores` backend (Vercel Edge): API-Football primary +
       TheSportsDB fallback, 60s cache, key via env, pluggable providers; frontend
       shows minute/red-cards/HT-FT + "Last updated", polls 30s only when live;

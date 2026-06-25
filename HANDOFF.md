@@ -146,7 +146,8 @@ C:\Resilio Sync\Alltek-Sean\Github\POVAtlas\   (canonical; F:\world map is a ret
    │  ├─ countryFacts.ts     ← per-country facts + topAttractions (all 48)
    │  ├─ matches.ts          ← explicit 2026 fixture table (72 group matches)
    │  ├─ topScorers.ts       ← Golden Boot leaderboard (illustrative)
-   │  ├─ teamExtras.ts       ← star players + bios per team
+   │  ├─ teamExtras.ts       ← curated star players + bios per team (feeds Players tab)
+   │  ├─ squads.ts           ← full 26-player squads for all 48 teams (official WC2026)
    │  └─ easterEgg.ts        ← OC roster (adults emoji, kids avatarUrl) + trigger geo box
    ├─ providers/             ← live-score providers (pure mappers + fetch)
    │  ├─ apiFootball.ts      ← API-Football (primary; key passed in, server-only fetch)
@@ -168,10 +169,16 @@ C:\Resilio Sync\Alltek-Sean\Github\POVAtlas\   (canonical; F:\world map is a ret
   countries + an arc connecting the two teams of a selected match.
 - Five left-pane tabs: **Matches, Teams, Standings, Stats, Players** + live
   search filter across teams and matches.
-- **Country profile** (`CountryDetailPanel`): capital/region/population/GDP/area/
-  languages/currency/neighbors, short intro, **📍 Must-see places** (3 curated
-  tourist sights per country — all 48 done), fun facts, star players, that
-  team's matches.
+- **Country profile** (`CountryDetailPanel`): two tabs — **Country** (capital/
+  region/population/GDP/area/languages/currency/neighbors, short intro, **📍
+  Must-see places**, that team's matches) and **Squad**.
+- **Squad tab** (`Squad.tsx` + `src/data/squads.ts`): the full **26-player
+  roster** for all 48 teams (official WC2026: shirt number + position + club),
+  grouped GK/DF/MF/FW. Members who are curated stars (`teamExtras.ts`) show a ⭐
+  and are tappable into the player profile modal; others render as plain rows.
+  `getSquad(code)` returns the roster, falling back to the star list if absent.
+  The data was parsed deterministically from the Wikipedia squads wikitext (see
+  `/tmp` generator in session history), NOT hand-typed — accuracy matters.
 - **Country comparison** (`CountryComparisonCard`): side-by-side stats with
   winner arrows, estimated win-chance bar, star players for both, kid summary.
 - **Real 2026 WC fixtures** (`matches.ts`): explicit 72-match group stage with
@@ -269,6 +276,21 @@ See `TODO.md` for the live checklist. Summary, highest priority first:
    missing) and those keep the bundled data. Team names are matched by an alias
    table (`liveScores.ts`); a new spelling would silently fail to map. Topscorers
    (Golden Boot) are NOT fetched — still the static `topScorers.ts`.
+8. **Dev server runs from the RETIRED `F:\world map` clone, and Resilio is NOT
+   syncing the canonical folder into it.** `.claude/launch.json` (used by the
+   preview tools) only exists in `F:\world map`, so `preview_start` serves that
+   clone. Edits in the canonical `C:\Resilio Sync\…\POVAtlas` folder do **not**
+   reach the dev server automatically — Resilio→F sync was observed inactive
+   (2026-06-25). **To verify locally, copy the changed `src/**` files into
+   `F:\world map` first** (it's never committed/pushed — dev-only), then HMR
+   picks them up. The real deploy is unaffected (Vercel builds from the Resilio
+   git push). Long-term fix: add a launch.json in the canonical folder and run
+   the dev server there, or re-enable Resilio sync for `src/`.
+9. **Squad data is a point-in-time snapshot** (`src/data/squads.ts`): official
+   26-player lists as announced; late post-build replacements won't update. The
+   ⭐ profile link matches a squad member to a curated star by diacritic-
+   insensitive name, so a star omitted from the squad just shows no ⭐ (e.g.
+   RSA's Percy Tau isn't in the final 26, so he's absent from the Squad tab).
 
 ---
 
