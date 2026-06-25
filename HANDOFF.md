@@ -25,8 +25,8 @@ in a fresh Claude Code session. Read it top-to-bottom before making changes.
 > `noUnusedParameters` enabled and the build is green, so there are **zero unused
 > imports/locals** by construction; removed two dead exported helpers
 > (`getContinents`, `getOpponentCode`); all 16 components are referenced; build
-> artifacts are gitignored. The production build is clean. `fetchLiveSchedule`
-> in `matches.ts` is intentionally retained as the documented live-data seam.
+> artifacts are gitignored. The production build is clean. (Live data is now a
+> real integration — see the `/api/live-scores` backend + `src/providers/`.)
 
 ---
 
@@ -208,12 +208,13 @@ See `TODO.md` for the live checklist. Summary, highest priority first:
    a snapshot and several are illustrative.
 5. **Replace illustrative Golden Boot tallies** (`topScorers.ts`) with real data
    if/when desired — currently labelled as illustrative in the UI.
-6. **Live data integration — DONE (client-side).** Implemented via
-   `src/utils/liveScores.ts` (TheSportsDB free API, polled every 60s, overlaid by
-   `mergeLiveScores`). Possible follow-ups: a serverless proxy to hide a paid key
-   / improve reliability and coverage; auto-fetch Golden Boot scorers too; expand
-   the team-name alias table if a fixture fails to map. The older
-   `fetchLiveSchedule(endpoint)` seam in `matches.ts` is still unused.
+6. **Live data integration — DONE (backend `/api/live-scores` + fallback).**
+   API-Football primary (needs a PAID plan for 2026 — free plan blocks the season)
+   then TheSportsDB free fallback; the frontend (`src/utils/liveScores.ts`) calls
+   the route, falling back to direct TheSportsDB if the route is absent. Currently
+   running on the **TheSportsDB fallback** (user chose not to pay for API-Football;
+   `API_FOOTBALL_KEY` unset). Follow-ups: auto-fetch Golden Boot scorers; surface
+   `Match.live.events` (goal scorers) in the detail; grow the alias table.
 
 ---
 
@@ -261,9 +262,10 @@ See `TODO.md` for the live checklist. Summary, highest priority first:
 
 ## 8. Important design decisions and why
 
-- **Static, hand-curated data over an API.** Target audience is kids/friends and
-  the app must work offline-ish and deploy as a pure static site. Live FIFA data
-  has no free public CORS-friendly API. `fetchLiveSchedule()` is left as a seam.
+- **Static, hand-curated data as the base, live scores overlaid.** Fixtures are
+  hand-curated so the app always works; live results are then fetched and merged
+  on top (`/api/live-scores` → `mergeLiveScores`). The hand-entered fixture scores
+  remain the fallback for matches the live feed doesn't cover.
 - **Explicit fixture table instead of procedural generation.** Earlier the app
   generated matches procedurally; it was replaced with a literal `FIXTURES`
   array so real dates/venues/scores are exact and easy to edit.
