@@ -267,15 +267,19 @@ See `TODO.md` for the live checklist. Summary, highest priority first:
    they are binary assets in git.
 5. **No automated tests / no ESLint.** `npm run lint` is just `tsc --noEmit`.
    Type-check + manual browser verification is the only safety net.
-6. **Scores/scorers are partly illustrative**, clearly labelled as such in the
-   Stats UI, but worth remembering they are not all official. Live auto-fetched
-   results override the bundled fixture scores for matches the feed covers.
+6. **Scores/scorers are now real but a point-in-time snapshot** (refreshed from
+   official data through 2026-06-25, group stage in progress). `matches.ts`
+   scorelines come from the Wikipedia per-group football boxes and `topScorers.ts`
+   from the goalscorers data module; re-run the parse (§9) to pull later
+   matchdays. Live auto-fetched results still override bundled scores when the
+   feed covers a match.
 7. **Live score feed is unofficial + best-effort.** TheSportsDB's free shared key
    "3" is rate-limited (requests are sequenced to cope) and coverage is partial —
    some fixtures never appear (e.g. on 2026-06-24, MEX-CZE and BIH-QAT were
    missing) and those keep the bundled data. Team names are matched by an alias
-   table (`liveScores.ts`); a new spelling would silently fail to map. Topscorers
-   (Golden Boot) are NOT fetched — still the static `topScorers.ts`.
+   table (`liveScores.ts`); a new spelling would silently fail to map. Live
+   Topscorers (Golden Boot) are NOT auto-fetched at runtime — `topScorers.ts` is
+   static (but now seeded with real data; refresh via the §9 parse).
 8. **Dev server runs from the RETIRED `F:\world map` clone, and Resilio is NOT
    syncing the canonical folder into it.** `.claude/launch.json` (used by the
    preview tools) only exists in `F:\world map`, so `preview_start` serves that
@@ -327,6 +331,18 @@ See `TODO.md` for the live checklist. Summary, highest priority first:
 ---
 
 ## 9. Files modified during this session
+
+> **Data-refresh recipe (squads / results / scorers from Wikipedia).** All three
+> were generated deterministically (no LLM summarizer — it hallucinated) by
+> pulling raw wikitext via the MediaWiki API and parsing it with a small Node
+> script. Endpoints:
+> `…/w/api.php?action=parse&prop=wikitext&format=json&formatversion=2&page=<PAGE>`
+> — `2026 FIFA World Cup squads` (one `{{nat fs g player}}` per row),
+> `2026 FIFA World Cup Group A`…`Group L` (`{{#invoke:football box}}`: `team1`/
+> `team2` = fifaCode, `score` = `X–Y`; one match — TUN-JPN — is split to its own
+> article), and `Module:Goalscorers/data/2026 FIFA World Cup` (`data.goalscorers`
+> list). Code aliases: results use ALG/HAI/IRN for app DZA/HTI/IRI. Rate-limit:
+> space requests out. The throwaway scripts were in `%TEMP%` during the session.
 
 This session's commits (newest first):
 

@@ -18,10 +18,10 @@
 ## 📦 Medium priority
 - [ ] **Knockout stage** (Round of 32 → Final). Only the 72-match group stage is
       modelled in `src/data/matches.ts`; standings/stats don't cover knockouts.
-- [ ] **Refresh fixture scores** in `src/data/matches.ts` near/after real
-      matchdays — current scores are a snapshot, some illustrative.
-- [ ] **Replace illustrative Golden Boot tallies** in `src/data/topScorers.ts`
-      with real data if desired (currently labelled illustrative in the UI).
+- [ ] **Re-sync fixture scores / Golden Boot after later matchdays.** Results +
+      scorers were refreshed from official data through 2026-06-25 (group stage in
+      progress). Re-run the Wikipedia parse (HANDOFF §9) to pull MD3 + knockouts
+      as they're played.
 
 ## 🧊 Low priority / stretch
 - [ ] **Improve live data (optional).** Backend `/api/live-scores` (API-Football +
@@ -34,6 +34,11 @@
       (`tsc --noEmit`) + manual browser verification.
 
 ## ✅ Done this session
+- [x] **Stats now use real WC2026 data** — refreshed `matches.ts` scorelines
+      from official group-stage results (parsed from Wikipedia football boxes;
+      CAN-SUI→1-2, ECU-GER 2-1, CUW-CIV 0-2) and regenerated `topScorers.ts`
+      from the real goalscorers module (Messi 5, Vinícius/Mbappé/Haaland 4…);
+      dropped the "illustrative" label — `2aaa069`
 - [x] **Mission & Vision** recorded; reframed POV Atlas as an interactive atlas
       for everyone (not a kids-only site) in README + HANDOFF §1 — `f716a20`
 - [x] **Full 26-player squads for all 48 teams** (`src/data/squads.ts`, 1,248
