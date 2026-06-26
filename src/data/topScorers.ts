@@ -20,6 +20,6 @@ export const topScorers: ScorerEntry[] = [
   { name: "Jonathan David", teamCode: "CAN", goals: 3 },
   { name: "Deniz Undav", teamCode: "GER", goals: 3 },
   { name: "Ismael Saibari", teamCode: "MAR", goals: 3 },
+  { name: "Brian Brobbey", teamCode: "NED", goals: 3 },
   { name: "Johan Manzambi", teamCode: "SUI", goals: 3 },
-  { name: "Ermin Mahmić", teamCode: "BIH", goals: 2 },
 ];
