@@ -18,10 +18,12 @@
 ## 📦 Medium priority
 - [ ] **Knockout stage** (Round of 32 → Final). Only the 72-match group stage is
       modelled in `src/data/matches.ts`; standings/stats don't cover knockouts.
-- [ ] **Re-sync fixture scores / Golden Boot after later matchdays.** Results +
-      scorers were refreshed from official data through 2026-06-25 (group stage in
-      progress). Re-run the Wikipedia parse (HANDOFF §9) to pull MD3 + knockouts
-      as they're played.
+- [x] **Auto-refresh fixture scores + Golden Boot every 30 min.** GitHub Actions
+      (`.github/workflows/refresh-results.yml`) runs `scripts/refresh-results.mjs`
+      on a `*/30` cron, pulls official results/scorers from Wikipedia, and commits
+      only on change → Vercel redeploys. Manual run: Actions tab → "Refresh WC
+      results" → Run workflow. (Knockout matches will flow in automatically once
+      their pages exist.)
 
 ## 🧊 Low priority / stretch
 - [ ] **Improve live data (optional).** Backend `/api/live-scores` (API-Football +

@@ -417,7 +417,18 @@ Immediately preceding context (from the continued session, already committed):
 
 ## 10. Environment, dependencies, and commands
 
-- **Node.js 18+** required. On this machine Node lives at
+- **Automated data refresh:** `.github/workflows/refresh-results.yml` runs
+  `scripts/refresh-results.mjs` every 30 min (cron `*/30`, + manual `workflow_
+  dispatch`). It pulls official results (per-group football boxes) + Golden Boot
+  (goalscorers module) from Wikipedia, updates ONLY the score columns of
+  `matches.ts` and regenerates `topScorers.ts`, and commits only when something
+  changed — which triggers a Vercel redeploy. It **only writes real scores
+  (never nulls)** and aborts on fetch failure, so it can't wipe data. Repo is
+  public → free Actions minutes. This keeps finished-match scores correct even
+  when the runtime live feed (`/api/live-scores`) doesn't cover them. To refresh
+  squads (rare), use the §9 recipe manually — squads are NOT auto-refreshed.
+- **Node.js 18+** required (the refresh script needs Node 18+ for global
+  `fetch`; CI uses Node 20). On this machine Node lives at
   `C:\Program Files\nodejs` (add to PATH in Bash:
   `export PATH="/c/Program Files/nodejs:$PATH"`).
 - **Shell:** Windows. Use **PowerShell** for `robocopy` (Git Bash mangles
