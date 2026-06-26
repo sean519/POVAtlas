@@ -1,8 +1,8 @@
 /**
  * Golden Boot race — leading goal-scorers of the 2026 World Cup.
  *
- * Real tournament data parsed from Wikipedia's goalscorers module
- * (Module:Goalscorers/data/2026 FIFA World Cup), current to 2026-06-25.
+ * Real tournament data, auto-refreshed from Wikipedia's goalscorers module
+ * (Module:Goalscorers/data/2026 FIFA World Cup) by scripts/refresh-results.mjs.
  * `teamCode` is a team `fifaCode` so the UI can render the right flag.
  */
 export interface ScorerEntry {
