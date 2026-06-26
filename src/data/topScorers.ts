@@ -14,8 +14,8 @@ export interface ScorerEntry {
 export const topScorers: ScorerEntry[] = [
   { name: "Lionel Messi", teamCode: "ARG", goals: 5 },
   { name: "Vinícius Júnior", teamCode: "BRA", goals: 4 },
-  { name: "Kylian Mbappé", teamCode: "FRA", goals: 4 },
   { name: "Ousmane Dembélé", teamCode: "FRA", goals: 4 },
+  { name: "Kylian Mbappé", teamCode: "FRA", goals: 4 },
   { name: "Erling Haaland", teamCode: "NOR", goals: 4 },
   { name: "Matheus Cunha", teamCode: "BRA", goals: 3 },
   { name: "Jonathan David", teamCode: "CAN", goals: 3 },
