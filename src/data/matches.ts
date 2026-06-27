@@ -185,8 +185,8 @@ const FIXTURES: Fixture[] = [
   ["L", 1, "2026-06-17", "18:00", "GHA", "PAN", "BMO",      1, 0],
   ["L", 2, "2026-06-23", "12:00", "ENG", "GHA", "GILLETTE", 0, 0],
   ["L", 2, "2026-06-23", "15:00", "PAN", "CRO", "BMO",      0, 1],
-  ["L", 3, "2026-06-27", "14:00", "PAN", "ENG", "METLIFE",  null, null],
-  ["L", 3, "2026-06-27", "14:00", "CRO", "GHA", "LINC",     null, null],
+  ["L", 3, "2026-06-27", "14:00", "PAN", "ENG", "METLIFE",  0, 2],
+  ["L", 3, "2026-06-27", "14:00", "CRO", "GHA", "LINC",     2, 1],
 ];
 
 function buildMatches(): Match[] {
