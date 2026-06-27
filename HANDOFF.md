@@ -109,8 +109,10 @@ C:\Resilio Sync\Alltek-Sean\Github\POVAtlas\   (canonical; F:\world map is a ret
 ├─ DEPLOY.md                 ← Vercel + custom-domain + §E live-scores backend
 ├─ api/
 │  ├─ live-scores.ts         ← Vercel Edge fn: live provider chain + 60s cache (in-progress)
-│  └─ results.ts             ← Vercel Edge fn: COMPLETE finished results parsed live from
-│                                Wikipedia, CDN-cached 5 min (primary finished-score source)
+│  ├─ results.ts             ← Vercel Edge fn: COMPLETE finished results parsed live from
+│  │                            Wikipedia, CDN-cached 5 min (primary finished-score source)
+│  └─ knockout.ts            ← Vercel Edge fn: knockout bracket (rounds/dates/teams/scores)
+│                                parsed live from the Wikipedia knockout page, CDN-cached 5 min
 ├─ index.html
 ├─ package.json / package-lock.json
 ├─ vite.config.ts            ← dev server on port 5180

@@ -16,8 +16,11 @@
 > time) — just `git push` from the canonical folder; Vercel builds it (HANDOFF §10).
 
 ## 📦 Medium priority
-- [ ] **Knockout stage** (Round of 32 → Final). Only the 72-match group stage is
-      modelled in `src/data/matches.ts`; standings/stats don't cover knockouts.
+- [x] **Knockout stage** (Round of 32 → Final). Auto-populated at runtime from the
+      Wikipedia knockout page via `/api/knockout` (`api/knockout.ts`); shown as a
+      "🏆 Knockout stage" section in the Matches tab, grouped by round, filling in
+      teams + scores as the bracket is decided. (Group-stage standings/stats in
+      `dataHelpers` still cover only the group stage — knockouts aren't in them.)
 - [x] **Auto-refresh fixture scores + Golden Boot every 30 min.** GitHub Actions
       (`.github/workflows/refresh-results.yml`) runs `scripts/refresh-results.mjs`
       on a `*/30` cron, pulls official results/scorers from Wikipedia, and commits
