@@ -108,7 +108,9 @@ C:\Resilio Sync\Alltek-Sean\Github\POVAtlas\   (canonical; F:\world map is a ret
 ├─ README.md
 ├─ DEPLOY.md                 ← Vercel + custom-domain + §E live-scores backend
 ├─ api/
-│  └─ live-scores.ts         ← Vercel Edge fn: provider chain + 60s cache (needs Vercel)
+│  ├─ live-scores.ts         ← Vercel Edge fn: live provider chain + 60s cache (in-progress)
+│  └─ results.ts             ← Vercel Edge fn: COMPLETE finished results parsed live from
+│                                Wikipedia, CDN-cached 5 min (primary finished-score source)
 ├─ index.html
 ├─ package.json / package-lock.json
 ├─ vite.config.ts            ← dev server on port 5180
@@ -273,13 +275,15 @@ See `TODO.md` for the live checklist. Summary, highest priority first:
    from the goalscorers data module; re-run the parse (§9) to pull later
    matchdays. Live auto-fetched results still override bundled scores when the
    feed covers a match.
-7. **Live score feed is unofficial + best-effort.** TheSportsDB's free shared key
-   "3" is rate-limited (requests are sequenced to cope) and coverage is partial —
-   some fixtures never appear (e.g. on 2026-06-24, MEX-CZE and BIH-QAT were
-   missing) and those keep the bundled data. Team names are matched by an alias
-   table (`liveScores.ts`); a new spelling would silently fail to map. Live
-   Topscorers (Golden Boot) are NOT auto-fetched at runtime — `topScorers.ts` is
-   static (but now seeded with real data; refresh via the §9 parse).
+7. **Finished-match coverage is now complete via `/api/results`** (the runtime
+   Wikipedia feed; `src/utils/liveScores.ts` merges it as the base, the live
+   provider chain overlays in-progress). The old gap — TheSportsDB's free feed
+   covers only *some* matches, so finished ones it missed showed "Full time"
+   with a blank score until the slow GitHub cron caught up — is fixed: every
+   finished match now appears within minutes. Remaining caveats: the live feed
+   itself (for in-progress minute-by-minute) is still partial/best-effort, and
+   the **Golden Boot is NOT in the runtime feed** — `topScorers.ts` is static,
+   refreshed only by the 30-min cron (so it can lag), or via the §9 parse.
 8. **Dev server runs from the RETIRED `F:\world map` clone, and Resilio is NOT
    syncing the canonical folder into it.** `.claude/launch.json` (used by the
    preview tools) only exists in `F:\world map`, so `preview_start` serves that
