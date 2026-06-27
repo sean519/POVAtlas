@@ -181,6 +181,39 @@ export interface Match {
   live?: LiveInfo;
 }
 
+/** Knockout-stage round, in bracket order. */
+export type KnockoutRound = "R32" | "R16" | "QF" | "SF" | "3P" | "Final";
+
+/**
+ * One knockout-stage match, parsed live from Wikipedia. Teams are `null` until
+ * the bracket is decided (group stage / prior round), in which case `labelA` /
+ * `labelB` carry the placeholder (e.g. "Winner Match 73"). Scores are `null`
+ * until played.
+ */
+export interface KnockoutMatch {
+  /** Stable id: round + position in the bracket, e.g. "R16-1". */
+  id: string;
+  round: KnockoutRound;
+  /** ISO date, e.g. "2026-07-04". */
+  date: string;
+  /** fifaCode once known, else null. */
+  teamA: string | null;
+  teamB: string | null;
+  /** Placeholder text shown when the team isn't decided yet. */
+  labelA: string;
+  labelB: string;
+  scoreA: number | null;
+  scoreB: number | null;
+}
+
+/** Response shape of the `/api/knockout` route. */
+export interface KnockoutResponse {
+  updatedAt: string;
+  source: string;
+  stale: boolean;
+  matches: KnockoutMatch[];
+}
+
 export interface CountryFacts {
   isoA3Code: string;
   countryName: string;

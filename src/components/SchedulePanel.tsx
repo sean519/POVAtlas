@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import type { Group, Match, StarPlayer, Team } from "../types";
+import type { Group, KnockoutMatch, KnockoutRound, Match, StarPlayer, Team } from "../types";
 import MatchCard from "./MatchCard";
 import TeamBadge from "./TeamBadge";
 import StandingsView from "./StandingsView";
 import StatsView from "./StatsView";
 import PlayersView from "./PlayersView";
-import { ALL_GROUPS } from "../utils/dataHelpers";
+import Flag from "./Flag";
+import { ALL_GROUPS, getTeamByCode } from "../utils/dataHelpers";
+import { ROUND_META } from "../utils/knockout";
 import { groupColors } from "../utils/groupColors";
 import { formatLongDate, todayInKickoffTz } from "../utils/formatters";
 
@@ -23,6 +25,8 @@ interface SchedulePanelProps {
   matches: Match[];
   /** Full (unfiltered) match list with live scores — for standings/stats. */
   allMatches: Match[];
+  /** Knockout bracket (auto-filled from Wikipedia); empty until it exists. */
+  knockout: KnockoutMatch[];
   /** Live-feed status line ("Last updated …"); null until the first fetch. */
   liveMeta: { updatedAt: string; source: string; stale: boolean } | null;
   teams: Team[];
@@ -54,6 +58,7 @@ function formatClock(iso: string): string {
 export default function SchedulePanel({
   matches,
   allMatches,
+  knockout,
   liveMeta,
   teams,
   hoveredTeamCode,
@@ -98,6 +103,19 @@ export default function SchedulePanel({
     if (el) el.scrollIntoView({ block: "start" });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tab, anchorDate]);
+
+  // Knockout matches grouped by round, in bracket order.
+  const knockoutByRound = useMemo(() => {
+    const map = new Map<KnockoutRound, KnockoutMatch[]>();
+    for (const k of knockout) {
+      const list = map.get(k.round) ?? [];
+      list.push(k);
+      map.set(k.round, list);
+    }
+    return [...map.entries()].sort(
+      (a, b) => ROUND_META[a[0]].order - ROUND_META[b[0]].order
+    );
+  }, [knockout]);
 
   const teamsByGroup = useMemo(() => {
     const map = new Map<Group, Team[]>();
@@ -209,6 +227,29 @@ export default function SchedulePanel({
             </div>
           ))}
 
+        {tab === "matches" && !searchTerm.trim() && knockoutByRound.length > 0 && (
+          <div className="mt-6 space-y-4 border-t border-slate-200 pt-4">
+            <h3 className="flex items-center gap-1.5 text-xs font-extrabold uppercase tracking-wide text-amber-600">
+              🏆 Knockout stage
+            </h3>
+            {knockoutByRound.map(([round, roundMatches]) => (
+              <section key={round}>
+                <h4 className="mb-1.5 text-[11px] font-bold uppercase tracking-wide text-slate-400">
+                  {ROUND_META[round].label}
+                </h4>
+                <div className="space-y-2">
+                  {roundMatches.map((k) => (
+                    <KnockoutCard key={k.id} k={k} />
+                  ))}
+                </div>
+              </section>
+            ))}
+            <p className="text-center text-[10px] text-slate-400">
+              Bracket fills in automatically as the tournament progresses.
+            </p>
+          </div>
+        )}
+
         {tab === "teams" &&
           (teamsByGroup.length === 0 ? (
             <EmptyState label="No teams match your search." />
@@ -269,6 +310,53 @@ export default function SchedulePanel({
           />
         )}
       </div>
+    </div>
+  );
+}
+
+/** One knockout fixture: real teams + score when known, placeholders otherwise. */
+function KnockoutCard({ k }: { k: KnockoutMatch }) {
+  const played = k.scoreA !== null && k.scoreB !== null;
+  return (
+    <div className="rounded-xl border border-slate-200 bg-white p-2.5 text-sm">
+      <div className="mb-1 text-[10px] font-medium uppercase tracking-wide text-slate-400">
+        {k.date ? formatLongDate(k.date) : "Date TBD"}
+      </div>
+      <div className="flex items-center gap-2">
+        <KnockoutSide code={k.teamA} label={k.labelA} />
+        <span className="shrink-0 rounded-md bg-brand-navy px-2 py-0.5 text-xs font-bold text-white">
+          {played ? `${k.scoreA} – ${k.scoreB}` : "vs"}
+        </span>
+        <KnockoutSide code={k.teamB} label={k.labelB} alignEnd />
+      </div>
+    </div>
+  );
+}
+
+function KnockoutSide({
+  code,
+  label,
+  alignEnd,
+}: {
+  code: string | null;
+  label: string;
+  alignEnd?: boolean;
+}) {
+  const team = code ? getTeamByCode(code) : undefined;
+  return (
+    <div
+      className={`flex min-w-0 flex-1 items-center gap-1.5 ${
+        alignEnd ? "flex-row-reverse text-right" : ""
+      }`}
+    >
+      {team ? (
+        <>
+          <Flag team={team} className="h-4 w-6 shrink-0" />
+          <span className="truncate font-semibold text-slate-700">{team.teamName}</span>
+        </>
+      ) : (
+        <span className="truncate text-xs italic text-slate-400">{label}</span>
+      )}
     </div>
   );
 }

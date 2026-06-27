@@ -8,10 +8,11 @@ import CountryComparisonCard from "./components/CountryComparisonCard";
 import EasterEggModal from "./components/EasterEggModal";
 import PlayerModal from "./components/PlayerModal";
 import Flag from "./components/Flag";
-import type { LiveScoresResponse, Match, StarPlayer, Team } from "./types";
+import type { KnockoutMatch, LiveScoresResponse, Match, StarPlayer, Team } from "./types";
 import { teams } from "./data/teams";
 import { matches, mergeLiveScores, isLiveWindowNow } from "./data/matches";
 import { fetchLiveScores } from "./utils/liveScores";
+import { fetchKnockout } from "./utils/knockout";
 import {
   compareCountries,
   getFactsForTeam,
@@ -71,6 +72,24 @@ export default function App() {
       const liveNow =
         isLiveWindowNow() || (res?.matches.some((m) => m.status === "live") ?? false);
       timer = window.setTimeout(tick, liveNow ? 30_000 : 5 * 60_000);
+    };
+    tick();
+    return () => {
+      cancelled = true;
+      if (timer) window.clearTimeout(timer);
+    };
+  }, []);
+
+  // Knockout bracket (auto-fills from Wikipedia as the tournament progresses).
+  const [knockout, setKnockout] = useState<KnockoutMatch[]>([]);
+  useEffect(() => {
+    let cancelled = false;
+    let timer: number | undefined;
+    const tick = async () => {
+      const ko = await fetchKnockout().catch(() => []);
+      if (cancelled) return;
+      if (ko.length > 0) setKnockout(ko);
+      timer = window.setTimeout(tick, 10 * 60_000); // bracket changes slowly
     };
     tick();
     return () => {
@@ -232,6 +251,7 @@ export default function App() {
         <SchedulePanel
           matches={filteredMatches}
           allMatches={liveMatches}
+          knockout={knockout}
           liveMeta={liveMeta}
           teams={filteredTeams}
           hoveredTeamCode={hoveredTeamCode}
