@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import type { Group, KnockoutMatch, KnockoutRound, Match, StarPlayer, Team } from "../types";
+import type { Group, KnockoutMatch, Match, StarPlayer, Team } from "../types";
 import MatchCard from "./MatchCard";
 import TeamBadge from "./TeamBadge";
 import StandingsView from "./StandingsView";
@@ -12,6 +12,11 @@ import { groupColors } from "../utils/groupColors";
 import { formatLongDate, todayInKickoffTz } from "../utils/formatters";
 
 type Tab = "matches" | "teams" | "standings" | "stats" | "players";
+
+/** One row in the chronological schedule: a group match or a knockout match. */
+type DayItem =
+  | { kind: "group"; match: Match }
+  | { kind: "ko"; ko: KnockoutMatch };
 
 const TABS: { id: Tab; label: string; icon: string }[] = [
   { id: "matches", label: "Matches", icon: "📅" },
@@ -76,23 +81,29 @@ export default function SchedulePanel({
   const [tab, setTab] = useState<Tab>("matches");
   const today = todayInKickoffTz();
 
-  // Whole schedule in chronological order, grouped by date (today included).
-  const matchesByDate = useMemo(() => {
-    const map = new Map<string, Match[]>();
-    for (const m of matches) {
-      const list = map.get(m.date) ?? [];
-      list.push(m);
-      map.set(m.date, list);
+  // Whole schedule (group + knockout) in chronological order, grouped by date.
+  // Knockout matches are folded in by date so "today" highlights/auto-scrolls to
+  // them once the group stage is over. Hidden while searching (group only).
+  const scheduleByDate = useMemo(() => {
+    const map = new Map<string, DayItem[]>();
+    const add = (date: string, item: DayItem) => {
+      const list = map.get(date) ?? [];
+      list.push(item);
+      map.set(date, list);
+    };
+    for (const m of matches) add(m.date, { kind: "group", match: m });
+    if (!searchTerm.trim()) {
+      for (const k of knockout) if (k.date) add(k.date, { kind: "ko", ko: k });
     }
-    return Array.from(map.entries());
-  }, [matches]);
+    return [...map.entries()].sort((a, b) => a[0].localeCompare(b[0]));
+  }, [matches, knockout, searchTerm]);
 
   // The date section to auto-scroll to: today, or the next upcoming date.
   const anchorDate = useMemo(() => {
-    const dates = matchesByDate.map(([d]) => d);
+    const dates = scheduleByDate.map(([d]) => d);
     if (dates.includes(today)) return today;
     return dates.find((d) => d >= today) ?? dates[dates.length - 1] ?? null;
-  }, [matchesByDate, today]);
+  }, [scheduleByDate, today]);
 
   const anchorRef = useRef<HTMLDivElement>(null);
 
@@ -103,19 +114,6 @@ export default function SchedulePanel({
     if (el) el.scrollIntoView({ block: "start" });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tab, anchorDate]);
-
-  // Knockout matches grouped by round, in bracket order.
-  const knockoutByRound = useMemo(() => {
-    const map = new Map<KnockoutRound, KnockoutMatch[]>();
-    for (const k of knockout) {
-      const list = map.get(k.round) ?? [];
-      list.push(k);
-      map.set(k.round, list);
-    }
-    return [...map.entries()].sort(
-      (a, b) => ROUND_META[a[0]].order - ROUND_META[b[0]].order
-    );
-  }, [knockout]);
 
   const teamsByGroup = useMemo(() => {
     const map = new Map<Group, Team[]>();
@@ -183,11 +181,11 @@ export default function SchedulePanel({
           </p>
         )}
         {tab === "matches" &&
-          (matchesByDate.length === 0 ? (
+          (scheduleByDate.length === 0 ? (
             <EmptyState label="No matches match your search." />
           ) : (
             <div className="space-y-5">
-              {matchesByDate.map(([date, dayMatches]) => {
+              {scheduleByDate.map(([date, items]) => {
                 const isToday = date === today;
                 const isAnchor = date === anchorDate;
                 return (
@@ -210,45 +208,26 @@ export default function SchedulePanel({
                       {formatLongDate(date)}
                     </h3>
                     <div className="space-y-2">
-                      {dayMatches.map((m) => (
-                        <MatchCard
-                          key={m.matchId}
-                          match={m}
-                          selected={selectedMatchId === m.matchId}
-                          hovered={hoveredMatchId === m.matchId}
-                          onHover={onHoverMatch}
-                          onClick={onSelectMatch}
-                        />
-                      ))}
+                      {items.map((it) =>
+                        it.kind === "group" ? (
+                          <MatchCard
+                            key={it.match.matchId}
+                            match={it.match}
+                            selected={selectedMatchId === it.match.matchId}
+                            hovered={hoveredMatchId === it.match.matchId}
+                            onHover={onHoverMatch}
+                            onClick={onSelectMatch}
+                          />
+                        ) : (
+                          <KnockoutCard key={it.ko.id} k={it.ko} />
+                        )
+                      )}
                     </div>
                   </section>
                 );
               })}
             </div>
           ))}
-
-        {tab === "matches" && !searchTerm.trim() && knockoutByRound.length > 0 && (
-          <div className="mt-6 space-y-4 border-t border-slate-200 pt-4">
-            <h3 className="flex items-center gap-1.5 text-xs font-extrabold uppercase tracking-wide text-amber-600">
-              🏆 Knockout stage
-            </h3>
-            {knockoutByRound.map(([round, roundMatches]) => (
-              <section key={round}>
-                <h4 className="mb-1.5 text-[11px] font-bold uppercase tracking-wide text-slate-400">
-                  {ROUND_META[round].label}
-                </h4>
-                <div className="space-y-2">
-                  {roundMatches.map((k) => (
-                    <KnockoutCard key={k.id} k={k} />
-                  ))}
-                </div>
-              </section>
-            ))}
-            <p className="text-center text-[10px] text-slate-400">
-              Bracket fills in automatically as the tournament progresses.
-            </p>
-          </div>
-        )}
 
         {tab === "teams" &&
           (teamsByGroup.length === 0 ? (
@@ -318,9 +297,11 @@ export default function SchedulePanel({
 function KnockoutCard({ k }: { k: KnockoutMatch }) {
   const played = k.scoreA !== null && k.scoreB !== null;
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-2.5 text-sm">
-      <div className="mb-1 text-[10px] font-medium uppercase tracking-wide text-slate-400">
-        {k.date ? formatLongDate(k.date) : "Date TBD"}
+    <div className="rounded-xl border border-amber-200 bg-amber-50/40 p-2.5 text-sm">
+      <div className="mb-1">
+        <span className="rounded bg-amber-100 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-amber-700">
+          🏆 {ROUND_META[k.round].label}
+        </span>
       </div>
       <div className="flex items-center gap-2">
         <KnockoutSide code={k.teamA} label={k.labelA} />
