@@ -19,7 +19,7 @@ export const topScorers: ScorerEntry[] = [
   { name: "Erling Haaland", teamCode: "NOR", goals: 4 },
   { name: "Matheus Cunha", teamCode: "BRA", goals: 3 },
   { name: "Jonathan David", teamCode: "CAN", goals: 3 },
+  { name: "Yoane Wissa", teamCode: "COD", goals: 3 },
   { name: "Harry Kane", teamCode: "ENG", goals: 3 },
   { name: "Deniz Undav", teamCode: "GER", goals: 3 },
-  { name: "Ismael Saibari", teamCode: "MAR", goals: 3 },
 ];
