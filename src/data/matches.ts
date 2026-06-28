@@ -168,8 +168,8 @@ const FIXTURES: Fixture[] = [
   ["J", 1, "2026-06-17", "09:00", "AUT", "JOR", "LEVIS",    3, 1],
   ["J", 2, "2026-06-22", "09:00", "ARG", "AUT", "ATT",      2, 0],
   ["J", 2, "2026-06-22", "18:00", "JOR", "DZA", "LEVIS",    1, 2],
-  ["J", 3, "2026-06-27", "19:00", "DZA", "AUT", "ARROW",    null, null],
-  ["J", 3, "2026-06-27", "19:00", "JOR", "ARG", "ATT",      null, null],
+  ["J", 3, "2026-06-27", "19:00", "DZA", "AUT", "ARROW",    3, 3],
+  ["J", 3, "2026-06-27", "19:00", "JOR", "ARG", "ATT",      1, 3],
 
   // ---- Group K (POR, COD, UZB, COL) ----
   // COL-UZB: midnight ET Jun 17 → 21:00 PDT Jun 16
