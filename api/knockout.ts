@@ -54,16 +54,16 @@ function teamField(body: string, which: "team1" | "team2"): { code: string | nul
   const line = body.match(new RegExp(`\\|\\s*${which}=([^\\n]*)`))?.[1] ?? "";
   // Real team: {{#invoke:flag|fb...|XXX}} NOT inside an HTML comment.
   const live = line.replace(/<!--[\s\S]*?-->/g, "");
-  const code = live.match(/\{\{#invoke:flag\|[^|]*\|([A-Z]{3})/)?.[1] ?? null;
+  const code = live.match(/\{\{#invoke:[Ff]lag\|[^|]*\|([A-Z]{3})/)?.[1] ?? null;
   // Placeholder label: text after any comment / template.
   const label = line.replace(/<!--[\s\S]*?-->/g, "").replace(/\{\{[^}]*\}\}/g, "").trim();
   return { code: code ? norm(code) : null, label };
 }
 
-async function buildKnockout(): Promise<KnockoutMatch[]> {
-  const wt = await getWikitext(PAGE);
+/** Position-aware round resolver for a page's section headings. */
+function roundResolver(wt: string): (idx: number) => KnockoutRound | null {
   const heads = [...wt.matchAll(/^==+\s*([^=\n]+?)\s*==+\s*$/gim)].map((m) => ({ i: m.index ?? 0, name: m[1] }));
-  const roundAt = (idx: number): KnockoutRound | null => {
+  return (idx: number) => {
     let r: KnockoutRound | null = null;
     for (const h of heads) {
       if (h.i < idx) { const hr = headingRound(h.name); if (hr) r = hr; }
@@ -71,17 +71,24 @@ async function buildKnockout(): Promise<KnockoutMatch[]> {
     }
     return r;
   };
+}
 
-  const out: KnockoutMatch[] = [];
-  const perRound: Record<string, number> = {};
+/** Parse every football box in `wt` into `out`, keyed/counted per round. */
+function collectBoxes(
+  wt: string,
+  out: KnockoutMatch[],
+  perRound: Record<string, number>,
+  roundOverride: KnockoutRound | null
+): void {
+  const roundAt = roundOverride ? null : roundResolver(wt);
   const re = /\{\{#invoke:football box\|main/gi;
   let m: RegExpExecArray | null;
   while ((m = re.exec(wt))) {
     const body = templateAt(wt, m.index);
     const a = teamField(body, "team1");
     const b = teamField(body, "team2");
+    let round = roundOverride ?? roundAt!(m.index);
     // 3rd-place play-off is a "Loser Match …" pairing.
-    let round = roundAt(m.index);
     if (/Loser Match/i.test(a.label) || /Loser Match/i.test(b.label)) round = "3P";
     if (!round) continue;
     const date = (body.match(/\|date=\{\{Start date\|(\d+)\|(\d+)\|(\d+)/) ?? [])
@@ -102,6 +109,36 @@ async function buildKnockout(): Promise<KnockoutMatch[]> {
       scoreB: sc ? parseInt(sc[2], 10) : null,
     });
   }
+}
+
+async function buildKnockout(): Promise<KnockoutMatch[]> {
+  const wt = await getWikitext(PAGE);
+  const out: KnockoutMatch[] = [];
+  const perRound: Record<string, number> = {};
+
+  // Inline boxes on the knockout page (currently R16 / QF / SF / 3rd place).
+  collectBoxes(wt, out, perRound, null);
+
+  // Big rounds live on their own pages, pulled in via {{#lst:SUBPAGE|…}}
+  // (Round of 32, Final). Resolve each subpage's round from the heading it sits
+  // under, then fetch + parse it.
+  const roundAt = roundResolver(wt);
+  const subRounds = new Map<string, KnockoutRound>();
+  for (const lm of wt.matchAll(/\{\{#lst:([^|}]+)\|/g)) {
+    const sub = lm[1].trim();
+    const r = roundAt(lm.index ?? 0);
+    if (r && !subRounds.has(sub)) subRounds.set(sub, r);
+  }
+  await Promise.all(
+    [...subRounds].map(async ([sub, round]) => {
+      try {
+        collectBoxes(await getWikitext(sub), out, perRound, round);
+      } catch {
+        // subpage unavailable — its round just stays absent this cycle
+      }
+    })
+  );
+
   return out;
 }
 
