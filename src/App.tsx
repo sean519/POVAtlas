@@ -26,6 +26,8 @@ export default function App() {
   const [selectedTeamCode, setSelectedTeamCode] = useState<string | null>(null);
   const [hoveredMatchId, setHoveredMatchId] = useState<string | null>(null);
   const [selectedMatchId, setSelectedMatchId] = useState<string | null>(null);
+  const [hoveredKnockoutId, setHoveredKnockoutId] = useState<string | null>(null);
+  const [selectedKnockoutId, setSelectedKnockoutId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
 
   // Whether the floating info card is collapsed to a small pill.
@@ -138,8 +140,16 @@ export default function App() {
   const selectedMatch = selectedMatchId
     ? liveMatches.find((m) => m.matchId === selectedMatchId) ?? null
     : null;
+  const selectedKnockout = selectedKnockoutId
+    ? knockout.find((k) => k.id === selectedKnockoutId) ?? null
+    : null;
+  const hoveredKnockout = hoveredKnockoutId
+    ? knockout.find((k) => k.id === hoveredKnockoutId) ?? null
+    : null;
   const comparison = selectedMatch
     ? compareCountries(selectedMatch.teamA, selectedMatch.teamB)
+    : selectedKnockout && selectedKnockout.teamA && selectedKnockout.teamB
+    ? compareCountries(selectedKnockout.teamA, selectedKnockout.teamB)
     : null;
 
   // ---- Map highlight set + focus ----
@@ -158,19 +168,38 @@ export default function App() {
         set.add(m.teamB);
       }
     }
+    if (selectedKnockout) {
+      if (selectedKnockout.teamA) set.add(selectedKnockout.teamA);
+      if (selectedKnockout.teamB) set.add(selectedKnockout.teamB);
+    }
+    if (hoveredKnockout) {
+      if (hoveredKnockout.teamA) set.add(hoveredKnockout.teamA);
+      if (hoveredKnockout.teamB) set.add(hoveredKnockout.teamB);
+    }
     return Array.from(set);
-  }, [selectedTeamCode, hoveredTeamCode, selectedMatch, hoveredMatchId]);
+  }, [
+    selectedTeamCode,
+    hoveredTeamCode,
+    selectedMatch,
+    hoveredMatchId,
+    selectedKnockout,
+    hoveredKnockout,
+  ]);
 
   const focusCode = selectedTeamCode;
-  // When a match is selected, frame + connect both of its teams on the map.
+  // When a match (group or decided knockout) is selected, frame + connect both
+  // of its teams on the map.
   const fitCodes = selectedMatch
     ? [selectedMatch.teamA, selectedMatch.teamB]
+    : selectedKnockout && selectedKnockout.teamA && selectedKnockout.teamB
+    ? [selectedKnockout.teamA, selectedKnockout.teamB]
     : null;
 
   // ---- Handlers ----
   const selectTeam = (code: string) => {
     setSelectedTeamCode(code);
     setSelectedMatchId(null);
+    setSelectedKnockoutId(null);
     setInfoCollapsed(false);
     surfaceMap();
   };
@@ -178,13 +207,31 @@ export default function App() {
   const selectMatch = (id: string) => {
     setSelectedMatchId(id);
     setSelectedTeamCode(null);
+    setSelectedKnockoutId(null);
     setInfoCollapsed(false);
     surfaceMap();
+  };
+
+  // Opens the head-to-head comparison once both sides of a knockout fixture
+  // are decided; if only one side is known yet, opens that team's profile
+  // instead (nothing to compare against). No-op for two TBD placeholders —
+  // SchedulePanel doesn't wire a click handler for those anyway.
+  const selectKnockout = (k: KnockoutMatch) => {
+    if (k.teamA && k.teamB) {
+      setSelectedKnockoutId(k.id);
+      setSelectedMatchId(null);
+      setSelectedTeamCode(null);
+      setInfoCollapsed(false);
+      surfaceMap();
+    } else if (k.teamA || k.teamB) {
+      selectTeam((k.teamA ?? k.teamB)!);
+    }
   };
 
   const clearSelection = () => {
     setSelectedMatchId(null);
     setSelectedTeamCode(null);
+    setSelectedKnockoutId(null);
   };
 
   // ---- Floating info card (bottom-right on desktop, bottom sheet on mobile) ----
@@ -208,13 +255,13 @@ export default function App() {
   } else if (comparison) {
     mapInfoCard = (
       <MapInfoSheet
-        key={`cmp-${selectedMatchId}`}
+        key={`cmp-${selectedMatchId ?? selectedKnockoutId}`}
         className={cardShell}
         onCollapse={() => setInfoCollapsed(true)}
       >
         <CountryComparisonCard
           comparison={comparison}
-          onClose={() => setSelectedMatchId(null)}
+          onClose={clearSelection}
           onCollapse={() => setInfoCollapsed(true)}
           onSelectTeam={selectTeam}
           onHoverTeam={setHoveredTeamCode}
@@ -258,10 +305,14 @@ export default function App() {
           selectedTeamCode={selectedTeamCode}
           hoveredMatchId={hoveredMatchId}
           selectedMatchId={selectedMatchId}
+          hoveredKnockoutId={hoveredKnockoutId}
+          selectedKnockoutId={selectedKnockoutId}
           onHoverTeam={setHoveredTeamCode}
           onSelectTeam={selectTeam}
           onHoverMatch={setHoveredMatchId}
           onSelectMatch={selectMatch}
+          onHoverKnockout={setHoveredKnockoutId}
+          onSelectKnockout={selectKnockout}
           onSelectPlayer={(team, player) => setSelectedPlayer({ team, player })}
           searchTerm={searchTerm}
           onSearchChange={setSearchTerm}

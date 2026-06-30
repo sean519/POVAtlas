@@ -39,10 +39,17 @@ interface SchedulePanelProps {
   selectedTeamCode: string | null;
   hoveredMatchId: string | null;
   selectedMatchId: string | null;
+  /** Selected/hovered knockout fixture id, mirroring hoveredMatchId/selectedMatchId. */
+  hoveredKnockoutId: string | null;
+  selectedKnockoutId: string | null;
   onHoverTeam: (code: string | null) => void;
   onSelectTeam: (code: string) => void;
   onHoverMatch: (id: string | null) => void;
   onSelectMatch: (id: string) => void;
+  onHoverKnockout: (id: string | null) => void;
+  /** Opens the head-to-head comparison (both teams known) or that team's
+   * profile (only one team decided yet). No-op if neither team is decided. */
+  onSelectKnockout: (k: KnockoutMatch) => void;
   onSelectPlayer: (team: Team, player: StarPlayer) => void;
   searchTerm: string;
   onSearchChange: (v: string) => void;
@@ -70,10 +77,14 @@ export default function SchedulePanel({
   selectedTeamCode,
   hoveredMatchId,
   selectedMatchId,
+  hoveredKnockoutId,
+  selectedKnockoutId,
   onHoverTeam,
   onSelectTeam,
   onHoverMatch,
   onSelectMatch,
+  onHoverKnockout,
+  onSelectKnockout,
   onSelectPlayer,
   searchTerm,
   onSearchChange,
@@ -222,8 +233,10 @@ export default function SchedulePanel({
                           <KnockoutCard
                             key={it.ko.id}
                             k={it.ko}
-                            onSelectTeam={onSelectTeam}
-                            onHoverTeam={onHoverTeam}
+                            selected={selectedKnockoutId === it.ko.id}
+                            hovered={hoveredKnockoutId === it.ko.id}
+                            onHover={onHoverKnockout}
+                            onClick={onSelectKnockout}
                           />
                         )
                       )}
@@ -298,46 +311,71 @@ export default function SchedulePanel({
   );
 }
 
-/** One knockout fixture: real teams + score when known, placeholders otherwise. */
+/**
+ * One knockout fixture. Tapping the card opens the head-to-head comparison
+ * (once both teams are decided) — same as a group MatchCard — or that team's
+ * profile if only one side is decided yet. Cards with two TBD placeholders
+ * aren't interactive (nothing to show).
+ */
 function KnockoutCard({
   k,
-  onSelectTeam,
-  onHoverTeam,
+  selected,
+  hovered,
+  onHover,
+  onClick,
 }: {
   k: KnockoutMatch;
-  onSelectTeam: (code: string) => void;
-  onHoverTeam: (code: string | null) => void;
+  selected: boolean;
+  hovered: boolean;
+  onHover: (id: string | null) => void;
+  onClick: (k: KnockoutMatch) => void;
 }) {
   const played = k.scoreA !== null && k.scoreB !== null;
+  const clickable = Boolean(k.teamA || k.teamB);
+
   return (
-    <div className="rounded-xl border border-amber-200 bg-amber-50/40 p-2.5 text-sm">
+    <button
+      type="button"
+      disabled={!clickable}
+      onMouseEnter={() => clickable && onHover(k.id)}
+      onMouseLeave={() => clickable && onHover(null)}
+      onFocus={() => clickable && onHover(k.id)}
+      onBlur={() => clickable && onHover(null)}
+      onClick={() => clickable && onClick(k)}
+      className={[
+        "w-full rounded-xl border p-2.5 text-left text-sm transition",
+        !clickable
+          ? "cursor-default border-amber-100 bg-amber-50/20 opacity-80"
+          : selected
+          ? "border-brand-blue bg-brand-blue/5 shadow-card ring-1 ring-brand-blue"
+          : hovered
+          ? "border-amber-300 bg-amber-50/70"
+          : "border-amber-200 bg-amber-50/40 hover:border-amber-300 hover:bg-amber-50/70",
+      ].join(" ")}
+    >
       <div className="mb-1">
         <span className="rounded bg-amber-100 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-amber-700">
           🏆 {ROUND_META[k.round].label}
         </span>
       </div>
       <div className="flex items-center gap-2">
-        <KnockoutSide code={k.teamA} label={k.labelA} onSelectTeam={onSelectTeam} onHoverTeam={onHoverTeam} />
+        <KnockoutSide code={k.teamA} label={k.labelA} />
         <span className="shrink-0 rounded-md bg-brand-navy px-2 py-0.5 text-xs font-bold text-white">
           {played ? `${k.scoreA} – ${k.scoreB}` : "vs"}
         </span>
-        <KnockoutSide code={k.teamB} label={k.labelB} onSelectTeam={onSelectTeam} onHoverTeam={onHoverTeam} alignEnd />
+        <KnockoutSide code={k.teamB} label={k.labelB} alignEnd />
       </div>
-    </div>
+    </button>
   );
 }
 
 function KnockoutSide({
   code,
   label,
-  onSelectTeam,
-  onHoverTeam,
   alignEnd,
 }: {
   code: string | null;
   label: string;
-  onSelectTeam: (code: string) => void;
-  onHoverTeam: (code: string | null) => void;
   alignEnd?: boolean;
 }) {
   const team = code ? getTeamByCode(code) : undefined;
@@ -345,7 +383,6 @@ function KnockoutSide({
     alignEnd ? "flex-row-reverse text-right" : ""
   }`;
 
-  // Placeholder (team not decided yet) — not clickable.
   if (!team) {
     return (
       <div className={rowClass}>
@@ -354,19 +391,11 @@ function KnockoutSide({
     );
   }
 
-  // Known team — tap to open its country profile (facts + squad).
   return (
-    <button
-      type="button"
-      onClick={() => onSelectTeam(team.fifaCode)}
-      onMouseEnter={() => onHoverTeam(team.fifaCode)}
-      onMouseLeave={() => onHoverTeam(null)}
-      title={`${team.teamName} · ${team.nameZh}`}
-      className={`${rowClass} rounded-md py-0.5 transition hover:bg-amber-100/70`}
-    >
+    <div className={rowClass}>
       <Flag team={team} className="h-4 w-6 shrink-0" />
       <span className="truncate font-semibold text-slate-700">{team.teamName}</span>
-    </button>
+    </div>
   );
 }
 
