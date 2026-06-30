@@ -219,7 +219,12 @@ export default function SchedulePanel({
                             onClick={onSelectMatch}
                           />
                         ) : (
-                          <KnockoutCard key={it.ko.id} k={it.ko} />
+                          <KnockoutCard
+                            key={it.ko.id}
+                            k={it.ko}
+                            onSelectTeam={onSelectTeam}
+                            onHoverTeam={onHoverTeam}
+                          />
                         )
                       )}
                     </div>
@@ -294,7 +299,15 @@ export default function SchedulePanel({
 }
 
 /** One knockout fixture: real teams + score when known, placeholders otherwise. */
-function KnockoutCard({ k }: { k: KnockoutMatch }) {
+function KnockoutCard({
+  k,
+  onSelectTeam,
+  onHoverTeam,
+}: {
+  k: KnockoutMatch;
+  onSelectTeam: (code: string) => void;
+  onHoverTeam: (code: string | null) => void;
+}) {
   const played = k.scoreA !== null && k.scoreB !== null;
   return (
     <div className="rounded-xl border border-amber-200 bg-amber-50/40 p-2.5 text-sm">
@@ -304,11 +317,11 @@ function KnockoutCard({ k }: { k: KnockoutMatch }) {
         </span>
       </div>
       <div className="flex items-center gap-2">
-        <KnockoutSide code={k.teamA} label={k.labelA} />
+        <KnockoutSide code={k.teamA} label={k.labelA} onSelectTeam={onSelectTeam} onHoverTeam={onHoverTeam} />
         <span className="shrink-0 rounded-md bg-brand-navy px-2 py-0.5 text-xs font-bold text-white">
           {played ? `${k.scoreA} – ${k.scoreB}` : "vs"}
         </span>
-        <KnockoutSide code={k.teamB} label={k.labelB} alignEnd />
+        <KnockoutSide code={k.teamB} label={k.labelB} onSelectTeam={onSelectTeam} onHoverTeam={onHoverTeam} alignEnd />
       </div>
     </div>
   );
@@ -317,28 +330,43 @@ function KnockoutCard({ k }: { k: KnockoutMatch }) {
 function KnockoutSide({
   code,
   label,
+  onSelectTeam,
+  onHoverTeam,
   alignEnd,
 }: {
   code: string | null;
   label: string;
+  onSelectTeam: (code: string) => void;
+  onHoverTeam: (code: string | null) => void;
   alignEnd?: boolean;
 }) {
   const team = code ? getTeamByCode(code) : undefined;
-  return (
-    <div
-      className={`flex min-w-0 flex-1 items-center gap-1.5 ${
-        alignEnd ? "flex-row-reverse text-right" : ""
-      }`}
-    >
-      {team ? (
-        <>
-          <Flag team={team} className="h-4 w-6 shrink-0" />
-          <span className="truncate font-semibold text-slate-700">{team.teamName}</span>
-        </>
-      ) : (
+  const rowClass = `flex min-w-0 flex-1 items-center gap-1.5 ${
+    alignEnd ? "flex-row-reverse text-right" : ""
+  }`;
+
+  // Placeholder (team not decided yet) — not clickable.
+  if (!team) {
+    return (
+      <div className={rowClass}>
         <span className="truncate text-xs italic text-slate-400">{label}</span>
-      )}
-    </div>
+      </div>
+    );
+  }
+
+  // Known team — tap to open its country profile (facts + squad).
+  return (
+    <button
+      type="button"
+      onClick={() => onSelectTeam(team.fifaCode)}
+      onMouseEnter={() => onHoverTeam(team.fifaCode)}
+      onMouseLeave={() => onHoverTeam(null)}
+      title={`${team.teamName} · ${team.nameZh}`}
+      className={`${rowClass} rounded-md py-0.5 transition hover:bg-amber-100/70`}
+    >
+      <Flag team={team} className="h-4 w-6 shrink-0" />
+      <span className="truncate font-semibold text-slate-700">{team.teamName}</span>
+    </button>
   );
 }
 
