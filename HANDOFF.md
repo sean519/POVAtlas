@@ -111,8 +111,11 @@ C:\Resilio Sync\Alltek-Sean\Github\POVAtlas\   (canonical; F:\world map is a ret
 │  ├─ live-scores.ts         ← Vercel Edge fn: live provider chain + 60s cache (in-progress)
 │  ├─ results.ts             ← Vercel Edge fn: COMPLETE finished results parsed live from
 │  │                            Wikipedia, CDN-cached 5 min (primary finished-score source)
-│  └─ knockout.ts            ← Vercel Edge fn: knockout bracket (rounds/dates/teams/scores)
-│                                parsed live from the Wikipedia knockout page, CDN-cached 5 min
+│  └─ knockout.ts            ← Vercel Edge fn: knockout bracket (rounds/dates/times/venues/
+│                                teams/scores) parsed live from Wikipedia (incl. the R32/Final
+│                                subpages it transcludes), CDN-cached 5 min. Kickoff time is
+│                                converted from each venue's local UTC offset to the site's
+│                                canonical PDT, rolling the date on cross-midnight kickoffs.
 ├─ index.html
 ├─ package.json / package-lock.json
 ├─ vite.config.ts            ← dev server on port 5180
@@ -185,6 +188,14 @@ C:\Resilio Sync\Alltek-Sean\Github\POVAtlas\   (canonical; F:\world map is a ret
   `/tmp` generator in session history), NOT hand-typed — accuracy matters.
 - **Country comparison** (`CountryComparisonCard`): side-by-side stats with
   winner arrows, estimated win-chance bar, star players for both, kid summary.
+- **Knockout bracket** (`api/knockout.ts` + `KnockoutCard` in `SchedulePanel`):
+  R32 → Final auto-populated at runtime from Wikipedia (teams/scores fill in as
+  the bracket is decided), folded into the Matches tab's chronological timeline
+  with the SAME look and click behavior as a group `MatchCard` — round badge,
+  date/time/status row, flags+nameZh, score, venue, compact win-chance bar.
+  Tapping a fixture with both teams decided opens the head-to-head comparison
+  (`CountryComparisonCard`, same one group matches use); one team decided opens
+  that team's profile; two TBD placeholders aren't clickable.
 - **Real 2026 WC fixtures** (`matches.ts`): explicit 72-match group stage with
   real dates, venues, and scorelines. Match status (finished/live/scheduled) is
   derived from the device's current date, so it "updates" day to day.
@@ -225,12 +236,17 @@ See `TODO.md` for the live checklist. Summary, highest priority first:
    images, drop them in `public/avatars/`, add `avatarUrl` in `easterEgg.ts`
    `OC_ADULTS`, and the existing `EasterEggModal` render path already supports
    it.
-3. **Knockout stage.** Only the 72-match group stage exists. Round of 32 →
-   final is not modelled in `matches.ts` or standings.
-4. **Verify/refresh fixture scores** closer to/after real matchdays; scores are
-   a snapshot and several are illustrative.
-5. **Replace illustrative Golden Boot tallies** (`topScorers.ts`) with real data
-   if/when desired — currently labelled as illustrative in the UI.
+3. **Knockout stage — DONE.** Auto-populated at runtime via `/api/knockout`
+   (Wikipedia-backed); shown as round-badged cards folded into the Matches
+   timeline, with the same click-to-compare UX as group matches. Standings/
+   stats still cover only the group stage (by design — there's no "knockout
+   standings" concept).
+4. **Fixture scores — DONE (real + auto-refreshing).** `/api/results` (runtime,
+   Wikipedia) + the 30-min GitHub cron keep `matches.ts` accurate; no longer a
+   manual snapshot.
+5. **Golden Boot — real data, cron-refreshed.** `topScorers.ts` is seeded from
+   the real goalscorers module; refreshed by the 30-min cron (the one piece NOT
+   on the runtime path — see §7 item 7).
 6. **Live data integration — DONE (backend `/api/live-scores` + fallback).**
    API-Football primary (needs a PAID plan for 2026 — free plan blocks the season)
    then TheSportsDB free fallback; the frontend (`src/utils/liveScores.ts`) calls
@@ -489,16 +505,19 @@ Immediately preceding context (from the continued session, already committed):
 
 ## 12. Recommended very next task
 
-**Nothing outstanding — the backlog is at a clean stopping point.** All 12 OC
-members now have photo avatars, the zoom is lightened, and the three reported map/
-mobile issues (heavy yellow, focus-box rectangle, dead mobile card buttons) are
-fixed, verified, committed (`5cc2b84`), and **deployed** to povatlas.com. Just ask
-the user to **hard-refresh (Ctrl+Shift+R)** to see the live result.
+**Backlog is at a clean stopping point (2026-06-30).** Group stage, knockout
+bracket (auto-populating, click-to-compare, full visual parity with group
+matches), real results/scorers, and the runtime auto-refresh feeds are all
+live and deployed. Squads are the only thing requiring a manual re-pull (HANDOFF
+§9 recipe) if a late roster change happens.
 
-Pick the next item from `TODO.md` when the user is ready — the biggest remaining
-feature is the **knockout stage** (Round of 32 → Final), not yet modelled in
-`src/data/matches.ts` or standings/stats. Remember to **auto-deploy** after any
-change (see the deploy-policy note at the top).
+Pick the next item from `TODO.md` when the user is ready. Two candidates:
+1. Auto-fetch the Golden Boot at runtime too (currently the only piece still on
+   the 30-min cron instead of the runtime `/api/*` path — see §7 item 7).
+2. Tests / ESLint — still the only safety net is `tsc --noEmit` + manual
+   browser verification.
+Remember to **auto-deploy** after any change (see the deploy-policy note at the
+top) — `git push` from `C:\Resilio Sync\Alltek-Sean\Github\POVAtlas`.
 
 > Note: the easter egg **can** now be triggered from `preview_eval` — the Leaflet
 > map instance is reachable by walking the React fiber tree from the

@@ -1,6 +1,6 @@
 # POV GoalMap — TODO
 
-> Status as of 2026-06-25. Branch `main`, working tree clean.
+> Status as of 2026-06-30. Branch `main`, working tree clean.
 > Full context lives in [HANDOFF.md](HANDOFF.md).
 
 ## 🔜 Next up (do first)
@@ -16,10 +16,14 @@
 > time) — just `git push` from the canonical folder; Vercel builds it (HANDOFF §10).
 
 ## 📦 Medium priority
-- [x] **Knockout stage** (Round of 32 → Final). Auto-populated at runtime from the
-      Wikipedia knockout page via `/api/knockout` (`api/knockout.ts`); shown as a
-      "🏆 Knockout stage" section in the Matches tab, grouped by round, filling in
-      teams + scores as the bracket is decided. (Group-stage standings/stats in
+- [x] **Knockout stage** (Round of 32 → Final) — full parity with group matches.
+      Auto-populated at runtime via `/api/knockout` (teams/scores/date/time/venue,
+      with venue-local→PDT time conversion incl. cross-midnight date rollover);
+      folded into the Matches tab's date timeline as round-badged cards styled
+      exactly like `MatchCard` (status pill, flags+nameZh, score, venue, compact
+      win-chance bar). Tapping a decided fixture opens the same head-to-head
+      comparison card group matches use; one-team-known opens that team's
+      profile; two-TBD cards are disabled. (Group-stage standings/stats in
       `dataHelpers` still cover only the group stage — knockouts aren't in them.)
 - [x] **Auto-refresh fixture scores + Golden Boot every 30 min.** GitHub Actions
       (`.github/workflows/refresh-results.yml`) runs `scripts/refresh-results.mjs`
