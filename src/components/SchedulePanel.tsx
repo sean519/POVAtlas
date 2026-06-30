@@ -6,10 +6,16 @@ import StandingsView from "./StandingsView";
 import StatsView from "./StatsView";
 import PlayersView from "./PlayersView";
 import Flag from "./Flag";
-import { ALL_GROUPS, getTeamByCode } from "../utils/dataHelpers";
+import WinChanceBar from "./WinChanceBar";
+import { ALL_GROUPS, getTeamByCode, matchWinChance } from "../utils/dataHelpers";
 import { ROUND_META } from "../utils/knockout";
 import { groupColors } from "../utils/groupColors";
-import { formatLongDate, todayInKickoffTz } from "../utils/formatters";
+import {
+  formatKickoff,
+  formatLongDate,
+  formatShortDate,
+  todayInKickoffTz,
+} from "../utils/formatters";
 
 type Tab = "matches" | "teams" | "standings" | "stats" | "players";
 
@@ -233,6 +239,7 @@ export default function SchedulePanel({
                           <KnockoutCard
                             key={it.ko.id}
                             k={it.ko}
+                            today={today}
                             selected={selectedKnockoutId === it.ko.id}
                             hovered={hoveredKnockoutId === it.ko.id}
                             onHover={onHoverKnockout}
@@ -311,20 +318,40 @@ export default function SchedulePanel({
   );
 }
 
+const KO_STATUS_STYLES = {
+  scheduled: { label: "Upcoming", className: "bg-slate-100 text-slate-600" },
+  finished: { label: "Full time", className: "bg-emerald-100 text-emerald-700" },
+} as const;
+
+/** Status pill content for a knockout fixture (no live-minute tracking yet). */
+function knockoutStatus(
+  played: boolean,
+  date: string,
+  today: string
+): { label: string; className: string } {
+  if (played) return KO_STATUS_STYLES.finished;
+  if (date === today) return { ...KO_STATUS_STYLES.scheduled, label: "Today" };
+  return KO_STATUS_STYLES.scheduled;
+}
+
 /**
- * One knockout fixture. Tapping the card opens the head-to-head comparison
- * (once both teams are decided) — same as a group MatchCard — or that team's
- * profile if only one side is decided yet. Cards with two TBD placeholders
- * aren't interactive (nothing to show).
+ * One knockout fixture, styled to match a group-stage `MatchCard` (round
+ * badge instead of group badge, same date/time/status row, score, venue and
+ * win-chance bar). Tapping the card opens the head-to-head comparison (once
+ * both teams are decided) — same as a group match — or that team's profile if
+ * only one side is decided yet. Cards with two TBD placeholders aren't
+ * interactive (nothing to show).
  */
 function KnockoutCard({
   k,
+  today,
   selected,
   hovered,
   onHover,
   onClick,
 }: {
   k: KnockoutMatch;
+  today: string;
   selected: boolean;
   hovered: boolean;
   onHover: (id: string | null) => void;
@@ -332,6 +359,11 @@ function KnockoutCard({
 }) {
   const played = k.scoreA !== null && k.scoreB !== null;
   const clickable = Boolean(k.teamA || k.teamB);
+  const status = knockoutStatus(played, k.date, today);
+  const teamA = k.teamA ? getTeamByCode(k.teamA) : undefined;
+  const teamB = k.teamB ? getTeamByCode(k.teamB) : undefined;
+  const chance =
+    k.teamA && k.teamB ? matchWinChance(k.teamA, k.teamB) : null;
 
   return (
     <button
@@ -343,7 +375,7 @@ function KnockoutCard({
       onBlur={() => clickable && onHover(null)}
       onClick={() => clickable && onClick(k)}
       className={[
-        "w-full rounded-xl border p-2.5 text-left text-sm transition",
+        "w-full rounded-xl border p-3 text-left transition",
         !clickable
           ? "cursor-default border-amber-100 bg-amber-50/20 opacity-80"
           : selected
@@ -353,48 +385,90 @@ function KnockoutCard({
           : "border-amber-200 bg-amber-50/40 hover:border-amber-300 hover:bg-amber-50/70",
       ].join(" ")}
     >
-      <div className="mb-1">
-        <span className="rounded bg-amber-100 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-amber-700">
+      <div className="mb-2 flex items-center justify-between gap-2 text-[11px]">
+        <span className="rounded-md bg-amber-100 px-1.5 py-0.5 font-bold text-amber-700">
           🏆 {ROUND_META[k.round].label}
         </span>
-      </div>
-      <div className="flex items-center gap-2">
-        <KnockoutSide code={k.teamA} label={k.labelA} />
-        <span className="shrink-0 rounded-md bg-brand-navy px-2 py-0.5 text-xs font-bold text-white">
-          {played ? `${k.scoreA} – ${k.scoreB}` : "vs"}
+        <span className="text-slate-500">
+          {formatShortDate(k.date)}
+          {k.kickoffTime ? ` · ${formatKickoff(k.kickoffTime)}` : ""}
         </span>
-        <KnockoutSide code={k.teamB} label={k.labelB} alignEnd />
+        <span className={`rounded-md px-1.5 py-0.5 font-semibold ${status.className}`}>
+          {status.label}
+        </span>
       </div>
+
+      <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
+        <KnockoutSide team={teamA} label={k.labelA} />
+        <div className="px-1 text-center">
+          {played ? (
+            <span className="rounded-lg bg-brand-navy px-2 py-0.5 text-sm font-bold text-white">
+              {k.scoreA} – {k.scoreB}
+            </span>
+          ) : (
+            <span className="text-xs font-bold text-slate-400">vs</span>
+          )}
+        </div>
+        <KnockoutSide team={teamB} label={k.labelB} alignEnd />
+      </div>
+
+      {(k.venue || k.city) && (
+        <div className="mt-2 truncate text-center text-[11px] text-slate-400">
+          {[k.venue, k.city].filter(Boolean).join(" · ")}
+        </div>
+      )}
+
+      {chance && teamA && teamB && (
+        <WinChanceBar chance={chance} teamA={teamA} teamB={teamB} variant="compact" />
+      )}
     </button>
   );
 }
 
 function KnockoutSide({
-  code,
+  team,
   label,
   alignEnd,
 }: {
-  code: string | null;
+  team: import("../types").Team | undefined;
   label: string;
   alignEnd?: boolean;
 }) {
-  const team = code ? getTeamByCode(code) : undefined;
-  const rowClass = `flex min-w-0 flex-1 items-center gap-1.5 ${
-    alignEnd ? "flex-row-reverse text-right" : ""
-  }`;
-
   if (!team) {
     return (
-      <div className={rowClass}>
+      <div
+        className={`flex min-w-0 items-center gap-2 ${
+          alignEnd ? "justify-self-end text-right" : "justify-self-start"
+        }`}
+      >
         <span className="truncate text-xs italic text-slate-400">{label}</span>
       </div>
     );
   }
 
   return (
-    <div className={rowClass}>
-      <Flag team={team} className="h-4 w-6 shrink-0" />
-      <span className="truncate font-semibold text-slate-700">{team.teamName}</span>
+    <div
+      className={`flex min-w-0 items-center gap-2 ${
+        alignEnd ? "justify-self-end text-right" : "justify-self-start"
+      }`}
+    >
+      {alignEnd ? (
+        <>
+          <span className="min-w-0 leading-tight">
+            <span className="block truncate text-sm font-semibold">{team.teamName}</span>
+            <span className="block truncate text-[11px] text-slate-400">{team.nameZh}</span>
+          </span>
+          <Flag team={team} className="h-6 w-8 shrink-0" />
+        </>
+      ) : (
+        <>
+          <Flag team={team} className="h-6 w-8 shrink-0" />
+          <span className="min-w-0 leading-tight">
+            <span className="block truncate text-sm font-semibold">{team.teamName}</span>
+            <span className="block truncate text-[11px] text-slate-400">{team.nameZh}</span>
+          </span>
+        </>
+      )}
     </div>
   );
 }

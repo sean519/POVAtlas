@@ -17,6 +17,9 @@ const PAGE = "2026 FIFA World Cup knockout stage";
 const ALIAS: Record<string, string> = { ALG: "DZA", HAI: "HTI", IRN: "IRI" };
 const norm = (c: string) => ALIAS[c] ?? c;
 
+/** The site's canonical kickoff timezone (PDT, UTC-7) — matches matches.ts. */
+const TARGET_UTC_OFFSET_MIN = -7 * 60;
+
 const CACHE_TTL_MS = 5 * 60_000;
 let cache: { at: number; data: KnockoutResponse } | null = null;
 
@@ -47,6 +50,69 @@ function headingRound(name: string): KnockoutRound | null {
   if (/Third place/i.test(name)) return "3P";
   if (/^Final/i.test(name)) return "Final";
   return null;
+}
+
+/** Strip wikilinks (`[[A|B]]` → `B`, `[[A]]` → `A`) from a raw field value. */
+function delink(raw: string): string {
+  return raw.replace(/\[\[(?:[^\]|]*\|)?([^\]]+)\]\]/g, (_, b: string) => b).trim();
+}
+
+/** Parse a `|stadium=[[Venue]], [[City|Label]]` field into { venue, city }. */
+function parseVenue(raw: string | undefined): { venue: string | null; city: string | null } {
+  if (!raw) return { venue: null, city: null };
+  const cleaned = delink(raw);
+  const idx = cleaned.indexOf(",");
+  if (idx === -1) return { venue: cleaned || null, city: null };
+  return { venue: cleaned.slice(0, idx).trim() || null, city: cleaned.slice(idx + 1).trim() || null };
+}
+
+/**
+ * Parse a `|time=12:00&nbsp;p.m. [[UTC−07:00|UTC−7]]` field (venue-local time
+ * + its explicit UTC offset) into 24h hour/minute + the offset in minutes
+ * (negative, West of UTC — true for every 2026 host city).
+ */
+function parseTimeField(raw: string | undefined): { hour: number; minute: number; offsetMin: number } | null {
+  if (!raw) return null;
+  const m = raw.match(/(\d{1,2}):(\d{2})\s*&nbsp;?\s*(a|p)\.m\.[\s\S]*?UTC[−-](\d{1,2})(?::(\d{2}))?/i);
+  if (!m) return null;
+  let hour = parseInt(m[1], 10) % 12;
+  if (/p/i.test(m[3])) hour += 12;
+  const minute = parseInt(m[2], 10);
+  const offHour = parseInt(m[4], 10);
+  const offMin = m[5] ? parseInt(m[5], 10) : 0;
+  return { hour, minute, offsetMin: -(offHour * 60 + offMin) };
+}
+
+function shiftIsoDate(iso: string, days: number): string {
+  if (days === 0) return iso;
+  const [y, mo, d] = iso.split("-").map(Number);
+  const dt = new Date(Date.UTC(y, mo - 1, d));
+  dt.setUTCDate(dt.getUTCDate() + days);
+  return dt.toISOString().slice(0, 10);
+}
+
+/**
+ * Convert a venue-local date+time(+offset) to the site's canonical PDT
+ * date+time, rolling the calendar date when the offset difference crosses
+ * midnight — the same conversion the group-stage fixtures were hand-done
+ * with (verified against `matches.ts`'s documented "midnight ET → 21:00 PDT
+ * previous day" cases).
+ */
+function toSiteLocal(
+  dateIso: string,
+  parsed: { hour: number; minute: number; offsetMin: number }
+): { date: string; time: string } {
+  const localTotal = parsed.hour * 60 + parsed.minute;
+  const utcTotal = localTotal - parsed.offsetMin;
+  const targetTotalRaw = utcTotal + TARGET_UTC_OFFSET_MIN;
+  const dayDelta = Math.floor(targetTotalRaw / 1440);
+  const targetTotal = ((targetTotalRaw % 1440) + 1440) % 1440;
+  const h = Math.floor(targetTotal / 60);
+  const mi = targetTotal % 60;
+  return {
+    date: shiftIsoDate(dateIso, dayDelta),
+    time: `${String(h).padStart(2, "0")}:${String(mi).padStart(2, "0")}`,
+  };
 }
 
 /** Pull "team1"/"team2" → { code|null, label } from a football-box body. */
@@ -91,16 +157,25 @@ function collectBoxes(
     // 3rd-place play-off is a "Loser Match …" pairing.
     if (/Loser Match/i.test(a.label) || /Loser Match/i.test(b.label)) round = "3P";
     if (!round) continue;
-    const date = (body.match(/\|date=\{\{Start date\|(\d+)\|(\d+)\|(\d+)/) ?? [])
+    const wikiDate = (body.match(/\|date=\{\{Start date\|(\d+)\|(\d+)\|(\d+)/) ?? [])
       .slice(1)
       .map((n, k) => (k === 0 ? n : n.padStart(2, "0")))
       .join("-");
+    const timeRaw = body.match(/\|time=([^\n]*)/)?.[1];
+    const timeParsed = parseTimeField(timeRaw);
+    const { date, time: kickoffTime } = timeParsed && wikiDate
+      ? toSiteLocal(wikiDate, timeParsed)
+      : { date: wikiDate, time: null };
+    const { venue, city } = parseVenue(body.match(/\|stadium=([^\n]*)/)?.[1]);
     const sc = body.match(/\|score=\{\{score link\|[^|]*\|(\d+)[–-](\d+)(?:\|[^}]*)?\}\}/);
     perRound[round] = (perRound[round] ?? 0) + 1;
     out.push({
       id: `${round}-${perRound[round]}`,
       round,
       date,
+      kickoffTime,
+      venue,
+      city,
       teamA: a.code,
       teamB: b.code,
       labelA: a.label || "TBD",

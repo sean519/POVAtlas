@@ -194,8 +194,14 @@ export interface KnockoutMatch {
   /** Stable id: round + position in the bracket, e.g. "R16-1". */
   id: string;
   round: KnockoutRound;
-  /** ISO date, e.g. "2026-07-04". */
+  /** ISO date, already converted to the site's canonical kickoff timezone
+   * (PDT) from the venue's local time — may differ from the host city's
+   * calendar date for late-night kickoffs, same as the group-stage fixtures. */
   date: string;
+  /** Local kickoff time in PDT, "HH:MM" (24h), or null if unparseable. */
+  kickoffTime: string | null;
+  venue: string | null;
+  city: string | null;
   /** fifaCode once known, else null. */
   teamA: string | null;
   teamB: string | null;
