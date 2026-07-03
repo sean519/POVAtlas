@@ -19,6 +19,7 @@ import {
   getMatchesForTeam,
   getTeamByCode,
 } from "./utils/dataHelpers";
+import { getVenuePoint } from "./data/venues";
 
 export default function App() {
   // ---- Selection / hover state ----
@@ -195,6 +196,19 @@ export default function App() {
     ? [selectedKnockout.teamA, selectedKnockout.teamB]
     : null;
 
+  // The selected match's stadium — the ⚽ marker sits here and both teams'
+  // arcs converge on it, so the venue is visible on the map.
+  const matchVenue = useMemo(() => {
+    const src =
+      selectedMatch ??
+      (selectedKnockout?.teamA && selectedKnockout.teamB ? selectedKnockout : null);
+    if (!src) return null;
+    const pt = getVenuePoint(src.venue);
+    if (!pt) return null;
+    const label = [src.venue, src.city].filter(Boolean).join(" · ");
+    return { ...pt, label };
+  }, [selectedMatch, selectedKnockout]);
+
   // ---- Handlers ----
   const selectTeam = (code: string) => {
     setSelectedTeamCode(code);
@@ -325,6 +339,7 @@ export default function App() {
             highlightCodes={highlightCodes}
             focusCode={focusCode}
             fitCodes={fitCodes}
+            venue={matchVenue}
             onTeamClick={selectTeam}
             onTeamHover={setHoveredTeamCode}
             onEasterEgg={() => setEggOpen(true)}

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   AttributionControl,
   MapContainer,
@@ -23,6 +23,8 @@ interface WorldMapProps {
   focusCode: string | null;
   /** Two fifaCodes to frame together (a selected match) via fit-bounds. */
   fitCodes: string[] | null;
+  /** The selected match's stadium: the ⚽ sits here and both arcs meet on it. */
+  venue: { lat: number; lng: number; label: string } | null;
   onTeamClick: (code: string) => void;
   onTeamHover: (code: string | null) => void;
   /** Fired when the hidden Orange County easter egg marker is clicked. */
@@ -40,6 +42,7 @@ export default function WorldMap({
   highlightCodes,
   focusCode,
   fitCodes,
+  venue,
   onTeamClick,
   onTeamHover,
   onEasterEgg,
@@ -124,13 +127,14 @@ export default function WorldMap({
           />
         ))}
 
-        {/* Animated arc linking the two teams of a selected match */}
-        <MatchArc codes={fitCodes} />
+        {/* Animated arcs linking the two teams of a selected match, meeting
+            at the venue's ⚽ when the stadium is known */}
+        <MatchArc codes={fitCodes} venue={venue} />
 
         {/* Hidden easter egg — only shows when zoomed into Orange County */}
         <OcEasterEgg onOpen={onEasterEgg} />
 
-        <MapController focusCode={focusCode} fitCodes={fitCodes} />
+        <MapController focusCode={focusCode} fitCodes={fitCodes} venue={venue} />
       </MapContainer>
 
       {geoError && (
@@ -346,15 +350,35 @@ function buildArc(
   return points;
 }
 
-function MatchArc({ codes }: { codes: string[] | null }) {
-  const key = codes ? codes.join(",") : "";
+function MatchArc({
+  codes,
+  venue,
+}: {
+  codes: string[] | null;
+  venue: { lat: number; lng: number; label: string } | null;
+}) {
+  const key = `${codes ? codes.join(",") : ""}|${venue ? venue.label : ""}`;
   const data = useMemo(() => {
     if (!codes || codes.length < 2) return null;
     const a = getTeamByCode(codes[0]);
     const b = getTeamByCode(codes[1]);
     if (!a || !b) return null;
+    if (venue) {
+      // Both teams' arcs converge on the stadium, where the ⚽ sits.
+      const v: [number, number] = [venue.lat, venue.lng];
+      return {
+        curves: [buildArc([a.lat, a.lng], v), buildArc([b.lat, b.lng], v)],
+        ball: v,
+        label: venue.label,
+      };
+    }
+    // Venue unknown — fall back to one arc with the ball at its midpoint.
     const curve = buildArc([a.lat, a.lng], [b.lat, b.lng]);
-    return { curve, mid: curve[Math.floor(curve.length / 2)] };
+    return {
+      curves: [curve],
+      ball: curve[Math.floor(curve.length / 2)],
+      label: null,
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key]);
 
@@ -373,23 +397,33 @@ function MatchArc({ codes }: { codes: string[] | null }) {
 
   return (
     <>
-      {/* Soft glow underlay */}
-      <Polyline
-        positions={data.curve}
-        interactive={false}
-        pathOptions={{ color: "#ffffff", weight: 6, opacity: 0.7 }}
-      />
-      <Polyline
-        positions={data.curve}
-        interactive={false}
-        pathOptions={{ className: "match-arc", color: "#5b86e5", weight: 3 }}
-      />
+      {data.curves.map((curve, i) => (
+        <Fragment key={`${key}-${i}`}>
+          {/* Soft glow underlay */}
+          <Polyline
+            positions={curve}
+            interactive={false}
+            pathOptions={{ color: "#ffffff", weight: 6, opacity: 0.7 }}
+          />
+          <Polyline
+            positions={curve}
+            interactive={false}
+            pathOptions={{ className: "match-arc", color: "#5b86e5", weight: 3 }}
+          />
+        </Fragment>
+      ))}
       <Marker
-        position={data.mid}
+        position={data.ball}
         icon={ballIcon}
-        interactive={false}
+        interactive={Boolean(data.label)}
         zIndexOffset={1500}
-      />
+      >
+        {data.label && (
+          <Tooltip direction="top" offset={[0, -12]} opacity={1}>
+            <span className="font-semibold">🏟️ {data.label}</span>
+          </Tooltip>
+        )}
+      </Marker>
     </>
   );
 }
@@ -454,16 +488,23 @@ function OcEasterEgg({ onOpen }: { onOpen: () => void }) {
 function MapController({
   focusCode,
   fitCodes,
+  venue,
 }: {
   focusCode: string | null;
   fitCodes: string[] | null;
+  venue: { lat: number; lng: number; label: string } | null;
 }) {
   const map = useMap();
   const targetRef = useRef<string>("world");
 
+  // Latest venue for apply() to read — the venue point joins the fit bounds so
+  // the stadium ⚽ always ends up in frame.
+  const venueRef = useRef(venue);
+  venueRef.current = venue;
+
   // A single key describing the current camera target.
   const target = fitCodes?.length
-    ? `fit:${fitCodes.join(",")}`
+    ? `fit:${fitCodes.join(",")}${venue ? `@${venue.lat},${venue.lng}` : ""}`
     : focusCode
     ? `team:${focusCode}`
     : "world";
@@ -481,10 +522,13 @@ function MapController({
         if (t.startsWith("fit:")) {
           pts = t
             .slice(4)
+            .split("@")[0]
             .split(",")
             .map((c) => getTeamByCode(c))
             .filter((tm): tm is Team => Boolean(tm))
             .map((tm) => [tm.lat, tm.lng] as [number, number]);
+          const v = venueRef.current;
+          if (v) pts.push([v.lat, v.lng]);
         } else if (t.startsWith("team:")) {
           const team = getTeamByCode(t.slice(5));
           if (team) {
