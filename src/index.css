@@ -259,15 +259,17 @@ body {
   }
 }
 
-/* Respect users who prefer reduced motion */
+/* Respect users who prefer reduced motion for the big, bouncy animations.
+   The match-arc dash flow and match-ball bob are intentionally EXEMPT: they
+   are small, contained motions that carry meaning (they point to the stadium
+   hosting the selected match) and should stay visible even when the OS asks
+   for reduced motion (e.g. Windows "animation effects" off). */
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
   }
   .animate-fade-in-up,
   .team-marker.is-active .ring,
-  .match-arc,
-  .match-ball,
   .oc-hq,
   .egg-confetti,
   .egg-pop,
