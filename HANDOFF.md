@@ -155,6 +155,7 @@ C:\Resilio Sync\Alltek-Sean\Github\POVAtlas\   (canonical; F:\world map is a ret
    │  ├─ topScorers.ts       ← Golden Boot leaderboard (illustrative)
    │  ├─ teamExtras.ts       ← curated star players + bios per team (feeds Players tab)
    │  ├─ squads.ts           ← full 26-player squads for all 48 teams (official WC2026)
+   │  ├─ venues.ts           ← real coordinates for the 16 host stadiums (by stadium name)
    │  └─ easterEgg.ts        ← OC roster (adults emoji, kids avatarUrl) + trigger geo box
    ├─ providers/             ← live-score providers (pure mappers + fetch)
    │  ├─ apiFootball.ts      ← API-Football (primary; key passed in, server-only fetch)
@@ -172,8 +173,11 @@ C:\Resilio Sync\Alltek-Sean\Github\POVAtlas\   (canonical; F:\world map is a ret
 
 ## 4. Features already completed
 
-- Interactive Leaflet world map; click/hover a country to select; highlighted
-  countries + an arc connecting the two teams of a selected match.
+- Interactive Leaflet world map; click/hover a country to select. For a
+  selected match, both teams' arcs converge on a ⚽ placed at the **real
+  stadium coordinates** (`src/data/venues.ts`; hover shows "🏟️ venue · city",
+  and the camera frames teams + stadium together). Falls back to a single
+  team-to-team arc with a midpoint ball if the venue name can't be resolved.
 - Five left-pane tabs: **Matches, Teams, Standings, Stats, Players** + live
   search filter across teams and matches.
 - **Country profile** (`CountryDetailPanel`): two tabs — **Country** (capital/
