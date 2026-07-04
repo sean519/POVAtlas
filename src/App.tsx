@@ -248,6 +248,50 @@ export default function App() {
     setSelectedKnockoutId(null);
   };
 
+  // ---- Browser Back returns to the initial view instead of leaving ----
+  // While anything is open (team/match panel, player modal, easter egg) we
+  // keep ONE guard entry on the history stack. Back then pops that entry and
+  // we restore the untouched initial view; a second Back leaves the site as
+  // usual. Closing things in-app (×) consumes the guard entry silently so the
+  // history never accumulates stale states.
+  const hasOpenUI = Boolean(
+    selectedTeamCode || selectedMatchId || selectedKnockoutId || selectedPlayer || eggOpen
+  );
+  const historyArmedRef = useRef(false);
+  const suppressPopRef = useRef(false);
+
+  useEffect(() => {
+    if (hasOpenUI && !historyArmedRef.current) {
+      window.history.pushState({ povatlas: "view" }, "");
+      historyArmedRef.current = true;
+    } else if (!hasOpenUI && historyArmedRef.current) {
+      suppressPopRef.current = true;
+      window.history.back();
+    }
+  }, [hasOpenUI]);
+
+  useEffect(() => {
+    const onPop = () => {
+      if (suppressPopRef.current) {
+        // Our own history.back() after an in-app close — nothing to restore.
+        suppressPopRef.current = false;
+        historyArmedRef.current = false;
+        return;
+      }
+      if (historyArmedRef.current) {
+        // User pressed Back while something was open → initial view.
+        historyArmedRef.current = false;
+        setSelectedMatchId(null);
+        setSelectedTeamCode(null);
+        setSelectedKnockoutId(null);
+        setSelectedPlayer(null);
+        setEggOpen(false);
+      }
+    };
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, []);
+
   // ---- Floating info card (bottom-right on desktop, bottom sheet on mobile) ----
   const cardShell =
     "animate-fade-in-up absolute inset-x-0 bottom-0 z-[600] flex h-[72%] flex-col overflow-hidden rounded-t-2xl bg-white shadow-card ring-1 ring-black/5 sm:inset-x-auto sm:bottom-4 sm:right-4 sm:h-[min(34rem,calc(100%-2rem))] sm:w-[min(23rem,calc(100%-1.5rem))] sm:rounded-2xl sm:border sm:border-white/60";
