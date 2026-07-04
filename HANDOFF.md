@@ -180,6 +180,12 @@ C:\Resilio Sync\Alltek-Sean\Github\POVAtlas\   (canonical; F:\world map is a ret
   team-to-team arc with a midpoint ball if the venue name can't be resolved.
 - Five left-pane tabs: **Matches, Teams, Standings, Stats, Players** + live
   search filter across teams and matches.
+- **Browser Back = return to the initial view** (App.tsx history guard): while
+  any panel/modal is open, one guard entry sits on the history stack — Back
+  restores the untouched initial view instead of leaving the site; a second
+  Back exits normally. In-app closes (×) consume the entry silently via
+  `history.back()` + a suppression flag, so no stale entries pile up.
+  Especially matters on Android's system Back gesture.
 - **Country profile** (`CountryDetailPanel`): two tabs — **Country** (capital/
   region/population/GDP/area/languages/currency/neighbors, short intro, **📍
   Must-see places**, that team's matches) and **Squad**.
