@@ -49,6 +49,8 @@ export default function WorldMap({
 }: WorldMapProps) {
   const [geo, setGeo] = useState<GeoData | null>(null);
   const [geoError, setGeoError] = useState(false);
+  // Base layer: street map (CARTO) or satellite imagery (Esri) + label overlay.
+  const [satellite, setSatellite] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -98,10 +100,28 @@ export default function WorldMap({
       >
         {/* Attribution bottom-left so it's never hidden by the comparison card */}
         <AttributionControl position="bottomleft" prefix={false} />
-        <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
-          url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
-        />
+        {satellite ? (
+          <>
+            <TileLayer
+              key="satellite"
+              attribution='Tiles &copy; <a href="https://www.esri.com/">Esri</a> &mdash; Source: Esri, Maxar, Earthstar Geographics'
+              url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+            />
+            {/* Place-name labels over the imagery (white text reads well) */}
+            <TileLayer
+              key="satellite-labels"
+              attribution='&copy; <a href="https://carto.com/attributions">CARTO</a>'
+              url="https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png"
+              zIndex={2}
+            />
+          </>
+        ) : (
+          <TileLayer
+            key="streets"
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
+            url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
+          />
+        )}
 
         {geo && (
           <GeoLayer
@@ -110,6 +130,7 @@ export default function WorldMap({
             highlightSet={highlightSet}
             focusCode={focusCode}
             anyActive={anyActive}
+            satellite={satellite}
             onTeamClick={onTeamClick}
             onTeamHover={onTeamHover}
           />
@@ -137,6 +158,17 @@ export default function WorldMap({
         <MapController focusCode={focusCode} fitCodes={fitCodes} venue={venue} />
       </MapContainer>
 
+      {/* Base-layer toggle: street map ↔ satellite imagery */}
+      <button
+        type="button"
+        onClick={() => setSatellite((s) => !s)}
+        title={satellite ? "切换为地图 · Switch to map view" : "切换为卫星图 · Switch to satellite view"}
+        className="absolute right-3 top-3 z-[500] flex items-center gap-1.5 rounded-xl border border-white/60 bg-white/95 px-2.5 py-1.5 text-xs font-bold text-slate-600 shadow-card ring-1 ring-black/5 backdrop-blur transition hover:bg-white"
+      >
+        <span aria-hidden>{satellite ? "🗺️" : "🛰️"}</span>
+        {satellite ? "Map" : "Satellite"}
+      </button>
+
       {geoError && (
         <div className="absolute left-1/2 top-3 z-[500] -translate-x-1/2 rounded-lg bg-amber-50 px-3 py-1.5 text-[11px] text-amber-800 shadow">
           Country borders couldn&rsquo;t load — showing markers only.
@@ -154,6 +186,8 @@ interface GeoLayerProps {
   highlightSet: Set<string>;
   focusCode: string | null;
   anyActive: boolean;
+  /** Satellite base layer active → mute fills so imagery stays visible. */
+  satellite: boolean;
   onTeamClick: (code: string) => void;
   onTeamHover: (code: string | null) => void;
 }
@@ -164,6 +198,7 @@ function GeoLayer({
   highlightSet,
   focusCode,
   anyActive,
+  satellite,
   onTeamClick,
   onTeamHover,
 }: GeoLayerProps) {
@@ -176,7 +211,11 @@ function GeoLayer({
 
   const styleFor = (team: Team | undefined): L.PathOptions => {
     if (!team) {
-      // Not a World Cup country
+      // Not a World Cup country. Over satellite imagery: thin light border,
+      // no fill, so the imagery isn't washed out.
+      if (satellite) {
+        return { weight: 0.4, color: "rgba(255,255,255,0.45)", fillOpacity: 0 };
+      }
       return {
         weight: 0.5,
         color: "#cbd5e1",
@@ -200,12 +239,15 @@ function GeoLayer({
     if (isActive) {
       return {
         weight: 2,
-        color: "#11487f",
+        color: satellite ? "#8fd0ff" : "#11487f",
         fillColor: "#2f8fd6",
-        fillOpacity: 0.7,
+        fillOpacity: satellite ? 0.35 : 0.7,
       };
     }
     if (anyActive) {
+      if (satellite) {
+        return { weight: 0.4, color: "rgba(255,255,255,0.3)", fillOpacity: 0 };
+      }
       return {
         weight: 0.5,
         color: "#94a3b8",
@@ -214,6 +256,9 @@ function GeoLayer({
       };
     }
     // Resting state (nothing selected): subtle, so nothing looks "highlighted".
+    if (satellite) {
+      return { weight: 0.6, color: "rgba(255,255,255,0.55)", fillOpacity: 0 };
+    }
     return {
       weight: 0.6,
       color: "#bcd9cb",
@@ -257,7 +302,7 @@ function GeoLayer({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data, map]);
 
-  // Restyle whenever highlight/selection changes.
+  // Restyle whenever highlight/selection or the base layer changes.
   useEffect(() => {
     const layer = layerRef.current;
     if (!layer) return;
@@ -267,7 +312,7 @@ function GeoLayer({
       (lyr as L.Path).setStyle(styleFor(team));
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [highlightSet, focusCode, anyActive, isoToTeam]);
+  }, [highlightSet, focusCode, anyActive, isoToTeam, satellite]);
 
   return null;
 }
