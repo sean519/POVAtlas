@@ -178,6 +178,10 @@ C:\Resilio Sync\Alltek-Sean\Github\POVAtlas\   (canonical; F:\world map is a ret
   stadium coordinates** (`src/data/venues.ts`; hover shows "🏟️ venue · city",
   and the camera frames teams + stadium together). Falls back to a single
   team-to-team arc with a midpoint ball if the venue name can't be resolved.
+- **Satellite layer toggle** (button top-right of the map): CARTO streets ↔
+  Esri World Imagery + CARTO dark_only_labels overlay for place names. In
+  satellite mode country polygons become thin white outlines (no fill) so the
+  imagery stays visible; zooming into a selected match shows the real stadium.
 - Five left-pane tabs: **Matches, Teams, Standings, Stats, Players** + live
   search filter across teams and matches.
 - **Browser Back = return to the initial view** (App.tsx history guard): while
