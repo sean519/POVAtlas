@@ -46,7 +46,15 @@ export default function Layout({
               </p>
             </div>
           </div>
-          <div className="ml-auto flex shrink-0 items-center gap-1.5 rounded-full bg-white/20 px-2.5 py-1.5 text-[11px] font-semibold shadow-inner sm:gap-2 sm:px-3 sm:text-xs">
+          <a
+            href="/game"
+            title="Cartoon Penalty · 点球小游戏"
+            className="ml-auto flex shrink-0 items-center gap-1 rounded-full bg-white/20 px-2.5 py-1.5 text-[11px] font-bold shadow-inner transition hover:bg-white/30 sm:gap-1.5 sm:px-3 sm:text-xs"
+          >
+            <span aria-hidden>🎮</span>
+            <span className="hidden sm:inline">Game</span>
+          </a>
+          <div className="flex shrink-0 items-center gap-1.5 rounded-full bg-white/20 px-2.5 py-1.5 text-[11px] font-semibold shadow-inner sm:gap-2 sm:px-3 sm:text-xs">
             <span className="relative flex h-2 w-2">
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white opacity-75" />
               <span className="relative inline-flex h-2 w-2 rounded-full bg-white" />

@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
+    <meta
+      name="description"
+      content="Cartoon Penalty — a mini penalty-shootout soccer game on POV Atlas. Pick your nation and score!"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <title>Cartoon Penalty ⚽ · POV Atlas</title>
+    <style>
+      * { box-sizing: border-box; }
+      html, body { margin: 0; padding: 0; height: 100%; }
+      body {
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+        background: linear-gradient(180deg, #dff0fb 0%, #fff7ee 100%);
+        color: #3a4a73;
+        -webkit-tap-highlight-color: transparent;
+        overscroll-behavior: none;
+      }
+      #game-root { display: flex; flex-direction: column; height: 100dvh; }
+
+      .gp-header {
+        display: flex; align-items: center; gap: 10px;
+        padding: calc(env(safe-area-inset-top) + 8px) 14px 8px;
+        background: linear-gradient(90deg, #5b86e5, #b8a6f0, #ff9e80);
+        color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.18);
+        box-shadow: 0 4px 16px -6px rgba(11,31,58,0.35);
+      }
+      .gp-header a.back {
+        display: inline-flex; align-items: center; gap: 6px;
+        color: #fff; text-decoration: none; font-weight: 700; font-size: 13px;
+        background: rgba(255,255,255,0.22); border-radius: 999px; padding: 6px 12px;
+        transition: background .15s;
+      }
+      .gp-header a.back:hover { background: rgba(255,255,255,0.35); }
+      .gp-title { font-weight: 800; font-size: 17px; line-height: 1.1; }
+      .gp-sub { font-size: 11px; opacity: .92; }
+      .gp-score {
+        margin-left: auto; font-weight: 800; font-size: 15px; letter-spacing: 2px;
+        background: rgba(255,255,255,0.22); border-radius: 999px; padding: 6px 12px;
+        white-space: nowrap;
+      }
+
+      .gp-stage { position: relative; flex: 1; min-height: 0; display: grid; place-items: center; padding: 10px; }
+      canvas#pitch {
+        display: block; border-radius: 18px;
+        box-shadow: 0 10px 34px -10px rgba(11,31,58,0.4);
+        touch-action: none; cursor: crosshair; background: #bfe3f7;
+        max-width: 100%; max-height: 100%;
+      }
+
+      .gp-hint {
+        text-align: center; font-size: 12px; color: #6b7aa1;
+        padding: 4px 12px calc(env(safe-area-inset-bottom) + 8px);
+      }
+
+      /* Overlays (team picker / end screen) */
+      .gp-overlay {
+        position: absolute; inset: 0; z-index: 10;
+        display: flex; align-items: center; justify-content: center; padding: 16px;
+        background: rgba(58, 74, 115, 0.45); backdrop-filter: blur(3px);
+      }
+      .gp-card {
+        background: #fff; border-radius: 20px; padding: 18px;
+        max-width: 560px; width: 100%; max-height: 88%; overflow: auto;
+        box-shadow: 0 18px 50px -12px rgba(11,31,58,0.5); text-align: center;
+      }
+      .gp-card h2 { margin: 2px 0 4px; font-size: 20px; }
+      .gp-card p.sub { margin: 0 0 12px; font-size: 13px; color: #6b7aa1; }
+      .team-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 8px; }
+      .team-btn {
+        display: flex; flex-direction: column; align-items: center; gap: 4px;
+        border: 1px solid #e2e8f0; background: #fff; border-radius: 14px;
+        padding: 8px 4px; cursor: pointer; font: inherit; font-size: 11px; font-weight: 600;
+        color: #3a4a73; transition: transform .1s, border-color .1s, background .1s;
+      }
+      .team-btn:hover { transform: translateY(-2px); border-color: #6fc3e8; background: #f2fafe; }
+      .team-btn img { width: 34px; height: 24px; object-fit: cover; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.25); }
+      .team-btn .zh { font-weight: 400; color: #94a3b8; font-size: 10px; }
+
+      .gp-big-btn {
+        display: inline-block; margin-top: 12px; border: 0; cursor: pointer; font: inherit;
+        font-weight: 800; font-size: 15px; color: #fff; border-radius: 999px; padding: 12px 26px;
+        background: linear-gradient(90deg, #34b187, #5ec9a0);
+        box-shadow: 0 8px 20px -6px rgba(52,177,135,0.6);
+        transition: transform .12s;
+      }
+      .gp-big-btn:hover { transform: scale(1.04); }
+      .gp-link-btn {
+        display: inline-block; margin-top: 10px; font-size: 13px; font-weight: 600;
+        color: #5b86e5; text-decoration: none;
+      }
+      .end-emoji { font-size: 52px; line-height: 1; }
+      .end-score { font-size: 30px; font-weight: 800; margin: 6px 0; }
+    </style>
+  </head>
+  <body>
+    <div id="game-root">
+      <header class="gp-header">
+        <a class="back" href="/">← POV Atlas</a>
+        <div>
+          <div class="gp-title">Cartoon Penalty ⚽ 点球大战</div>
+          <div class="gp-sub" id="gp-teams-line">Pick your team · 选择你的球队</div>
+        </div>
+        <div class="gp-score" id="gp-score">– – – – –</div>
+      </header>
+      <div class="gp-stage" id="gp-stage">
+        <canvas id="pitch"></canvas>
+      </div>
+      <div class="gp-hint">
+        🖱️ Move to aim, click to shoot · 移动瞄准,点击射门 — 5 shots per game · 每局5球
+      </div>
+    </div>
+    <script type="module" src="/src/game/main.ts"></script>
+  </body>
+</html>
