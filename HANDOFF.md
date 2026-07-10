@@ -117,11 +117,12 @@ C:\Resilio Sync\Alltek-Sean\Github\POVAtlas\   (canonical; F:\world map is a ret
 │                                converted from each venue's local UTC offset to the site's
 │                                canonical PDT, rolling the date on cross-midnight kickoffs.
 ├─ index.html
+├─ game.html                 ← /game subpage shell (Cartoon Penalty mini-game)
 ├─ package.json / package-lock.json
-├─ vite.config.ts            ← dev server on port 5180
+├─ vite.config.ts            ← dev server on port 5180; two build entries (main + game)
 ├─ tailwind.config.js / postcss.config.js
 ├─ tsconfig.json / tsconfig.node.json
-├─ vercel.json
+├─ vercel.json               ← /game → /game.html rewrite + SPA catch-all
 ├─ public/
 │  ├─ CNAME                  ← povatlas.com (custom domain)
 │  ├─ favicon.svg
@@ -131,6 +132,8 @@ C:\Resilio Sync\Alltek-Sean\Github\POVAtlas\   (canonical; F:\world map is a ret
 │     └─ Remi.png   Lucas.png    Lawrence.png
 └─ src/
    ├─ main.tsx               ← React entry
+   ├─ game/
+   │  └─ main.ts             ← Cartoon Penalty mini-game (canvas, no React) for /game
    ├─ App.tsx                ← root controller; MapInfoSheet, CollapsedBar, WelcomeHint live here
    ├─ index.css              ← Tailwind + custom keyframes/classes
    ├─ types.ts               ← all shared domain types
@@ -182,6 +185,11 @@ C:\Resilio Sync\Alltek-Sean\Github\POVAtlas\   (canonical; F:\world map is a ret
   Esri World Imagery + CARTO dark_only_labels overlay for place names. In
   satellite mode country polygons become thin white outlines (no fill) so the
   imagery stays visible; zooming into a selected match shows the real stadium.
+- **/game — "Cartoon Penalty" mini-game** (game.html + src/game/main.ts, a
+  second Vite entry, no React): pick any of the 48 teams, 5 penalty shots vs a
+  cartoon keeper (random other nation); aim + click/tap, weighted keeper AI,
+  confetti, bilingual UI, end-screen rating. Linked from the header 🎮 button;
+  vercel.json rewrites /game → /game.html.
 - Five left-pane tabs: **Matches, Teams, Standings, Stats, Players** + live
   search filter across teams and matches.
 - **Browser Back = return to the initial view** (App.tsx history guard): while
