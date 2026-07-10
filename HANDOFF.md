@@ -194,15 +194,20 @@ C:\Resilio Sync\Alltek-Sean\Github\POVAtlas\   (canonical; F:\world map is a ret
   cartoon keeper (random other nation); aim + click/tap, weighted keeper AI,
   confetti, bilingual UI, end-screen rating. Linked from the header 🎮 button;
   vercel.json rewrites /game → /game.html.
-- **/soccer — "Arcade Soccer 热血足球"** (soccer.html + src/soccer/main.ts,
-  third entry): Kunio-kun-style 4v4 arcade match, 2 minutes vs an AI nation.
-  Auto-switch control of the blue player nearest the ball; WASD/arrows run,
-  J/Space shoot, K pass, tackle by contact; possession fills a 🔥 meter for a
-  blazing super shot. Keeper/formation AI, goal banners + confetti, win/draw/
-  loss end screen, touch joystick + buttons on mobile. Cross-linked with /game.
-  Debug: ?t=SECONDS match length, ?auto=1 full-AI, window.__soccerTick(n)
-  fixed-step simulator (rAF freezes when the tab is occluded — by design the
-  game just pauses; use the tick hook for automated testing).
+- **/soccer — "Arcade Soccer 热血足球" v2** (soccer.html + src/soccer/main.ts,
+  third entry; Input/FX/Ball/Player/Game classes): retro pixel-art 4v4 arcade
+  match — 400×256 internal canvas upscaled with image-rendering:pixelated,
+  hand-drawn 7×11 pixel sprites (run/kick/knocked poses), bright blue-vs-red
+  kits. Controls: WASD/arrows move, **Shift sprint** (stamina bar), **J pass /
+  sliding tackle** (knocks the carrier down, ball pops loose), **K shoot**,
+  **P pause** (resume/restart overlay). Possession fills a 🔥 meter → blazing
+  wobbling super shot with screen shake; exaggerated body collisions with
+  flashes/stuns, sprint speed lines, shot trails, goal confetti, win/draw/loss
+  end screen. Touch: left joystick + SPRINT/PASS/SHOOT buttons + ⏸.
+  Cross-linked with /game. Debug: ?t=SECONDS, ?auto=1 full-AI,
+  window.__soccerTick(n) fixed-step simulator (rAF freezes when the tab is
+  occluded — the game just pauses; use the tick hook + canvas pixel sampling
+  for automated verification, screenshots can't capture occluded tabs).
 - Five left-pane tabs: **Matches, Teams, Standings, Stats, Players** + live
   search filter across teams and matches.
 - **Browser Back = return to the initial view** (App.tsx history guard): while
