@@ -118,11 +118,12 @@ C:\Resilio Sync\Alltek-Sean\Github\POVAtlas\   (canonical; F:\world map is a ret
 │                                canonical PDT, rolling the date on cross-midnight kickoffs.
 ├─ index.html
 ├─ game.html                 ← /game subpage shell (Cartoon Penalty mini-game)
+├─ soccer.html               ← /soccer subpage shell (Arcade Soccer 热血足球 4v4)
 ├─ package.json / package-lock.json
-├─ vite.config.ts            ← dev server on port 5180; two build entries (main + game)
+├─ vite.config.ts            ← dev server on port 5180; three build entries (main/game/soccer)
 ├─ tailwind.config.js / postcss.config.js
 ├─ tsconfig.json / tsconfig.node.json
-├─ vercel.json               ← /game → /game.html rewrite + SPA catch-all
+├─ vercel.json               ← /game + /soccer rewrites + SPA catch-all
 ├─ public/
 │  ├─ CNAME                  ← povatlas.com (custom domain)
 │  ├─ favicon.svg
@@ -134,6 +135,9 @@ C:\Resilio Sync\Alltek-Sean\Github\POVAtlas\   (canonical; F:\world map is a ret
    ├─ main.tsx               ← React entry
    ├─ game/
    │  └─ main.ts             ← Cartoon Penalty mini-game (canvas, no React) for /game
+   ├─ soccer/
+   │  └─ main.ts             ← Arcade Soccer 热血足球 4v4 match game (canvas) for /soccer
+   │                            debug: ?t=secs ?auto=1 + window.__soccerTick(frames)
    ├─ App.tsx                ← root controller; MapInfoSheet, CollapsedBar, WelcomeHint live here
    ├─ index.css              ← Tailwind + custom keyframes/classes
    ├─ types.ts               ← all shared domain types
@@ -190,6 +194,15 @@ C:\Resilio Sync\Alltek-Sean\Github\POVAtlas\   (canonical; F:\world map is a ret
   cartoon keeper (random other nation); aim + click/tap, weighted keeper AI,
   confetti, bilingual UI, end-screen rating. Linked from the header 🎮 button;
   vercel.json rewrites /game → /game.html.
+- **/soccer — "Arcade Soccer 热血足球"** (soccer.html + src/soccer/main.ts,
+  third entry): Kunio-kun-style 4v4 arcade match, 2 minutes vs an AI nation.
+  Auto-switch control of the blue player nearest the ball; WASD/arrows run,
+  J/Space shoot, K pass, tackle by contact; possession fills a 🔥 meter for a
+  blazing super shot. Keeper/formation AI, goal banners + confetti, win/draw/
+  loss end screen, touch joystick + buttons on mobile. Cross-linked with /game.
+  Debug: ?t=SECONDS match length, ?auto=1 full-AI, window.__soccerTick(n)
+  fixed-step simulator (rAF freezes when the tab is occluded — by design the
+  game just pauses; use the tick hook for automated testing).
 - Five left-pane tabs: **Matches, Teams, Standings, Stats, Players** + live
   search filter across teams and matches.
 - **Browser Back = return to the initial view** (App.tsx history guard): while
