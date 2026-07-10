@@ -6,10 +6,11 @@ export default defineConfig({
   plugins: [react()],
   build: {
     rollupOptions: {
-      // Two pages: the main atlas app and the /game mini-game subpage.
+      // Three pages: the atlas app + the /game and /soccer mini-game subpages.
       input: {
         main: "index.html",
         game: "game.html",
+        soccer: "soccer.html",
       },
     },
   },

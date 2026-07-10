@@ -5,11 +5,11 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta
       name="viewport"
-      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no"
     />
     <meta
       name="description"
-      content="Cartoon Penalty — a mini penalty-shootout soccer game on POV Atlas. Pick your nation and score!"
+      content="Arcade Soccer 热血足球 — a fast cartoon 4v4 soccer match with blazing super shots, on POV Atlas."
     />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -17,7 +17,7 @@
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap"
       rel="stylesheet"
     />
-    <title>Cartoon Penalty ⚽ · POV Atlas</title>
+    <title>Arcade Soccer ⚽ 热血足球 · POV Atlas</title>
     <style>
       * { box-sizing: border-box; }
       html, body { margin: 0; padding: 0; height: 100%; }
@@ -27,6 +27,7 @@
         color: #3a4a73;
         -webkit-tap-highlight-color: transparent;
         overscroll-behavior: none;
+        touch-action: manipulation;
       }
       #game-root { display: flex; flex-direction: column; height: 100dvh; }
 
@@ -41,31 +42,45 @@
         display: inline-flex; align-items: center; gap: 6px;
         color: #fff; text-decoration: none; font-weight: 700; font-size: 13px;
         background: rgba(255,255,255,0.22); border-radius: 999px; padding: 6px 12px;
-        transition: background .15s;
+        transition: background .15s; white-space: nowrap;
       }
       .gp-header a.back:hover { background: rgba(255,255,255,0.35); }
-      .gp-title { font-weight: 800; font-size: 17px; line-height: 1.1; }
+      .gp-title { font-weight: 800; font-size: 16px; line-height: 1.1; white-space: nowrap; }
       .gp-sub { font-size: 11px; opacity: .92; }
       .gp-score {
-        margin-left: auto; font-weight: 800; font-size: 15px; letter-spacing: 2px;
-        background: rgba(255,255,255,0.22); border-radius: 999px; padding: 6px 12px;
-        white-space: nowrap;
+        margin-left: auto; font-weight: 800; font-size: 16px;
+        background: rgba(255,255,255,0.22); border-radius: 999px; padding: 6px 14px;
+        white-space: nowrap; display: flex; align-items: center; gap: 8px;
       }
+      .gp-score img { width: 20px; height: 13px; border-radius: 2px; }
+      .gp-time { font-weight: 700; font-size: 13px; background: rgba(255,255,255,0.22); border-radius: 999px; padding: 6px 12px; }
 
-      .gp-stage { position: relative; flex: 1; min-height: 0; display: grid; place-items: center; padding: 10px; }
+      .gp-stage { position: relative; flex: 1; min-height: 0; display: grid; place-items: center; padding: 8px; }
       canvas#pitch {
-        display: block; border-radius: 18px;
+        display: block; border-radius: 16px;
         box-shadow: 0 10px 34px -10px rgba(11,31,58,0.4);
-        touch-action: none; cursor: crosshair; background: #bfe3f7;
+        touch-action: none; background: #4fbf95;
         max-width: 100%; max-height: 100%;
       }
 
       .gp-hint {
-        text-align: center; font-size: 12px; color: #6b7aa1;
-        padding: 4px 12px calc(env(safe-area-inset-bottom) + 8px);
+        text-align: center; font-size: 11.5px; color: #6b7aa1;
+        padding: 4px 10px calc(env(safe-area-inset-bottom) + 6px);
       }
 
-      /* Overlays (team picker / end screen) */
+      /* Touch controls — only on coarse pointers */
+      .touch-btns { position: absolute; right: 18px; bottom: 18px; z-index: 5; display: none; gap: 12px; }
+      @media (pointer: coarse) { .touch-btns { display: flex; } }
+      .touch-btns button {
+        width: 74px; height: 74px; border-radius: 50%; border: 0; font: inherit;
+        font-weight: 800; font-size: 13px; color: #fff; cursor: pointer;
+        box-shadow: 0 6px 18px -4px rgba(11,31,58,0.5); opacity: 0.92;
+        touch-action: none; user-select: none; -webkit-user-select: none;
+      }
+      .touch-btns .btn-shoot { background: radial-gradient(circle at 35% 30%, #ff9e80, #e5644a); }
+      .touch-btns .btn-pass  { background: radial-gradient(circle at 35% 30%, #6fc3e8, #3a7bd5); }
+
+      /* Overlays */
       .gp-overlay {
         position: absolute; inset: 0; z-index: 10;
         display: flex; align-items: center; justify-content: center; padding: 16px;
@@ -88,7 +103,6 @@
       .team-btn:hover { transform: translateY(-2px); border-color: #6fc3e8; background: #f2fafe; }
       .team-btn img { width: 34px; height: 24px; object-fit: cover; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.25); }
       .team-btn .zh { font-weight: 400; color: #94a3b8; font-size: 10px; }
-
       .gp-big-btn {
         display: inline-block; margin-top: 12px; border: 0; cursor: pointer; font: inherit;
         font-weight: 800; font-size: 15px; color: #fff; border-radius: 999px; padding: 12px 26px;
@@ -97,10 +111,7 @@
         transition: transform .12s;
       }
       .gp-big-btn:hover { transform: scale(1.04); }
-      .gp-link-btn {
-        display: inline-block; margin-top: 10px; font-size: 13px; font-weight: 600;
-        color: #5b86e5; text-decoration: none;
-      }
+      .gp-link-btn { display: inline-block; margin-top: 10px; font-size: 13px; font-weight: 600; color: #5b86e5; text-decoration: none; }
       .end-emoji { font-size: 52px; line-height: 1; }
       .end-score { font-size: 30px; font-weight: 800; margin: 6px 0; }
     </style>
@@ -108,21 +119,25 @@
   <body>
     <div id="game-root">
       <header class="gp-header">
-        <a class="back" href="/">← POV Atlas</a>
+        <a class="back" href="/game">← 🎯 Penalty</a>
         <div>
-          <div class="gp-title">Cartoon Penalty ⚽ 点球大战</div>
+          <div class="gp-title">Arcade Soccer ⚽ 热血足球</div>
           <div class="gp-sub" id="gp-teams-line">Pick your team · 选择你的球队</div>
         </div>
-        <a class="back" href="/soccer" style="margin-left:auto">⚡ 热血足球 →</a>
-        <div class="gp-score" id="gp-score">– – – – –</div>
+        <div class="gp-score" id="gp-score">0 : 0</div>
+        <div class="gp-time" id="gp-time">2:00</div>
       </header>
       <div class="gp-stage" id="gp-stage">
         <canvas id="pitch"></canvas>
+        <div class="touch-btns">
+          <button type="button" class="btn-pass" id="btn-pass">PASS<br>传球</button>
+          <button type="button" class="btn-shoot" id="btn-shoot">SHOOT<br>射门</button>
+        </div>
       </div>
       <div class="gp-hint">
-        🖱️ Move to aim, click to shoot · 移动瞄准,点击射门 — 5 shots per game · 每局5球
+        ⌨️ WASD/方向键移动 · <b>J/空格</b> 射门 · <b>K</b> 传球 — 带球蓄满🔥后是必杀火焰射门!(手机:左半屏摇杆 + 右下按钮)
       </div>
     </div>
-    <script type="module" src="/src/game/main.ts"></script>
+    <script type="module" src="/src/soccer/main.ts"></script>
   </body>
 </html>

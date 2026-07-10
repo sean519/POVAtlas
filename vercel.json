@@ -5,6 +5,7 @@
   "outputDirectory": "dist",
   "rewrites": [
     { "source": "/game", "destination": "/game.html" },
+    { "source": "/soccer", "destination": "/soccer.html" },
     { "source": "/((?!api/).*)", "destination": "/index.html" }
   ]
 }
