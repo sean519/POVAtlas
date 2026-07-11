@@ -9,7 +9,7 @@
     />
     <meta
       name="description"
-      content="Arcade Soccer 热血足球 — a fast cartoon 4v4 soccer match with blazing super shots, on POV Atlas."
+      content="Arcade Soccer — a retro pixel 4v4 soccer match with sprints, slide tackles and blazing super shots, on POV Atlas."
     />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -17,7 +17,7 @@
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap"
       rel="stylesheet"
     />
-    <title>Arcade Soccer ⚽ 热血足球 · POV Atlas</title>
+    <title>Arcade Soccer ⚽ · POV Atlas</title>
     <style>
       * { box-sizing: border-box; }
       html, body { margin: 0; padding: 0; height: 100%; }
@@ -130,23 +130,23 @@
       <header class="gp-header">
         <a class="back" href="/game">← 🎯 Penalty</a>
         <div>
-          <div class="gp-title">Arcade Soccer ⚽ 热血足球</div>
-          <div class="gp-sub" id="gp-teams-line">Pick your team · 选择你的球队</div>
+          <div class="gp-title">Arcade Soccer ⚽</div>
+          <div class="gp-sub" id="gp-teams-line">Pick your team</div>
         </div>
         <div class="gp-score" id="gp-score">0 : 0</div>
         <div class="gp-time" id="gp-time">2:00</div>
       </header>
       <div class="gp-stage" id="gp-stage">
         <canvas id="pitch"></canvas>
-        <button type="button" class="pause-btn" id="btn-pause" title="Pause · 暂停 (P)">⏸</button>
+        <button type="button" class="pause-btn" id="btn-pause" title="Pause (P)">⏸</button>
         <div class="touch-btns">
-          <button type="button" class="btn-sprint" id="btn-sprint">SPRINT<br>冲刺</button>
-          <button type="button" class="btn-pass" id="btn-pass">PASS<br>传/铲</button>
-          <button type="button" class="btn-shoot" id="btn-shoot">SHOOT<br>射门</button>
+          <button type="button" class="btn-sprint" id="btn-sprint">SPRINT</button>
+          <button type="button" class="btn-pass" id="btn-pass">PASS</button>
+          <button type="button" class="btn-shoot" id="btn-shoot">SHOOT</button>
         </div>
       </div>
       <div class="gp-hint">
-        ⌨️ WASD/方向键移动 · <b>Shift</b> 冲刺 · <b>J</b> 传球/铲球 · <b>K</b> 射门 · <b>P</b> 暂停 — 带球蓄满🔥放必杀!(手机:左半屏摇杆+右下按钮)
+        ⌨️ <b>WASD/Arrows</b> move · <b>Shift</b> sprint · <b>J</b> pass / slide tackle · <b>K</b> shoot · <b>P</b> pause — hold the ball to fill the 🔥 meter for a SUPER SHOT! (Mobile: left-half joystick + buttons)
       </div>
     </div>
     <script type="module" src="/src/soccer/main.ts"></script>

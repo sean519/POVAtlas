@@ -3,16 +3,15 @@ import { flagUrl } from "../utils/flags";
 import type { Team } from "../types";
 
 /**
- * Arcade Soccer 热血足球 v2 — retro pixel-art 4v4 arcade match (subpage /soccer).
+ * Arcade Soccer — retro pixel-art 4v4 arcade match (subpage /soccer).
  *
- * 8/16-bit inspired, all assets original: the world simulates at a chunky
- * 400×256 internal resolution and the canvas upscales with
- * `image-rendering: pixelated` for a genuine retro look. Structured into
- * Input / FX / Ball / Player / Game classes.
+ * 16-bit inspired, all assets original: the world simulates at a 640×400
+ * internal resolution and the canvas upscales with `image-rendering:
+ * pixelated`. Structured into Input / FX / Ball / Player / Game classes.
  *
  * Controls: WASD/arrows move · Shift sprint (stamina) · J pass, or a sliding
  * tackle when you don't have the ball (knocks the carrier down!) · K shoot —
- * holding possession fills the 🔥 meter for a blazing super shot · P pause.
+ * holding possession fills the FIRE meter for a blazing super shot · P pause.
  * Touch: left-half joystick + SPRINT/PASS/SHOOT buttons.
  *
  * Debug helpers (not linked in the UI): ?t=SECONDS match length, ?auto=1 full
@@ -21,24 +20,24 @@ import type { Team } from "../types";
 
 /* ================= World constants (pixel units, 60 fps frames) ========== */
 
-const W = 400;
-const H = 256;
-const FIELD = { left: 20, right: 380, top: 26, bottom: 246 };
-const MOUTH = { top: 106, bottom: 166 };
-const GOAL_DEPTH = 11;
-const CENTER = { x: 200, y: 136 };
+const W = 640;
+const H = 400;
+const FIELD = { left: 32, right: 608, top: 42, bottom: 394 };
+const MOUTH = { top: 170, bottom: 266 };
+const GOAL_DEPTH = 18;
+const CENTER = { x: 320, y: 218 };
 
-const P_R = 5.5;
-const RUN_SPEED = 1.35;
-const SPRINT_SPEED = 2.0;
-const AI_SPEED = 1.25;
-const KEEPER_SPEED = 1.05;
-const SHOT_SPEED = 4.3;
-const FIRE_SHOT_SPEED = 6.2;
-const PASS_SPEED = 3.5;
-const CAPTURE_R = 7;
+const P_R = 9;
+const RUN_SPEED = 2.2;
+const SPRINT_SPEED = 3.2;
+const AI_SPEED = 2.0;
+const KEEPER_SPEED = 1.7;
+const SHOT_SPEED = 6.9;
+const FIRE_SHOT_SPEED = 9.9;
+const PASS_SPEED = 5.6;
+const CAPTURE_R = 11;
 const SLIDE_MS = 380;
-const SLIDE_SPEED = 3.2;
+const SLIDE_SPEED = 5.1;
 const SLIDE_RECOVER_MS = 260;
 const SLIDE_CD_MS = 1100;
 const KNOCK_MS = 900;
@@ -50,47 +49,65 @@ const AUTO_PLAY = params.get("auto") === "1";
 
 const dist = (ax: number, ay: number, bx: number, by: number) => Math.hypot(bx - ax, by - ay);
 
-/* ================= Pixel sprites (7×11, facing right) ===================== */
-/* D outline · S skin · E eye · J jersey · H shorts · W socks/gloves · .    */
+/* ================= Pixel sprites (11×17, facing right) ==================== */
+/* H hair · S skin · E eye · J jersey · P shorts · W socks · B boots/dark    */
 
 const RUN_A = [
-  ".DDD...",
-  ".SSS...",
-  ".SSE...",
-  "..D....",
-  ".JJJJ..",
-  "SJJJJS.",
-  ".JJJJ..",
-  ".HHHH..",
-  ".D..D..",
-  ".D..D..",
-  "WW..WW.",
+  "...HHHH....",
+  "..HHHHHH...",
+  "..HSSSSH...",
+  "..SSSSE....",
+  "..SSSSSS...",
+  "...SSSS....",
+  "..JJJJJJ...",
+  ".JJJJJJJJ..",
+  "SJJJJJJJJS.",
+  ".JJJJJJJJ..",
+  "..JJJJJJ...",
+  "..PPPPPP...",
+  "..PP..PP...",
+  "..B....B...",
+  "..B....B...",
+  ".WW....WW..",
+  ".BB....BB..",
 ];
 const RUN_B = [
-  ".DDD...",
-  ".SSS...",
-  ".SSE...",
-  "..D....",
-  ".JJJJ..",
-  "SJJJJS.",
-  ".JJJJ..",
-  ".HHHH..",
-  "..DD...",
-  "..DD...",
-  ".WWW...",
+  "...HHHH....",
+  "..HHHHHH...",
+  "..HSSSSH...",
+  "..SSSSE....",
+  "..SSSSSS...",
+  "...SSSS....",
+  "..JJJJJJ...",
+  ".JJJJJJJJ..",
+  "SJJJJJJJJS.",
+  ".JJJJJJJJ..",
+  "..JJJJJJ...",
+  "..PPPPPP...",
+  "..PP..PP...",
+  "....BB.....",
+  "....BB.....",
+  "...WWW.....",
+  "...BBB.....",
 ];
 const KICK = [
-  ".DDD...",
-  ".SSS...",
-  ".SSE...",
-  "..D....",
-  ".JJJJ..",
-  "SJJJJS.",
-  ".JJJJ..",
-  ".HHHH..",
-  ".D.DDD.",
-  ".D...W.",
-  "WW.....",
+  "...HHHH....",
+  "..HHHHHH...",
+  "..HSSSSH...",
+  "..SSSSE....",
+  "..SSSSSS...",
+  "...SSSS....",
+  "..JJJJJJ...",
+  ".JJJJJJJJ..",
+  "SJJJJJJJJS.",
+  ".JJJJJJJJ..",
+  "..JJJJJJ...",
+  "..PPPPPP...",
+  "..PP..PP...",
+  "..B...BBBB.",
+  "..B........",
+  ".WW........",
+  ".BB........",
 ];
 
 const flipFrame = (f: string[]) => f.map((r) => [...r].reverse().join(""));
@@ -98,17 +115,19 @@ const RUN_A_L = flipFrame(RUN_A);
 const RUN_B_L = flipFrame(RUN_B);
 const KICK_L = flipFrame(KICK);
 
-interface Pal { J: string; H: string; S: string; D: string; W: string; E: string }
+interface Pal { J: string; P: string; S: string; E: string; W: string; B: string; H: string }
 
 const SKINS = ["#f7c8a0", "#e8a87c", "#c98d64", "#8d5b3f"];
-function makePal(team: 0 | 1, keeper: boolean, skin: string): Pal {
+const HAIRS = ["#2c2320", "#5b3a1e", "#171a24", "#8a5a2b", "#c9762b", "#4a4e57"];
+function makePal(team: 0 | 1, keeper: boolean, skin: string, hair: string): Pal {
   return {
     J: keeper ? (team === 0 ? "#ffd23e" : "#9b4df3") : team === 0 ? "#2b6bf3" : "#f23a3a",
-    H: "#f5f2ea",
+    P: "#f5f2ea",
     S: skin,
-    D: "#1b1e2b",
-    W: keeper ? "#ffffff" : "#e8e8e8",
-    E: "#1b1e2b",
+    E: "#14161f",
+    W: "#e8e8e8",
+    B: "#1b1e2b",
+    H: hair,
   };
 }
 
@@ -197,8 +216,8 @@ class FX {
   flashes: Flash[] = [];
   shakeAmt = 0;
 
-  trail(x: number, y: number, color: string, life = 300): void {
-    this.particles.push({ x, y, vx: 0, vy: 0, color, size: 1, born: performance.now(), life, gravity: false });
+  trail(x: number, y: number, color: string, life = 300, size = 2): void {
+    this.particles.push({ x, y, vx: 0, vy: 0, color, size, born: performance.now(), life, gravity: false });
   }
   burst(x: number, y: number, color: string, n: number, speed: number): void {
     const now = performance.now();
@@ -207,37 +226,37 @@ class FX {
       const sp = speed * (0.4 + Math.random() * 0.6);
       this.particles.push({
         x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp,
-        color, size: 1, born: now, life: 500 + Math.random() * 300, gravity: false,
+        color, size: 2, born: now, life: 500 + Math.random() * 300, gravity: false,
       });
     }
   }
   confetti(x: number, y: number): void {
     const now = performance.now();
     const colors = ["#ffd23e", "#f23a3a", "#2b6bf3", "#3ecf8e", "#ffffff"];
-    for (let i = 0; i < 36; i++) {
+    for (let i = 0; i < 40; i++) {
       const a = Math.random() * Math.PI * 2;
-      const sp = 0.8 + Math.random() * 2;
+      const sp = 1.3 + Math.random() * 3.2;
       this.particles.push({
-        x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 1.4,
-        color: colors[i % colors.length], size: 2, born: now, life: 1000, gravity: true,
+        x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 2.2,
+        color: colors[i % colors.length], size: 3, born: now, life: 1000, gravity: true,
       });
     }
   }
   flash(x: number, y: number): void {
     this.flashes.push({ x, y, born: performance.now() });
-    this.shake(2.4);
+    this.shake(3);
   }
-  shake(n: number): void { this.shakeAmt = Math.min(5, this.shakeAmt + n); }
+  shake(n: number): void { this.shakeAmt = Math.min(8, this.shakeAmt + n); }
 
   update(now: number, dtF: number): void {
     this.particles = this.particles.filter((p) => now - p.born < p.life);
     for (const p of this.particles) {
       p.x += p.vx * dtF;
       p.y += p.vy * dtF;
-      if (p.gravity) p.vy += 0.06 * dtF;
+      if (p.gravity) p.vy += 0.1 * dtF;
     }
     this.flashes = this.flashes.filter((f) => now - f.born < 220);
-    this.shakeAmt = Math.max(0, this.shakeAmt - 0.18 * dtF);
+    this.shakeAmt = Math.max(0, this.shakeAmt - 0.25 * dtF);
   }
 
   draw(o: CanvasRenderingContext2D, now: number): void {
@@ -249,14 +268,14 @@ class FX {
     o.globalAlpha = 1;
     for (const f of this.flashes) {
       const t = (now - f.born) / 220;
-      const r = 2 + t * 7;
+      const r = 3 + t * 11;
       o.fillStyle = t < 0.5 ? "#ffffff" : "#ffd23e";
-      o.fillRect(Math.round(f.x - r), Math.round(f.y), r * 2, 1);
-      o.fillRect(Math.round(f.x), Math.round(f.y - r), 1, r * 2);
-      o.fillRect(Math.round(f.x - r * 0.6), Math.round(f.y - r * 0.6), 1, 1);
-      o.fillRect(Math.round(f.x + r * 0.6), Math.round(f.y - r * 0.6), 1, 1);
-      o.fillRect(Math.round(f.x - r * 0.6), Math.round(f.y + r * 0.6), 1, 1);
-      o.fillRect(Math.round(f.x + r * 0.6), Math.round(f.y + r * 0.6), 1, 1);
+      o.fillRect(Math.round(f.x - r), Math.round(f.y), r * 2, 2);
+      o.fillRect(Math.round(f.x), Math.round(f.y - r), 2, r * 2);
+      o.fillRect(Math.round(f.x - r * 0.6), Math.round(f.y - r * 0.6), 2, 2);
+      o.fillRect(Math.round(f.x + r * 0.6), Math.round(f.y - r * 0.6), 2, 2);
+      o.fillRect(Math.round(f.x - r * 0.6), Math.round(f.y + r * 0.6), 2, 2);
+      o.fillRect(Math.round(f.x + r * 0.6), Math.round(f.y + r * 0.6), 2, 2);
     }
   }
 }
@@ -279,22 +298,22 @@ class Ball {
   updateLoose(dtF: number, fx: FX): void {
     if (this.fire) {
       this.wobble += 0.35 * dtF;
-      this.vy += Math.sin(this.wobble) * 0.09 * dtF;
+      this.vy += Math.sin(this.wobble) * 0.14 * dtF;
     }
-    if (this.speed() > 2.2) {
+    if (this.speed() > 3.5) {
       fx.trail(this.x, this.y, this.fire ? "#ff9e4a" : "#ffffff", this.fire ? 340 : 220);
-      if (this.fire) fx.trail(this.x + (Math.random() - 0.5) * 3, this.y + (Math.random() - 0.5) * 3, "#ffd23e", 260);
+      if (this.fire) fx.trail(this.x + (Math.random() - 0.5) * 5, this.y + (Math.random() - 0.5) * 5, "#ffd23e", 260);
     }
     this.x += this.vx * dtF;
     this.y += this.vy * dtF;
     const fr = Math.pow(0.988, dtF);
     this.vx *= fr; this.vy *= fr;
 
-    if (this.y < FIELD.top + 2) { this.y = FIELD.top + 2; this.vy *= -0.7; }
-    if (this.y > FIELD.bottom - 2) { this.y = FIELD.bottom - 2; this.vy *= -0.7; }
+    if (this.y < FIELD.top + 3) { this.y = FIELD.top + 3; this.vy *= -0.7; }
+    if (this.y > FIELD.bottom - 3) { this.y = FIELD.bottom - 3; this.vy *= -0.7; }
     const inMouth = this.y > MOUTH.top && this.y < MOUTH.bottom;
-    if (this.x < FIELD.left + 2 && !inMouth) { this.x = FIELD.left + 2; this.vx *= -0.7; }
-    if (this.x > FIELD.right - 2 && !inMouth) { this.x = FIELD.right - 2; this.vx *= -0.7; }
+    if (this.x < FIELD.left + 3 && !inMouth) { this.x = FIELD.left + 3; this.vx *= -0.7; }
+    if (this.x > FIELD.right - 3 && !inMouth) { this.x = FIELD.right - 3; this.vx *= -0.7; }
     if (this.x < FIELD.left - GOAL_DEPTH) { this.x = FIELD.left - GOAL_DEPTH; this.vx *= -0.5; }
     if (this.x > FIELD.right + GOAL_DEPTH) { this.x = FIELD.right + GOAL_DEPTH; this.vx *= -0.5; }
   }
@@ -302,14 +321,17 @@ class Ball {
   draw(o: CanvasRenderingContext2D, now: number): void {
     const x = Math.round(this.x), y = Math.round(this.y);
     o.fillStyle = "rgba(0,0,0,0.25)";
-    o.fillRect(x - 2, y + 2, 4, 1);
+    o.fillRect(x - 3, y + 5, 6, 2);
     o.fillStyle = this.fire ? "#ffb46a" : "#ffffff";
-    o.fillRect(x - 2, y - 2, 4, 4);
+    o.fillRect(x - 2, y - 3, 4, 6);
+    o.fillRect(x - 3, y - 2, 6, 4);
     o.fillStyle = this.fire ? "#f23a3a" : "#1b1e2b";
-    o.fillRect(x - 1 + (Math.floor(now / 90) % 2), y - 1, 1, 1);
+    o.fillRect(x - 1 + (Math.floor(now / 90) % 2), y - 1, 2, 2);
+    o.fillRect(x - 2, y + 1, 1, 1);
+    o.fillRect(x + 1, y - 2, 1, 1);
     if (this.fire) {
       o.fillStyle = "#ffd23e";
-      o.fillRect(x - 3, y - 1 + (Math.floor(now / 60) % 3) - 1, 1, 1);
+      o.fillRect(x - 5, y - 2 + (Math.floor(now / 60) % 4) - 1, 2, 2);
     }
   }
 }
@@ -334,13 +356,13 @@ class Player {
   slideCdUntil = 0;
   slideDx = 0; slideDy = 0;
 
-  constructor(team: 0 | 1, keeper: boolean, x: number, y: number, skin: string) {
+  constructor(team: 0 | 1, keeper: boolean, x: number, y: number, skin: string, hair: string) {
     this.team = team;
     this.keeper = keeper;
     this.x = x; this.y = y;
     this.anchorX = x; this.anchorY = y;
     this.faceX = team === 0 ? 1 : -1;
-    this.pal = makePal(team, keeper, skin);
+    this.pal = makePal(team, keeper, skin, hair);
   }
 
   busy(now: number): boolean {
@@ -372,7 +394,7 @@ class Player {
         this.vy = (dy / len) * sp;
         this.faceX = dx / len;
         this.faceY = dy / len;
-        this.runPhase += 0.18 * sp * dtF;
+        this.runPhase += 0.12 * sp * dtF;
       } else {
         this.vx = 0; this.vy = 0;
       }
@@ -380,12 +402,12 @@ class Player {
     this.x += this.vx * dtF;
     this.y += this.vy * dtF;
     if (this.keeper) {
-      const homeX = this.team === 0 ? FIELD.left + 6 : FIELD.right - 6;
-      this.x = Math.max(homeX - 9, Math.min(homeX + 16, this.x));
-      this.y = Math.max(MOUTH.top - 12, Math.min(MOUTH.bottom + 12, this.y));
+      const homeX = this.team === 0 ? FIELD.left + 10 : FIELD.right - 10;
+      this.x = Math.max(homeX - 14, Math.min(homeX + 26, this.x));
+      this.y = Math.max(MOUTH.top - 19, Math.min(MOUTH.bottom + 19, this.y));
     } else {
-      this.x = Math.max(FIELD.left + 4, Math.min(FIELD.right - 4, this.x));
-      this.y = Math.max(FIELD.top + 4, Math.min(FIELD.bottom - 4, this.y));
+      this.x = Math.max(FIELD.left + 6, Math.min(FIELD.right - 6, this.x));
+      this.y = Math.max(FIELD.top + 6, Math.min(FIELD.bottom - 6, this.y));
     }
   }
 
@@ -393,49 +415,54 @@ class Player {
     const x = Math.round(this.x), y = Math.round(this.y);
     // Shadow
     o.fillStyle = "rgba(0,0,0,0.22)";
-    o.fillRect(x - 3, y + 5, 7, 1);
+    o.fillRect(x - 4, y + 8, 9, 2);
 
     if (controlled) {
       o.fillStyle = "#ffd23e";
-      o.fillRect(x - 4, y + 7, 9, 1);
-      o.fillRect(x - 1, y - 10 + (Math.floor(now / 220) % 2), 3, 1);
+      o.fillRect(x - 5, y + 11, 11, 2);
+      o.fillRect(x - 1, y - 14 + (Math.floor(now / 220) % 2), 3, 2);
     }
 
     const knocked = now < this.knockedUntil;
     const sliding = now < this.slideUntil;
     const kicking = now < this.kickUntil;
-    const moving = Math.abs(this.vx) + Math.abs(this.vy) > 0.2;
+    const moving = Math.abs(this.vx) + Math.abs(this.vy) > 0.3;
     const right = this.faceX >= 0;
     let frame: string[];
     if (kicking) frame = right ? KICK : KICK_L;
     else if (moving && Math.floor(this.runPhase) % 2 === 0) frame = right ? RUN_A : RUN_A_L;
-    else if (moving) frame = right ? RUN_B : RUN_B_L;
     else frame = right ? RUN_B : RUN_B_L;
 
     o.save();
     o.translate(x, y);
     if (knocked) o.rotate(right ? Math.PI / 2 : -Math.PI / 2);
     else if (sliding) o.rotate((right ? 1 : -1) * 0.62);
-    // sprite is 7×11, anchored at center-ish (3, 6)
+    // sprite is 11×17, anchored near its center (5, 8)
     for (let r = 0; r < frame.length; r++) {
       const row = frame[r];
       for (let c = 0; c < row.length; c++) {
         const ch = row[c] as keyof Pal | ".";
         if (ch === ".") continue;
         o.fillStyle = this.pal[ch];
-        o.fillRect(c - 3, r - 6, 1, 1);
+        o.fillRect(c - 5, r - 8, 1, 1);
       }
+    }
+    // Keeper gloves on the arm tips
+    if (this.keeper) {
+      o.fillStyle = "#ffffff";
+      o.fillRect(-5, 0, 1, 1);
+      o.fillRect(4, 0, 1, 1);
     }
     o.restore();
 
     if (knocked) {
       o.fillStyle = "#ffd23e";
       const ph = Math.floor(now / 150) % 3;
-      o.fillRect(x - 4 + ph * 3, y - 10, 1, 1);
+      o.fillRect(x - 6 + ph * 5, y - 14, 2, 2);
     }
     if (hasBallFire) {
       o.fillStyle = Math.floor(now / 100) % 2 ? "#ff9e4a" : "#ffd23e";
-      o.fillRect(x + 4, y - 9 + (Math.floor(now / 120) % 2), 2, 2);
+      o.fillRect(x + 7, y - 13 + (Math.floor(now / 120) % 2), 3, 3);
     }
   }
 }
@@ -478,7 +505,7 @@ class Game {
       const fx = team === 0 ? s.fx : 1 - s.fx;
       const x = FIELD.left + fx * (FIELD.right - FIELD.left);
       const y = FIELD.top + s.fy * (FIELD.bottom - FIELD.top);
-      return new Player(team, s.keeper, x, y, SKINS[(i + team * 2) % SKINS.length]);
+      return new Player(team, s.keeper, x, y, SKINS[(i + team * 2) % SKINS.length], HAIRS[(i * 2 + team * 3) % HAIRS.length]);
     });
   }
 
@@ -516,8 +543,8 @@ class Game {
   shoot(p: Player, now: number): void {
     const b = this.ball;
     const gx = (p.team === 0 ? FIELD.right : FIELD.left) + (p.team === 0 ? GOAL_DEPTH / 2 : -GOAL_DEPTH / 2);
-    let gy = (MOUTH.top + MOUTH.bottom) / 2 + p.faceY * 46;
-    gy = Math.max(MOUTH.top + 6, Math.min(MOUTH.bottom - 6, gy + (Math.random() - 0.5) * 18));
+    let gy = (MOUTH.top + MOUTH.bottom) / 2 + p.faceY * 74;
+    gy = Math.max(MOUTH.top + 10, Math.min(MOUTH.bottom - 10, gy + (Math.random() - 0.5) * 29));
     const fire = p.team === 0 && !p.keeper && this.fireMeter >= 1;
     const speed = fire ? FIRE_SHOT_SPEED : SHOT_SPEED;
     const d = dist(p.x, p.y, gx, gy) || 1;
@@ -528,7 +555,7 @@ class Game {
     b.wobble = 0;
     p.captureCd = now + 600;
     p.kickUntil = now + 220;
-    if (fire) { this.fx.shake(4); this.fx.burst(p.x, p.y, "#ff9e4a", 10, 1.6); }
+    if (fire) { this.fx.shake(5); this.fx.burst(p.x, p.y, "#ff9e4a", 12, 2.6); }
     if (p.team === 0) this.fireMeter = 0;
   }
 
@@ -540,12 +567,12 @@ class Game {
     let bestScore = -Infinity;
     for (const m of mates) {
       const opp = this.nearestOpponent(m);
-      const open = opp ? Math.min(48, dist(m.x, m.y, opp.x, opp.y)) : 48;
+      const open = opp ? Math.min(77, dist(m.x, m.y, opp.x, opp.y)) : 77;
       const score = m.x * attackDir + open * 0.8;
       if (score > bestScore) { bestScore = score; best = m; }
     }
     const b = this.ball;
-    const lead = 10 * attackDir;
+    const lead = 16 * attackDir;
     const d = dist(p.x, p.y, best.x + lead, best.y) || 1;
     b.owner = null;
     b.fire = false;
@@ -580,7 +607,7 @@ class Game {
     if (this.controlled && (now < this.controlled.slideUntil || now < this.controlled.knockedUntil)) return;
     const mine = this.players.filter((p) => p.team === 0 && !p.keeper);
     let best = this.controlled && !this.controlled.keeper ? this.controlled : mine[0];
-    let bd = this.controlled ? dist(this.controlled.x, this.controlled.y, this.ball.x, this.ball.y) - 10 : Infinity;
+    let bd = this.controlled ? dist(this.controlled.x, this.controlled.y, this.ball.x, this.ball.y) - 16 : Infinity;
     for (const p of mine) {
       const d = dist(p.x, p.y, this.ball.x, this.ball.y);
       if (d < bd) { bd = d; best = p; }
@@ -595,16 +622,16 @@ class Game {
     const attackDir = p.team === 0 ? 1 : -1;
 
     if (p.keeper) {
-      const ty = Math.max(MOUTH.top + 5, Math.min(MOUTH.bottom - 5, b.y));
-      return { x: (p.team === 0 ? FIELD.left + 6 : FIELD.right - 6) - p.x, y: ty - p.y, speed: KEEPER_SPEED };
+      const ty = Math.max(MOUTH.top + 8, Math.min(MOUTH.bottom - 8, b.y));
+      return { x: (p.team === 0 ? FIELD.left + 10 : FIELD.right - 10) - p.x, y: ty - p.y, speed: KEEPER_SPEED };
     }
 
     if (b.owner === p) {
       const gx = p.team === 0 ? FIELD.right : FIELD.left;
-      const gy = (MOUTH.top + MOUTH.bottom) / 2 + Math.sin(now / 700 + p.runPhase) * 24;
-      const inRange = Math.abs(gx - p.x) < 130;
+      const gy = (MOUTH.top + MOUTH.bottom) / 2 + Math.sin(now / 700 + p.runPhase) * 38;
+      const inRange = Math.abs(gx - p.x) < 210;
       const opp = this.nearestOpponent(p);
-      const pressured = opp && dist(p.x, p.y, opp.x, opp.y) < 22;
+      const pressured = opp && dist(p.x, p.y, opp.x, opp.y) < 35;
       if (inRange && Math.random() < 0.025) this.shoot(p, now);
       else if (pressured && Math.random() < 0.04) this.pass(p, now);
       return { x: gx - p.x, y: gy - p.y, speed: AI_SPEED };
@@ -613,7 +640,7 @@ class Game {
     // Defenders may slide-tackle an enemy carrier.
     if (b.owner && b.owner.team !== p.team && !b.owner.keeper) {
       const d = dist(p.x, p.y, b.owner.x, b.owner.y);
-      if (d < 13 && now - b.owner.holdT0 > 500 && Math.random() < 0.02) {
+      if (d < 21 && now - b.owner.holdT0 > 500 && Math.random() < 0.02) {
         p.faceX = (b.owner.x - p.x) / (d || 1);
         p.faceY = (b.owner.y - p.y) / (d || 1);
         p.startSlide(now);
@@ -632,8 +659,8 @@ class Game {
       const ty = b.owner ? b.owner.y : b.y;
       return { x: tx - p.x, y: ty - p.y, speed: AI_SPEED };
     }
-    const shift = (b.x - CENTER.x) * 0.3 + attackDir * (b.owner && b.owner.team === p.team ? 36 : 0);
-    const tx = Math.max(FIELD.left + 12, Math.min(FIELD.right - 12, p.anchorX + shift));
+    const shift = (b.x - CENTER.x) * 0.3 + attackDir * (b.owner && b.owner.team === p.team ? 58 : 0);
+    const tx = Math.max(FIELD.left + 19, Math.min(FIELD.right - 19, p.anchorX + shift));
     return { x: tx - p.x, y: p.anchorY + (b.y - CENTER.y) * 0.18 - p.y, speed: AI_SPEED * 0.9 };
   }
 
@@ -663,7 +690,7 @@ class Game {
 
     this.pickControlled(now);
 
-    // Movement + actions
+    // Movement + sprint stamina
     const sprinting = this.controlled && this.input.sprinting() && this.stamina > 0.05;
     for (const p of this.players) {
       if (p === this.controlled && this.phase === "play") {
@@ -673,7 +700,7 @@ class Game {
         p.move(d.x, d.y, speed, dtF, now);
         if (sprinting && moving) {
           this.stamina = Math.max(0, this.stamina - dt / 1500);
-          if (Math.floor(now / 40) % 2 === 0) this.fx.trail(p.x - p.faceX * 5, p.y + 3, "#dff1ff", 240);
+          if (Math.floor(now / 40) % 2 === 0) this.fx.trail(p.x - p.faceX * 8, p.y + 5, "#dff1ff", 240);
         } else {
           this.stamina = Math.min(1, this.stamina + dt / 2600);
         }
@@ -682,7 +709,7 @@ class Game {
         p.move(a.x, a.y, a.speed, dtF, now);
       }
     }
-    if (!this.controlled || !(this.input.sprinting())) {
+    if (!this.controlled || !this.input.sprinting()) {
       this.stamina = Math.min(1, this.stamina + dt / 5200);
     }
 
@@ -706,20 +733,19 @@ class Game {
     if (b.owner) {
       const o = b.owner;
       if (now < o.knockedUntil) {
-        // Carrier got knocked down — ball pops loose.
         b.owner = null;
-        b.vx = (Math.random() - 0.5) * 2;
-        b.vy = (Math.random() - 0.5) * 2;
+        b.vx = (Math.random() - 0.5) * 3.2;
+        b.vy = (Math.random() - 0.5) * 3.2;
       } else {
-        b.x = o.x + o.faceX * 7;
-        b.y = o.y + o.faceY * 7 + 3;
+        b.x = o.x + o.faceX * 11;
+        b.y = o.y + o.faceY * 11 + 5;
         b.vx = 0; b.vy = 0;
         if (o.team === 0 && !o.keeper) this.fireMeter = Math.min(1, this.fireMeter + dt / FIRE_FILL_MS);
         if (o.keeper && now - o.holdT0 > 550) {
           const attackDir = o.team === 0 ? 1 : -1;
           b.owner = null;
-          b.vx = attackDir * 3.4;
-          b.vy = (Math.random() - 0.5) * 2;
+          b.vx = attackDir * 5.4;
+          b.vy = (Math.random() - 0.5) * 3.2;
           o.captureCd = now + 800;
           o.kickUntil = now + 200;
         }
@@ -737,22 +763,21 @@ class Game {
       for (const p of this.players) {
         if (now < p.captureCd || now < p.knockedUntil) continue;
         const d = dist(p.x, p.y, b.x, b.y);
-        if (p.keeper && speed > 2.4) {
+        if (p.keeper && speed > 3.8) {
           const towardOwnGoal = p.team === 0 ? b.vx < 0 : b.vx > 0;
-          if (towardOwnGoal && d < 13) {
+          if (towardOwnGoal && d < 21) {
             const catchProb = b.fire ? 0.3 : 0.75;
             if (Math.random() < catchProb) { this.gain(p, now); break; }
             b.vx *= -0.4;
-            b.vy = (Math.random() - 0.5) * 3;
+            b.vy = (Math.random() - 0.5) * 4.8;
             b.fire = false;
             this.fx.flash(p.x, p.y);
             p.captureCd = now + 400;
             break;
           }
         }
-        if (d < CAPTURE_R && speed < 3.8) { this.gain(p, now); break; }
-        // Sliding players can capture faster balls.
-        if (now < p.slideUntil && d < CAPTURE_R + 2 && speed < 5) { this.gain(p, now); break; }
+        if (d < CAPTURE_R && speed < 6.1) { this.gain(p, now); break; }
+        if (now < p.slideUntil && d < CAPTURE_R + 3 && speed < 8) { this.gain(p, now); break; }
       }
     }
 
@@ -766,20 +791,19 @@ class Game {
       if (now >= s.slideUntil) continue;
       for (const v of this.players) {
         if (v.team === s.team || v.keeper || now < v.knockedUntil) continue;
-        if (dist(s.x, s.y, v.x, v.y) < P_R * 2 - 1) {
+        if (dist(s.x, s.y, v.x, v.y) < P_R * 2 - 2) {
           v.knockedUntil = now + KNOCK_MS;
           v.stunnedUntil = now + KNOCK_MS + 200;
           this.fx.flash((s.x + v.x) / 2, (s.y + v.y) / 2);
-          this.fx.burst(v.x, v.y, "#ffffff", 6, 1.2);
+          this.fx.burst(v.x, v.y, "#ffffff", 8, 2);
           if (this.ball.owner === v) {
             this.ball.owner = null;
-            this.ball.vx = s.slideDx * 1.6 + (Math.random() - 0.5);
-            this.ball.vy = s.slideDy * 1.6 + (Math.random() - 0.5);
+            this.ball.vx = s.slideDx * 2.6 + (Math.random() - 0.5) * 1.6;
+            this.ball.vy = s.slideDy * 2.6 + (Math.random() - 0.5) * 1.6;
             v.captureCd = now + 800;
           }
         }
       }
-      // Recovering stun once the slide ends.
       if (s.slideUntil - now < 30) s.stunnedUntil = Math.max(s.stunnedUntil, s.slideUntil + SLIDE_RECOVER_MS);
     }
   }
@@ -797,7 +821,7 @@ class Game {
         a.x -= nx * push; a.y -= ny * push;
         c.x += nx * push; c.y += ny * push;
         const rel = Math.hypot(a.vx - c.vx, a.vy - c.vy);
-        if (rel > 2.4 && a.team !== c.team) {
+        if (rel > 3.8 && a.team !== c.team) {
           this.fx.flash((a.x + c.x) / 2, (a.y + c.y) / 2);
           a.stunnedUntil = Math.max(a.stunnedUntil, now + 160);
           c.stunnedUntil = Math.max(c.stunnedUntil, now + 160);
@@ -816,7 +840,7 @@ class Game {
       t0: now,
     };
     this.fx.confetti(team === 0 ? FIELD.right : FIELD.left, this.ball.y);
-    this.fx.shake(4);
+    this.fx.shake(5);
     Object.assign(this.ball, { vx: 0, vy: 0, owner: null, fire: false });
     this.updateHud();
   }
@@ -843,11 +867,11 @@ class Game {
     const card = document.createElement("div");
     card.className = "gp-card";
     card.innerHTML =
-      `<div class="end-emoji">⏸️</div><h2>PAUSED · 暂停</h2>` +
-      `<p class="sub">WASD/方向键移动 · Shift 冲刺 · J 传球/铲球 · K 射门</p>`;
+      `<div class="end-emoji">⏸️</div><h2>PAUSED</h2>` +
+      `<p class="sub">WASD/Arrows move · Shift sprint · J pass/slide · K shoot</p>`;
     const resume = document.createElement("button");
     resume.className = "gp-big-btn";
-    resume.textContent = "Resume · 继续";
+    resume.textContent = "Resume";
     resume.addEventListener("click", () => {
       removeOverlay();
       this.phase = this.resumePhase;
@@ -855,7 +879,7 @@ class Game {
     const restart = document.createElement("a");
     restart.className = "gp-link-btn";
     restart.href = "#";
-    restart.textContent = "Restart · 重新开始";
+    restart.textContent = "Restart match";
     restart.addEventListener("click", (e) => { e.preventDefault(); this.start(this.myTeam!); });
     card.appendChild(resume);
     card.appendChild(document.createElement("br"));
@@ -868,9 +892,9 @@ class Game {
     this.phase = "end";
     const [a, b] = this.score;
     const [emoji, line] =
-      a > b ? ["🏆", "You win! 你赢啦!"] :
-      a === b ? ["🤝", "Draw! 平局!"] :
-      ["💪", "So close — again! 差一点,再来!"];
+      a > b ? ["🏆", "You win!"] :
+      a === b ? ["🤝", "Draw!"] :
+      ["💪", "So close — go again!"];
     const overlay = document.createElement("div");
     overlay.className = "gp-overlay";
     const card = document.createElement("div");
@@ -881,12 +905,12 @@ class Game {
       `<p class="sub">${line}</p>`;
     const again = document.createElement("button");
     again.className = "gp-big-btn";
-    again.textContent = "Play again · 再来一局";
+    again.textContent = "Play again";
     again.addEventListener("click", () => this.start(this.myTeam!));
     const change = document.createElement("a");
     change.className = "gp-link-btn";
     change.href = "#";
-    change.textContent = "Change team · 换支球队";
+    change.textContent = "Change team";
     change.addEventListener("click", (e) => { e.preventDefault(); showTeamPicker(); });
     card.appendChild(again);
     card.appendChild(document.createElement("br"));
@@ -909,28 +933,26 @@ class Game {
 
     // Pitch
     o.fillStyle = "#2e9e64";
-    o.fillRect(-4, -4, W + 8, H + 8);
+    o.fillRect(-6, -6, W + 12, H + 12);
     o.fillStyle = "#27905a";
-    for (let i = 0; i < 8; i++) o.fillRect(FIELD.left + i * 45, 0, 23, H);
+    for (let i = 0; i < 8; i++) o.fillRect(FIELD.left + i * 72, 0, 36, H);
 
-    // Lines (1px pixel lines)
+    // Lines
     o.fillStyle = "#e8f5ec";
-    o.fillRect(FIELD.left, FIELD.top, FIELD.right - FIELD.left, 1);
-    o.fillRect(FIELD.left, FIELD.bottom, FIELD.right - FIELD.left, 1);
-    o.fillRect(FIELD.left, FIELD.top, 1, FIELD.bottom - FIELD.top);
-    o.fillRect(FIELD.right, FIELD.top, 1, FIELD.bottom - FIELD.top + 1);
-    o.fillRect(CENTER.x, FIELD.top, 1, FIELD.bottom - FIELD.top);
-    // Center circle (pixel circle)
-    for (let a = 0; a < 64; a++) {
-      const ang = (a / 64) * Math.PI * 2;
-      o.fillRect(Math.round(CENTER.x + Math.cos(ang) * 26), Math.round(CENTER.y + Math.sin(ang) * 26), 1, 1);
+    o.fillRect(FIELD.left, FIELD.top, FIELD.right - FIELD.left, 2);
+    o.fillRect(FIELD.left, FIELD.bottom, FIELD.right - FIELD.left, 2);
+    o.fillRect(FIELD.left, FIELD.top, 2, FIELD.bottom - FIELD.top);
+    o.fillRect(FIELD.right, FIELD.top, 2, FIELD.bottom - FIELD.top + 2);
+    o.fillRect(CENTER.x, FIELD.top, 2, FIELD.bottom - FIELD.top);
+    for (let a = 0; a < 96; a++) {
+      const ang = (a / 96) * Math.PI * 2;
+      o.fillRect(Math.round(CENTER.x + Math.cos(ang) * 42), Math.round(CENTER.y + Math.sin(ang) * 42), 2, 2);
     }
-    // Boxes
     for (const side of [0, 1] as const) {
-      const x = side === 0 ? FIELD.left : FIELD.right - 46;
-      o.fillRect(x, MOUTH.top - 22, 46, 1);
-      o.fillRect(x, MOUTH.bottom + 22, 46, 1);
-      o.fillRect(side === 0 ? x + 46 : x, MOUTH.top - 22, 1, MOUTH.bottom - MOUTH.top + 44);
+      const x = side === 0 ? FIELD.left : FIELD.right - 74;
+      o.fillRect(x, MOUTH.top - 35, 74, 2);
+      o.fillRect(x, MOUTH.bottom + 35, 74, 2);
+      o.fillRect(side === 0 ? x + 74 : x, MOUTH.top - 35, 2, MOUTH.bottom - MOUTH.top + 72);
     }
 
     // Goals
@@ -939,47 +961,47 @@ class Game {
       o.fillStyle = "rgba(232,245,236,0.28)";
       o.fillRect(gx, MOUTH.top, GOAL_DEPTH, MOUTH.bottom - MOUTH.top);
       o.fillStyle = "rgba(232,245,236,0.55)";
-      for (let y = MOUTH.top; y <= MOUTH.bottom; y += 4) o.fillRect(gx, y, GOAL_DEPTH, 1);
-      for (let x = gx; x <= gx + GOAL_DEPTH; x += 4) o.fillRect(x, MOUTH.top, 1, MOUTH.bottom - MOUTH.top);
+      for (let y = MOUTH.top; y <= MOUTH.bottom; y += 5) o.fillRect(gx, y, GOAL_DEPTH, 1);
+      for (let x = gx; x <= gx + GOAL_DEPTH; x += 5) o.fillRect(x, MOUTH.top, 1, MOUTH.bottom - MOUTH.top);
       o.fillStyle = "#ffffff";
-      o.fillRect(gx, MOUTH.top - 1, GOAL_DEPTH + 1, 2);
-      o.fillRect(gx, MOUTH.bottom, GOAL_DEPTH + 1, 2);
-      o.fillRect(side === 0 ? gx : gx + GOAL_DEPTH - 1, MOUTH.top, 2, MOUTH.bottom - MOUTH.top + 1);
+      o.fillRect(gx, MOUTH.top - 2, GOAL_DEPTH + 2, 3);
+      o.fillRect(gx, MOUTH.bottom, GOAL_DEPTH + 2, 3);
+      o.fillRect(side === 0 ? gx : gx + GOAL_DEPTH - 1, MOUTH.top, 3, MOUTH.bottom - MOUTH.top + 2);
     }
 
     this.fx.draw(o, now);
 
-    // Entities, sorted by y
     const sorted = [...this.players].sort((a, b) => a.y - b.y);
     for (const p of sorted) {
       p.draw(o, now, p === this.controlled, this.ball.owner === p && p.team === 0 && this.fireMeter >= 1);
     }
     this.ball.draw(o, now);
 
-    // Meters (fire + stamina), pixel bars top-center
+    // Meters (fire + stamina)
     if (this.phase !== "pick") {
-      this.drawBar(o, W / 2 - 30, 6, 60, 5, this.fireMeter, "#ff9e4a", "#ffd23e");
-      this.drawBar(o, W / 2 - 30, 14, 60, 3, this.stamina, "#5b86e5", "#9fd0ff");
-      o.font = "7px monospace";
+      this.drawBar(o, W / 2 - 50, 8, 100, 7, this.fireMeter, "#ff9e4a", "#ffd23e");
+      this.drawBar(o, W / 2 - 50, 19, 100, 4, this.stamina, "#5b86e5", "#9fd0ff");
+      o.font = "9px monospace";
       o.fillStyle = "#ffffff";
-      o.fillText("FIRE", W / 2 - 55, 11);
-      o.fillText("RUN", W / 2 - 51, 18);
+      o.fillText("FIRE", W / 2 - 88, 15);
+      o.fillText("RUN", W / 2 - 82, 24);
       if (this.fireMeter >= 1 && Math.floor(now / 250) % 2 === 0) {
         o.fillStyle = "#ffd23e";
-        o.fillText("SUPER SHOT READY!", W / 2 + 36, 12);
+        o.font = "800 10px monospace";
+        o.fillText("SUPER SHOT READY!", W / 2 + 58, 16);
       }
     }
 
     // Banner
     if (this.banner && now - this.banner.t0 < 1400) {
       const t = Math.min(1, (now - this.banner.t0) / 200);
-      o.font = `800 ${Math.round(14 + t * 8)}px monospace`;
+      o.font = `800 ${Math.round(22 + t * 12)}px monospace`;
       o.textAlign = "center";
-      o.lineWidth = 3;
+      o.lineWidth = 4;
       o.strokeStyle = "#ffffff";
       o.fillStyle = this.banner.color;
-      o.strokeText(this.banner.text, CENTER.x, 64);
-      o.fillText(this.banner.text, CENTER.x, 64);
+      o.strokeText(this.banner.text, CENTER.x, 100);
+      o.fillText(this.banner.text, CENTER.x, 100);
       o.textAlign = "left";
     }
 
@@ -989,10 +1011,10 @@ class Game {
       const sx = ((this.input.joy.ox - r.left) / r.width) * W;
       const sy = ((this.input.joy.oy - r.top) / r.height) * H;
       o.strokeStyle = "rgba(255,255,255,0.5)";
-      o.lineWidth = 1;
-      o.strokeRect(Math.round(sx - 12), Math.round(sy - 12), 24, 24);
+      o.lineWidth = 2;
+      o.strokeRect(Math.round(sx - 15), Math.round(sy - 15), 30, 30);
       o.fillStyle = "rgba(255,255,255,0.7)";
-      o.fillRect(Math.round(sx + this.input.joy.dx * 10 - 3), Math.round(sy + this.input.joy.dy * 10 - 3), 6, 6);
+      o.fillRect(Math.round(sx + this.input.joy.dx * 12 - 4), Math.round(sy + this.input.joy.dy * 12 - 4), 8, 8);
     }
 
     o.restore();
@@ -1047,8 +1069,8 @@ function showTeamPicker(): void {
   const card = document.createElement("div");
   card.className = "gp-card";
   card.innerHTML =
-    `<h2>🕹️ ARCADE SOCCER · 热血足球</h2>` +
-    `<p class="sub">4v4 pixel match · 冲刺、铲球、火焰必杀!Pick your team · 选择你的球队</p>`;
+    `<h2>🕹️ ARCADE SOCCER</h2>` +
+    `<p class="sub">Retro 4v4 pixel match — sprint, slide tackles &amp; flaming super shots. Pick your team!</p>`;
   const grid = document.createElement("div");
   grid.className = "team-grid";
   for (const t of teams) {
@@ -1057,7 +1079,7 @@ function showTeamPicker(): void {
     btn.className = "team-btn";
     btn.innerHTML =
       `<img src="${flagUrl(t.iso2)}" alt="${t.fifaCode}" loading="lazy">` +
-      `<span>${t.teamName}</span><span class="zh">${t.nameZh}</span>`;
+      `<span>${t.teamName}</span>`;
     btn.addEventListener("click", () => game.start(t));
     grid.appendChild(btn);
   }
