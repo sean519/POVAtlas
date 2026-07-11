@@ -194,17 +194,18 @@ C:\Resilio Sync\Alltek-Sean\Github\POVAtlas\   (canonical; F:\world map is a ret
   cartoon keeper (random other nation); aim + click/tap, weighted keeper AI,
   confetti, bilingual UI, end-screen rating. Linked from the header 🎮 button;
   vercel.json rewrites /game → /game.html.
-- **/soccer — "Arcade Soccer 热血足球" v2** (soccer.html + src/soccer/main.ts,
-  third entry; Input/FX/Ball/Player/Game classes): retro pixel-art 4v4 arcade
-  match — 400×256 internal canvas upscaled with image-rendering:pixelated,
-  hand-drawn 7×11 pixel sprites (run/kick/knocked poses), bright blue-vs-red
-  kits. Controls: WASD/arrows move, **Shift sprint** (stamina bar), **J pass /
+- **/soccer — "Arcade Soccer" v3** (soccer.html + src/soccer/main.ts, third
+  entry; Input/FX/Ball/Player/Game classes; **UI is English-only** per user
+  request): retro pixel-art 4v4 arcade match — **640×400** internal canvas
+  upscaled with image-rendering:pixelated, 11×17 pixel sprites (hair/eyes/
+  boots, run/kick/knocked poses, keeper gloves), bright blue-vs-red kits.
+  Controls: WASD/arrows move, **Shift sprint** (stamina bar), **J pass /
   sliding tackle** (knocks the carrier down, ball pops loose), **K shoot**,
-  **P pause** (resume/restart overlay). Possession fills a 🔥 meter → blazing
-  wobbling super shot with screen shake; exaggerated body collisions with
-  flashes/stuns, sprint speed lines, shot trails, goal confetti, win/draw/loss
-  end screen. Touch: left joystick + SPRINT/PASS/SHOOT buttons + ⏸.
-  Cross-linked with /game. Debug: ?t=SECONDS, ?auto=1 full-AI,
+  **P pause** (resume/restart overlay). Possession fills a FIRE meter →
+  blazing wobbling super shot with screen shake; exaggerated body collisions
+  with flashes/stuns, sprint speed lines, shot trails, goal confetti,
+  win/draw/loss end screen. Touch: left joystick + SPRINT/PASS/SHOOT buttons
+  + ⏸. Cross-linked with /game. Debug: ?t=SECONDS, ?auto=1 full-AI,
   window.__soccerTick(n) fixed-step simulator (rAF freezes when the tab is
   occluded — the game just pauses; use the tick hook + canvas pixel sampling
   for automated verification, screenshots can't capture occluded tabs).
