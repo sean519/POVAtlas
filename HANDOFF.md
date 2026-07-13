@@ -189,11 +189,18 @@ C:\Resilio Sync\Alltek-Sean\Github\POVAtlas\   (canonical; F:\world map is a ret
   Esri World Imagery + CARTO dark_only_labels overlay for place names. In
   satellite mode country polygons become thin white outlines (no fill) so the
   imagery stays visible; zooming into a selected match shows the real stadium.
-- **/game — "Cartoon Penalty" mini-game** (game.html + src/game/main.ts, a
-  second Vite entry, no React): pick any of the 48 teams, 5 penalty shots vs a
-  cartoon keeper (random other nation); aim + click/tap, weighted keeper AI,
-  confetti, bilingual UI, end-screen rating. Linked from the header 🎮 button;
-  vercel.json rewrites /game → /game.html.
+- **/game — "Cartoon Penalty" v2** (game.html + src/game/main.ts, a second
+  Vite entry, no React; **English-only UI**): a FULL penalty shootout with
+  real rules — alternating rounds (you shoot, then guard your goal as keeper),
+  early finish when mathematically decided, sudden death if level after five.
+  Shooting uses a timed POWER bar (green sweet zone = PERFECT strike; wild
+  timing sprays wide / CLANKs the woodwork; two PERFECTs in a row load a 🔥
+  FIRE BALL). Saving: click one of six goal zones during the striker's run-up
+  — a tell arrow hints the side but lies 35% of the time; matching zone saves,
+  adjacent 30%. Per-kick pips, commentary lines, confetti, SUDDEN DEATH
+  banner, win/lose flavor screens. Debug: ?auto=1 self-play +
+  window.__penalty {S,tick,click} fixed-step hooks. Linked from the header 🎮
+  button; vercel.json rewrites /game → /game.html.
 - **/soccer — "Arcade Soccer" v3** (soccer.html + src/soccer/main.ts, third
   entry; Input/FX/Ball/Player/Game classes; **UI is English-only** per user
   request): retro pixel-art 4v4 arcade match — **640×400** internal canvas
