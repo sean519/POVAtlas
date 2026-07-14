@@ -18,8 +18,8 @@ export const topScorers: ScorerEntry[] = [
   { name: "Jude Bellingham", teamCode: "ENG", goals: 6 },
   { name: "Harry Kane", teamCode: "ENG", goals: 6 },
   { name: "Ousmane Dembélé", teamCode: "FRA", goals: 5 },
+  { name: "Mikel Oyarzabal", teamCode: "ESP", goals: 5 },
   { name: "Vinícius Júnior", teamCode: "BRA", goals: 4 },
   { name: "Julián Quiñones", teamCode: "MEX", goals: 4 },
   { name: "Ismaïla Sarr", teamCode: "SEN", goals: 4 },
-  { name: "Mikel Oyarzabal", teamCode: "ESP", goals: 4 },
 ];
