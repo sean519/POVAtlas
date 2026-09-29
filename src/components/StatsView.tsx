@@ -1,24 +1,36 @@
 import { useMemo } from "react";
-import type { Match } from "../types";
+import type { KnockoutMatch, Match, ScoredResult } from "../types";
 import { computeTournamentStats, getTeamByCode } from "../utils/dataHelpers";
 import { topScorers } from "../data/topScorers";
+import { isTournamentOver } from "../data/matches";
 import Flag from "./Flag";
 
 interface StatsViewProps {
   matches: Match[];
+  /** Knockout bracket; its played matches count toward every stat. */
+  knockout: KnockoutMatch[];
   onSelectTeam: (code: string) => void;
   onSelectMatch: (id: string) => void;
+  onSelectKnockout: (k: KnockoutMatch) => void;
   onHoverTeam: (code: string | null) => void;
 }
 
 /** Tournament-wide statistics, Google-style: hero numbers + leaderboards. */
 export default function StatsView({
   matches,
+  knockout,
   onSelectTeam,
   onSelectMatch,
+  onSelectKnockout,
   onHoverTeam,
 }: StatsViewProps) {
-  const stats = useMemo(() => computeTournamentStats(matches), [matches]);
+  const stats = useMemo(() => computeTournamentStats(matches, knockout), [matches, knockout]);
+
+  const openResult = (r: ScoredResult) => {
+    if (r.kind === "group") return onSelectMatch(r.id);
+    const k = knockout.find((x) => x.id === r.id);
+    if (k) onSelectKnockout(k);
+  };
 
   const bw = stats.biggestWin;
   const bwA = bw ? getTeamByCode(bw.teamA) : undefined;
@@ -97,7 +109,9 @@ export default function StatsView({
           ))}
         </div>
         <p className="mt-1 text-[10px] text-slate-400">
-          Goal tallies from official tournament data (through the group stage so far).
+          {isTournamentOver()
+            ? `Final tallies — ${scorers[0]?.name ?? "the leader"} won the Golden Boot.`
+            : "Goal tallies from official tournament data, updated as matches finish."}
         </p>
       </section>
 
@@ -144,7 +158,7 @@ export default function StatsView({
             b={bwB}
             scoreA={bw.scoreA}
             scoreB={bw.scoreB}
-            onClick={() => onSelectMatch(bw.matchId)}
+            onClick={() => openResult(bw)}
           />
         </section>
       )}
@@ -160,7 +174,7 @@ export default function StatsView({
             b={hsB}
             scoreA={hs.scoreA}
             scoreB={hs.scoreB}
-            onClick={() => onSelectMatch(hs.matchId)}
+            onClick={() => openResult(hs)}
           />
         </section>
       )}

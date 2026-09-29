@@ -8,7 +8,7 @@ import PlayersView from "./PlayersView";
 import Flag from "./Flag";
 import WinChanceBar from "./WinChanceBar";
 import { ALL_GROUPS, getTeamByCode, matchWinChance } from "../utils/dataHelpers";
-import { ROUND_META } from "../utils/knockout";
+import { ROUND_META, knockoutWinner } from "../utils/knockout";
 import { groupColors } from "../utils/groupColors";
 import {
   formatKickoff,
@@ -112,6 +112,10 @@ export default function SchedulePanel({
     if (!searchTerm.trim()) {
       for (const k of knockout) if (k.date) add(k.date, { kind: "ko", ko: k });
     }
+    // Within a day, order by kickoff (knockout rows arrive in feed order).
+    const kickoff = (it: DayItem) =>
+      (it.kind === "group" ? it.match.kickoffTime : it.ko.kickoffTime) ?? "99:99";
+    for (const list of map.values()) list.sort((a, b) => kickoff(a).localeCompare(kickoff(b)));
     return [...map.entries()].sort((a, b) => a[0].localeCompare(b[0]));
   }, [matches, knockout, searchTerm]);
 
@@ -123,14 +127,23 @@ export default function SchedulePanel({
   }, [scheduleByDate, today]);
 
   const anchorRef = useRef<HTMLDivElement>(null);
+  const championRef = useRef<HTMLDivElement>(null);
 
-  // When the Matches tab opens, jump to the current/upcoming date.
+  // The decided final (and third-place match), once the tournament is over.
+  const finalMatch = useMemo(() => {
+    const f = knockout.find((k) => k.round === "Final");
+    return f && knockoutWinner(f) ? f : undefined;
+  }, [knockout]);
+  const thirdPlaceMatch = useMemo(() => knockout.find((k) => k.round === "3P"), [knockout]);
+
+  // When the Matches tab opens, jump to the champion banner once the
+  // tournament is decided, otherwise to the current/upcoming date.
   useEffect(() => {
     if (tab !== "matches") return;
-    const el = anchorRef.current;
+    const el = finalMatch ? championRef.current : anchorRef.current;
     if (el) el.scrollIntoView({ block: "start" });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tab, anchorDate]);
+  }, [tab, anchorDate, finalMatch]);
 
   const teamsByGroup = useMemo(() => {
     const map = new Map<Group, Team[]>();
@@ -191,7 +204,12 @@ export default function SchedulePanel({
 
       {/* Content */}
       <div className="nice-scroll flex-1 overflow-y-auto p-3">
-        {tab === "matches" && liveMeta && (
+        {tab === "matches" && finalMatch && !searchTerm.trim() && (
+          <div ref={championRef}>
+            <ChampionBanner final={finalMatch} thirdPlace={thirdPlaceMatch} onOpen={onSelectKnockout} />
+          </div>
+        )}
+        {tab === "matches" && liveMeta && !finalMatch && (
           <p className="mb-2 text-center text-[10px] text-slate-400">
             Last updated: {formatClock(liveMeta.updatedAt)}
             {liveMeta.stale && " · showing last cached"}
@@ -299,8 +317,10 @@ export default function SchedulePanel({
         {tab === "stats" && (
           <StatsView
             matches={allMatches}
+            knockout={knockout}
             onSelectTeam={onSelectTeam}
             onSelectMatch={onSelectMatch}
+            onSelectKnockout={onSelectKnockout}
             onHoverTeam={onHoverTeam}
           />
         )}
@@ -358,6 +378,7 @@ function KnockoutCard({
   onClick: (k: KnockoutMatch) => void;
 }) {
   const played = k.scoreA !== null && k.scoreB !== null;
+  const winner = knockoutWinner(k);
   const clickable = Boolean(k.teamA || k.teamB);
   const status = knockoutStatus(played, k.date, today);
   const teamA = k.teamA ? getTeamByCode(k.teamA) : undefined;
@@ -398,18 +419,30 @@ function KnockoutCard({
         </span>
       </div>
 
-      <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
-        <KnockoutSide team={teamA} label={k.labelA} />
+      <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2">
+        <KnockoutSide team={teamA} label={k.labelA} lost={Boolean(winner && winner !== k.teamA)} />
         <div className="px-1 text-center">
           {played ? (
-            <span className="rounded-lg bg-brand-navy px-2 py-0.5 text-sm font-bold text-white">
-              {k.scoreA} – {k.scoreB}
-            </span>
+            <>
+              <span className="rounded-lg bg-brand-navy px-2 py-0.5 text-sm font-bold text-white">
+                {k.scoreA} – {k.scoreB}
+              </span>
+              {(k.aet || k.penA != null) && (
+                <span className="mt-1 block text-[10px] font-semibold text-slate-500">
+                  {k.penA != null ? `${k.penA}–${k.penB} pens` : "a.e.t."}
+                </span>
+              )}
+            </>
           ) : (
             <span className="text-xs font-bold text-slate-400">vs</span>
           )}
         </div>
-        <KnockoutSide team={teamB} label={k.labelB} alignEnd />
+        <KnockoutSide
+          team={teamB}
+          label={k.labelB}
+          alignEnd
+          lost={Boolean(winner && winner !== k.teamB)}
+        />
       </div>
 
       {(k.venue || k.city) && (
@@ -429,15 +462,18 @@ function KnockoutSide({
   team,
   label,
   alignEnd,
+  lost,
 }: {
-  team: import("../types").Team | undefined;
+  team: Team | undefined;
   label: string;
   alignEnd?: boolean;
+  /** Dim the side that was knocked out. */
+  lost?: boolean;
 }) {
   if (!team) {
     return (
       <div
-        className={`flex min-w-0 items-center gap-2 ${
+        className={`flex min-w-0 max-w-full items-center gap-2 ${
           alignEnd ? "justify-self-end text-right" : "justify-self-start"
         }`}
       >
@@ -448,9 +484,9 @@ function KnockoutSide({
 
   return (
     <div
-      className={`flex min-w-0 items-center gap-2 ${
+      className={`flex min-w-0 max-w-full items-center gap-2 ${
         alignEnd ? "justify-self-end text-right" : "justify-self-start"
-      }`}
+      } ${lost ? "opacity-50" : ""}`}
     >
       {alignEnd ? (
         <>
@@ -470,6 +506,69 @@ function KnockoutSide({
         </>
       )}
     </div>
+  );
+}
+
+/**
+ * Tournament summary shown atop the Matches tab once the final is decided:
+ * champion, final scoreline, runner-up and third place. Tapping it opens the
+ * final's head-to-head comparison.
+ */
+function ChampionBanner({
+  final,
+  thirdPlace,
+  onOpen,
+}: {
+  final: KnockoutMatch;
+  thirdPlace: KnockoutMatch | undefined;
+  onOpen: (k: KnockoutMatch) => void;
+}) {
+  const winnerCode = knockoutWinner(final);
+  const champ = getTeamByCode(winnerCode);
+  const runnerUp = getTeamByCode(winnerCode === final.teamA ? final.teamB : final.teamA);
+  const third = getTeamByCode(thirdPlace ? knockoutWinner(thirdPlace) : null);
+  const a = getTeamByCode(final.teamA);
+  const b = getTeamByCode(final.teamB);
+  if (!champ || !runnerUp || !a || !b) return null;
+
+  const extra =
+    final.penA != null ? ` (${final.penA}–${final.penB} pens)` : final.aet ? " (a.e.t.)" : "";
+
+  return (
+    <button
+      type="button"
+      onClick={() => onOpen(final)}
+      className="mb-4 w-full overflow-hidden rounded-2xl border border-amber-300 bg-gradient-to-br from-amber-50 via-white to-amber-100 p-4 text-left shadow-sm transition hover:shadow-card"
+    >
+      <p className="text-[11px] font-bold uppercase tracking-wide text-amber-700">
+        🏆 2026 World Cup Champions · 世界杯冠军
+      </p>
+      <div className="mt-2 flex items-center gap-3">
+        <Flag team={champ} className="h-10 w-14 shrink-0 ring-2 ring-amber-300" />
+        <div className="min-w-0">
+          <p className="truncate text-xl font-extrabold leading-tight text-brand-navy">
+            {champ.teamName}
+          </p>
+          <p className="text-sm text-slate-500">{champ.nameZh}</p>
+        </div>
+      </div>
+      <p className="mt-3 text-xs text-slate-600">
+        <span className="font-semibold">Final:</span> {a.teamName} {final.scoreA}–{final.scoreB}{" "}
+        {b.teamName}
+        {extra}
+        {final.venue ? ` · ${final.venue}` : ""}
+      </p>
+      <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-600">
+        <span className="flex items-center gap-1.5">
+          🥈 <Flag team={runnerUp} className="h-3.5 w-5" /> {runnerUp.teamName}
+        </span>
+        {third && (
+          <span className="flex items-center gap-1.5">
+            🥉 <Flag team={third} className="h-3.5 w-5" /> {third.teamName}
+          </span>
+        )}
+      </div>
+    </button>
   );
 }
 

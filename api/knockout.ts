@@ -168,6 +168,7 @@ function collectBoxes(
       : { date: wikiDate, time: null };
     const { venue, city } = parseVenue(body.match(/\|stadium=([^\n]*)/)?.[1]);
     const sc = body.match(/\|score=\{\{score link\|[^|]*\|(\d+)[–-](\d+)(?:\|[^}]*)?\}\}/);
+    const pen = body.match(/\|\s*penaltyscore\s*=\s*(\d+)\s*[–-]\s*(\d+)/);
     perRound[round] = (perRound[round] ?? 0) + 1;
     out.push({
       id: `${round}-${perRound[round]}`,
@@ -182,6 +183,9 @@ function collectBoxes(
       labelB: b.label || "TBD",
       scoreA: sc ? parseInt(sc[1], 10) : null,
       scoreB: sc ? parseInt(sc[2], 10) : null,
+      aet: /\|\s*aet\s*=\s*yes/i.test(body),
+      penA: pen ? parseInt(pen[1], 10) : null,
+      penB: pen ? parseInt(pen[2], 10) : null,
     });
   }
 }

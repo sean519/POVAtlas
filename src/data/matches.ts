@@ -269,6 +269,14 @@ function orientLive(live: LiveInfo, flip: boolean): LiveInfo {
   };
 }
 
+/** Date of the final (PDT). After this day no score can change. */
+export const TOURNAMENT_FINAL_DATE = "2026-07-19";
+
+/** True once the final has been played — live feeds no longer need polling. */
+export function isTournamentOver(): boolean {
+  return todayInKickoffTz() > TOURNAMENT_FINAL_DATE;
+}
+
 /** True if any fixture is currently inside its live window (fresh clock read). */
 export function isLiveWindowNow(): boolean {
   const today = todayInKickoffTz();

@@ -20,6 +20,31 @@
 This document is the single source of truth for picking up work on this project
 in a fresh Claude Code session. Read it top-to-bottom before making changes.
 
+> 🏁 **2026-09-29 — the tournament is OVER** (Spain beat Argentina 1–0 a.e.t. in
+> the July 19 final). Post-tournament review changes:
+> - **Basemap moved from CARTO to Esri Light Gray Canvas.** CARTO's keyless
+>   basemaps started serving an "API KEY REQUIRED" watermark tile, which broke
+>   the map. Satellite labels also moved to Esri `World_Boundaries_and_Places`.
+>   Both are keyless.
+> - **The final bracket is bundled** in `src/data/knockoutResults.ts` (generated
+>   from `/api/knockout` + Wikipedia, not hand-typed). After
+>   `TOURNAMENT_FINAL_DATE` (`matches.ts`) `fetchKnockout()` returns it with no
+>   network, so it's immune to later Wikipedia edits.
+> - Knockout matches now carry `aet` / `penA` / `penB`. `api/knockout.ts` parses
+>   `|aet=yes` / `|penaltyscore=`, and cards show "a.e.t." or "3–4 pens" with the
+>   eliminated side dimmed.
+> - **Champion banner** tops the Matches tab (and the tab opens there). Stats now
+>   include knockout matches (104/104, 308 goals). The comparison card shows the
+>   real result for played matches.
+> - **Polling stops** after the final: one fetch, no timers.
+> - **The GitHub Actions refresh cron was auto-disabled by GitHub** (60 days of
+>   inactivity, 2026-09-16). That's correct now that results are final. Don't
+>   re-enable it.
+> - The dev server now runs from THIS folder: `.claude/launch.json` → `preview_start`
+>   name `povatlas`, port 5181. `postcss.config.js` / `tailwind.config.js` now
+>   resolve paths relative to the repo, so builds no longer depend on the cwd.
+>   §7 item 8 is resolved.
+
 > **Final cleanup pass done (HEAD `2eaa5a6`).** Whole project reviewed: no
 > `console.log`/`debugger`/temp code; `tsconfig` has `noUnusedLocals` +
 > `noUnusedParameters` enabled and the build is green, so there are **zero unused
@@ -350,7 +375,10 @@ See `TODO.md` for the live checklist. Summary, highest priority first:
    itself (for in-progress minute-by-minute) is still partial/best-effort, and
    the **Golden Boot is NOT in the runtime feed** — `topScorers.ts` is static,
    refreshed only by the 30-min cron (so it can lag), or via the §9 parse.
-8. **Dev server runs from the RETIRED `F:\world map` clone, and Resilio is NOT
+8. ~~**Dev server runs from the RETIRED `F:\world map` clone**~~ **RESOLVED
+   2026-09-29:** the canonical folder now has its own `.claude/launch.json`
+   (`povatlas`, port 5181). The original note is kept below for history.
+   **Dev server runs from the RETIRED `F:\world map` clone, and Resilio is NOT
    syncing the canonical folder into it.** `.claude/launch.json` (used by the
    preview tools) only exists in `F:\world map`, so `preview_start` serves that
    clone. Edits in the canonical `C:\Resilio Sync\…\POVAtlas` folder do **not**

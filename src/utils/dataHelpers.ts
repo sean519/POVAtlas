@@ -7,7 +7,9 @@ import type {
   CountryComparison,
   CountryFacts,
   Group,
+  KnockoutMatch,
   Match,
+  ScoredResult,
   SquadMember,
   StandingRow,
   StarPlayer,
@@ -243,21 +245,34 @@ export function computeGroupStandings(
 
 /** Tournament-wide aggregate stats computed from played matches. */
 export function computeTournamentStats(
-  ms: Match[] = matches
+  ms: Match[] = matches,
+  knockout: KnockoutMatch[] = []
 ): TournamentStats {
-  const played = ms.filter(hasScore);
-  const totalGoals = played.reduce(
-    (sum, m) => sum + (m.scoreA as number) + (m.scoreB as number),
-    0
-  );
+  // Goals include extra time; penalty-shootout kicks are not goals.
+  const played: ScoredResult[] = [
+    ...ms.filter(hasScore).map((m) => ({
+      kind: "group" as const,
+      id: m.matchId,
+      teamA: m.teamA,
+      teamB: m.teamB,
+      scoreA: m.scoreA as number,
+      scoreB: m.scoreB as number,
+    })),
+    ...knockout.flatMap((k) =>
+      k.teamA && k.teamB && k.scoreA !== null && k.scoreB !== null
+        ? [{ kind: "ko" as const, id: k.id, teamA: k.teamA, teamB: k.teamB, scoreA: k.scoreA, scoreB: k.scoreB }]
+        : []
+    ),
+  ];
+  const totalGoals = played.reduce((sum, m) => sum + m.scoreA + m.scoreB, 0);
 
-  let biggestWin: Match | null = null;
+  let biggestWin: ScoredResult | null = null;
   let biggestMargin = -1;
-  let highestScoring: Match | null = null;
+  let highestScoring: ScoredResult | null = null;
   let mostGoals = -1;
   for (const m of played) {
-    const sa = m.scoreA as number;
-    const sb = m.scoreB as number;
+    const sa = m.scoreA;
+    const sb = m.scoreB;
     const margin = Math.abs(sa - sb);
     if (margin > biggestMargin) {
       biggestMargin = margin;
@@ -272,8 +287,8 @@ export function computeTournamentStats(
 
   const goalsByTeam = new Map<string, number>();
   for (const m of played) {
-    goalsByTeam.set(m.teamA, (goalsByTeam.get(m.teamA) ?? 0) + (m.scoreA as number));
-    goalsByTeam.set(m.teamB, (goalsByTeam.get(m.teamB) ?? 0) + (m.scoreB as number));
+    goalsByTeam.set(m.teamA, (goalsByTeam.get(m.teamA) ?? 0) + m.scoreA);
+    goalsByTeam.set(m.teamB, (goalsByTeam.get(m.teamB) ?? 0) + m.scoreB);
   }
   const scoredEntries = Array.from(goalsByTeam.entries())
     .map(([code, goals]) => ({ team: getTeamByCode(code), goals }))
@@ -283,7 +298,7 @@ export function computeTournamentStats(
   const topScorers = scoredEntries.slice(0, 6);
 
   return {
-    totalMatches: ms.length,
+    totalMatches: ms.length + knockout.length,
     playedMatches: played.length,
     totalGoals,
     avgGoals: played.length ? totalGoals / played.length : 0,

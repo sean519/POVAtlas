@@ -124,14 +124,25 @@ export interface StandingRow {
 }
 
 /** Tournament-wide aggregate statistics. */
+/** A played match from either stage, reduced to what the stats need. */
+export interface ScoredResult {
+  /** "group" → `id` is a Match.matchId; "ko" → a KnockoutMatch.id. */
+  kind: "group" | "ko";
+  id: string;
+  teamA: string;
+  teamB: string;
+  scoreA: number;
+  scoreB: number;
+}
+
 export interface TournamentStats {
   totalMatches: number;
   playedMatches: number;
   totalGoals: number;
   avgGoals: number;
-  biggestWin: Match | null;
+  biggestWin: ScoredResult | null;
   /** Match with the most combined goals. */
-  highestScoring: Match | null;
+  highestScoring: ScoredResult | null;
   /** Number of distinct teams that have scored at least one goal. */
   teamsScored: number;
   topScorers: { team: Team; goals: number }[];
@@ -210,6 +221,11 @@ export interface KnockoutMatch {
   labelB: string;
   scoreA: number | null;
   scoreB: number | null;
+  /** True when the match went to extra time (scores include it). */
+  aet?: boolean;
+  /** Penalty-shootout score, present only when the tie went to penalties. */
+  penA?: number | null;
+  penB?: number | null;
 }
 
 /** Response shape of the `/api/knockout` route. */

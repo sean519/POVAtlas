@@ -10,8 +10,19 @@ import Flag from "./Flag";
 import WinChanceBar from "./WinChanceBar";
 import StarPlayers from "./StarPlayers";
 
+/** Scoreline of the match this comparison was opened from, once played. */
+export interface ComparisonResult {
+  scoreA: number;
+  scoreB: number;
+  /** Stage label, e.g. "Group A" or "Final". */
+  stage: string;
+  /** "a.e.t." or "3–4 pens", when relevant. */
+  note?: string;
+}
+
 interface CountryComparisonCardProps {
   comparison: CountryComparison;
+  result?: ComparisonResult | null;
   onClose: () => void;
   onCollapse?: () => void;
   onSelectTeam: (code: string) => void;
@@ -22,6 +33,7 @@ type Winner = "a" | "b" | "tie";
 
 export default function CountryComparisonCard({
   comparison,
+  result,
   onClose,
   onCollapse,
   onSelectTeam,
@@ -66,7 +78,7 @@ export default function CountryComparisonCard({
       <div className="bg-brand-pitch p-4 text-white">
         <div className="flex items-center justify-between">
           <h2 className="text-sm font-bold uppercase tracking-wide text-white/80">
-            Country comparison
+            {result ? `${result.stage} · result` : "Country comparison"}
           </h2>
           <div className="flex shrink-0 items-center gap-1">
             {onCollapse && (
@@ -97,7 +109,18 @@ export default function CountryComparisonCard({
             onClick={() => onSelectTeam(teamA.fifaCode)}
             onHover={(h) => onHoverTeam(h ? teamA.fifaCode : null)}
           />
-          <span className="text-xs font-black text-white/70">VS</span>
+          {result ? (
+            <span className="flex flex-col items-center leading-tight">
+              <span className="rounded-lg bg-white px-2 py-0.5 text-base font-extrabold text-brand-pitch">
+                {result.scoreA} – {result.scoreB}
+              </span>
+              {result.note && (
+                <span className="mt-0.5 text-[10px] font-semibold text-white/80">{result.note}</span>
+              )}
+            </span>
+          ) : (
+            <span className="text-xs font-black text-white/70">VS</span>
+          )}
           <TeamHead
             team={teamB}
             align="end"
@@ -152,7 +175,7 @@ export default function CountryComparisonCard({
         {chance && (
           <section className="mt-4 rounded-xl border border-slate-200 bg-white p-3">
             <h3 className="mb-2 text-xs font-bold uppercase tracking-wide text-brand-blue">
-              ⚡ Win chance (estimate)
+              ⚡ {result ? "Pre-match win chance (estimate)" : "Win chance (estimate)"}
             </h3>
             <WinChanceBar chance={chance} teamA={teamA} teamB={teamB} />
           </section>

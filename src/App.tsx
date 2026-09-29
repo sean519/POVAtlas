@@ -4,15 +4,15 @@ import Layout from "./components/Layout";
 import SchedulePanel from "./components/SchedulePanel";
 import WorldMap from "./components/WorldMap";
 import CountryDetailPanel from "./components/CountryDetailPanel";
-import CountryComparisonCard from "./components/CountryComparisonCard";
+import CountryComparisonCard, { type ComparisonResult } from "./components/CountryComparisonCard";
 import EasterEggModal from "./components/EasterEggModal";
 import PlayerModal from "./components/PlayerModal";
 import Flag from "./components/Flag";
 import type { KnockoutMatch, LiveScoresResponse, Match, StarPlayer, Team } from "./types";
 import { teams } from "./data/teams";
-import { matches, mergeLiveScores, isLiveWindowNow } from "./data/matches";
+import { matches, mergeLiveScores, isLiveWindowNow, isTournamentOver } from "./data/matches";
 import { fetchLiveScores } from "./utils/liveScores";
-import { fetchKnockout } from "./utils/knockout";
+import { ROUND_META, fetchKnockout } from "./utils/knockout";
 import {
   compareCountries,
   getFactsForTeam,
@@ -71,6 +71,8 @@ export default function App() {
       } else if (res) {
         setLiveMeta((prev) => prev ?? { updatedAt: res.updatedAt, source: res.source, stale: res.stale });
       }
+      // Tournament over: scores are final, one fetch is enough.
+      if (isTournamentOver()) return;
       // Poll every 30s only while a match is live; otherwise a slow heartbeat.
       const liveNow =
         isLiveWindowNow() || (res?.matches.some((m) => m.status === "live") ?? false);
@@ -92,6 +94,7 @@ export default function App() {
       const ko = await fetchKnockout().catch(() => []);
       if (cancelled) return;
       if (ko.length > 0) setKnockout(ko);
+      if (isTournamentOver()) return; // bracket is final
       timer = window.setTimeout(tick, 10 * 60_000); // bracket changes slowly
     };
     tick();
@@ -152,6 +155,23 @@ export default function App() {
     : selectedKnockout && selectedKnockout.teamA && selectedKnockout.teamB
     ? compareCountries(selectedKnockout.teamA, selectedKnockout.teamB)
     : null;
+  const comparisonResult: ComparisonResult | null =
+    selectedMatch && selectedMatch.status === "finished" &&
+    selectedMatch.scoreA !== null && selectedMatch.scoreB !== null
+      ? { scoreA: selectedMatch.scoreA, scoreB: selectedMatch.scoreB, stage: `Group ${selectedMatch.group}` }
+      : selectedKnockout && selectedKnockout.scoreA !== null && selectedKnockout.scoreB !== null
+      ? {
+          scoreA: selectedKnockout.scoreA,
+          scoreB: selectedKnockout.scoreB,
+          stage: ROUND_META[selectedKnockout.round].label,
+          note:
+            selectedKnockout.penA != null
+              ? `${selectedKnockout.penA}–${selectedKnockout.penB} pens`
+              : selectedKnockout.aet
+              ? "a.e.t."
+              : undefined,
+        }
+      : null;
 
   // ---- Map highlight set + focus ----
   const highlightCodes = useMemo(() => {
@@ -319,6 +339,7 @@ export default function App() {
       >
         <CountryComparisonCard
           comparison={comparison}
+          result={comparisonResult}
           onClose={clearSelection}
           onCollapse={() => setInfoCollapsed(true)}
           onSelectTeam={selectTeam}

@@ -109,8 +109,8 @@ export default function MatchCard({
         </span>
       </div>
 
-      <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
-        <div className="flex min-w-0 items-center gap-2 justify-self-start">
+      <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2">
+        <div className="flex min-w-0 max-w-full items-center gap-2 justify-self-start">
           <Flag team={teamA} className="h-6 w-8" />
           <span className="min-w-0 leading-tight">
             <span className="block truncate text-sm font-semibold">
@@ -140,7 +140,7 @@ export default function MatchCard({
           )}
         </div>
 
-        <div className="flex min-w-0 items-center gap-2 justify-self-end text-right">
+        <div className="flex min-w-0 max-w-full items-center gap-2 justify-self-end text-right">
           <span className="min-w-0 leading-tight">
             <span className="block truncate text-sm font-semibold">
               {teamB.teamName}

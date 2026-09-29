@@ -1,14 +1,31 @@
 # POV GoalMap — TODO
 
-> Status as of 2026-06-30. Branch `main`, working tree clean.
-> Full context lives in [HANDOFF.md](HANDOFF.md).
+> Status as of 2026-09-29. The World Cup is over; the site is in its
+> post-tournament state. Full context lives in [HANDOFF.md](HANDOFF.md).
 
-## 🔜 Next up (do first)
-- [ ] **(Optional) Switch live primary to API-Football.** The backend is LIVE at
-      povatlas.com/api/live-scores (Vercel-from-source), currently using the
-      TheSportsDB fallback (`"source":"thesportsdb"`). To make API-Football the
-      primary, set the `API_FOOTBALL_KEY` env var in Vercel + Redeploy (DEPLOY.md
-      §E). Until then TheSportsDB works fine.
+## 🔜 Next up (candidates — user's call)
+- [ ] **Branding:** the header/title still say "POV GoalMap", but the product and
+      domain are **POV Atlas**. Rename when the user confirms.
+- [ ] **Next "event lens"** (per the mission): the WC-specific UI works as an
+      archive now; decide what the next event is.
+- [ ] **Bundle size:** `main` chunk is ~547 KB (164 KB gzip). Lazy-load the
+      Stats/Players/Squad views or split `squads.ts` if first load matters.
+- [x] ~~(Optional) Switch live primary to API-Football~~ — moot, tournament over.
+
+## ✅ Done 2026-09-29 (post-tournament review)
+- [x] Map basemap fixed: CARTO now watermarks keyless tiles → switched to Esri
+      Light Gray Canvas (+ Esri labels in satellite mode).
+- [x] Knockout a.e.t. + penalty-shootout results (parser + cards + dimmed loser).
+- [x] Final bracket bundled (`src/data/knockoutResults.ts`); no Wikipedia
+      dependency after the final.
+- [x] Champion banner (🏆 Spain, 🥈 Argentina, 🥉 England), Matches tab opens on it.
+- [x] Stats include knockouts (104 matches, 308 goals; most goals = FRA 4–6 ENG).
+- [x] Comparison card shows the real result + "pre-match" win chance label.
+- [x] Live-score / bracket polling stops after the final.
+- [x] Mobile: long team names no longer overlap the score (truncate instead).
+- [x] Same-day knockout matches sorted by kickoff time.
+- [x] Tailwind/PostCSS configs resolve from the repo, not the cwd; dev server
+      config added to the canonical folder.
 - Deploy is now **`git push`** (branch `main` → `sean519/POVAtlas` → Vercel).
   Robocopy flow is retired — see HANDOFF §10.
 
