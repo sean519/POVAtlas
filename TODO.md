@@ -4,13 +4,25 @@
 > post-tournament state. Full context lives in [HANDOFF.md](HANDOFF.md).
 
 ## 🔜 Next up (candidates — user's call)
-- [ ] **Branding:** the header/title still say "POV GoalMap", but the product and
-      domain are **POV Atlas**. Rename when the user confirms.
-- [ ] **Next "event lens"** (per the mission): the WC-specific UI works as an
-      archive now; decide what the next event is.
-- [ ] **Bundle size:** `main` chunk is ~547 KB (164 KB gzip). Lazy-load the
-      Stats/Players/Squad views or split `squads.ts` if first load matters.
-- [x] ~~(Optional) Switch live primary to API-Football~~ — moot, tournament over.
+- [ ] **Next "event lens"** (per the mission): Winter Olympics (Feb 2027) as a
+      new section next to "⚽ World Cup 2026" in `SectionSwitch`.
+- [ ] **Per-country pages / SEO:** `?country=JPN` links exist; real paths
+      (`/japan`) + per-page titles/preview images would help search & sharing.
+- [ ] **Country of the Week beyond 46:** write intros/fun facts/must-see for
+      more countries (`countryFacts.ts`) — the rotation picks them up
+      automatically. Also, only the chosen country's write-up is needed on the
+      Today tab; splitting `countryFacts` per country would save ~18 KB gzip.
+- [ ] **Yearly:** re-run `node scripts/build-world-data.mjs` (World Bank data).
+- [ ] **Map coloring by statistic** (choropleth): the Countries-tab ranking data
+      is ready for it.
+
+## ✅ Done 2026-09-30
+- [x] Renamed to POV Atlas; first load −29% (self-hosted borders, lazy country
+      data, vendor chunks, immutable asset caching).
+- [x] Atlas section: 🧩 Daily Country puzzle (streaks, stats, share), 🌟 Country
+      of the Week, ⚖️ compare any two of 250 countries (9 World Bank stats),
+      🌐 all-countries ranking, every map country clickable with a profile card,
+      share links (`?compare=`, `?country=`).
 
 ## ✅ Done 2026-09-29 (post-tournament review)
 - [x] Map basemap fixed: CARTO now watermarks keyless tiles → switched to Esri

@@ -8,6 +8,10 @@ interface LayoutProps {
   overlay?: ReactNode;
   /** Increment to ask the mobile view to jump to the Map tab. */
   focusMapSignal: number;
+  /** Increment to ask the mobile view to jump to the Browse panel. */
+  focusPanelSignal: number;
+  /** Header badge for the daily puzzle. */
+  daily: { puzzle: number; done: boolean; streak: number; onOpen: () => void };
 }
 
 type MobileTab = "schedule" | "map";
@@ -17,6 +21,8 @@ export default function Layout({
   map,
   overlay,
   focusMapSignal,
+  focusPanelSignal,
+  daily,
 }: LayoutProps) {
   const [mobileTab, setMobileTab] = useState<MobileTab>("schedule");
 
@@ -24,6 +30,9 @@ export default function Layout({
   useEffect(() => {
     if (focusMapSignal > 0) setMobileTab("map");
   }, [focusMapSignal]);
+  useEffect(() => {
+    if (focusPanelSignal > 0) setMobileTab("schedule");
+  }, [focusPanelSignal]);
 
   return (
     <div className="flex h-[100dvh] flex-col overflow-hidden">
@@ -35,14 +44,14 @@ export default function Layout({
               className="grid h-9 w-9 shrink-0 place-items-center rounded-2xl bg-white/25 text-xl shadow-inner sm:h-11 sm:w-11 sm:text-2xl"
               aria-hidden
             >
-              <span className="ball-spin inline-block">⚽</span>
+              🌍
             </span>
             <div className="min-w-0">
               <h1 className="truncate text-base font-extrabold leading-tight sm:text-xl">
                 POV Atlas
               </h1>
               <p className="hidden text-xs text-white/90 sm:block sm:text-sm">
-                FIFA World Cup 2026 · explore every nation on the map
+                Explore the world through sports, geography &amp; data · 探索世界
               </p>
             </div>
           </div>
@@ -54,16 +63,29 @@ export default function Layout({
             <span aria-hidden>🎮</span>
             <span className="hidden sm:inline">Game</span>
           </a>
-          <div className="flex shrink-0 items-center gap-1.5 rounded-full bg-white/20 px-2.5 py-1.5 text-[11px] font-semibold shadow-inner sm:gap-2 sm:px-3 sm:text-xs">
-            <span className="relative flex h-2 w-2">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white opacity-75" />
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-white" />
-            </span>
-            <span className="sm:hidden">{formatShortDate(todayISO())}</span>
+          <button
+            type="button"
+            onClick={() => {
+              daily.onOpen();
+              setMobileTab("schedule");
+            }}
+            title={`Daily Country #${daily.puzzle} · ${formatLongDate(todayISO())}`}
+            className="flex shrink-0 items-center gap-1.5 rounded-full bg-white/20 px-2.5 py-1.5 text-[11px] font-bold shadow-inner transition hover:bg-white/30 sm:gap-2 sm:px-3 sm:text-xs"
+          >
+            {daily.done ? (
+              <span aria-hidden>✅</span>
+            ) : (
+              <span className="relative flex h-2 w-2">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white opacity-75" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-white" />
+              </span>
+            )}
+            <span>🧩</span>
             <span className="hidden sm:inline">
-              Today · {formatLongDate(todayISO())}
+              Daily #{daily.puzzle} · {formatShortDate(todayISO())}
             </span>
-          </div>
+            {daily.streak > 0 && <span>🔥{daily.streak}</span>}
+          </button>
         </div>
       </header>
 

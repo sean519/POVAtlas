@@ -14,9 +14,29 @@ import type { Team } from "../types";
 import { getTeamByCode } from "../utils/dataHelpers";
 import { flagUrl } from "../utils/flags";
 import { OC_HQ, OC_TRIGGER } from "../data/easterEgg";
-import geoUrl from "../assets/countries.geo.json?url";
+import { loadGeo, type GeoData } from "../utils/geo";
+
+/** How an Atlas country is marked: selected ("focus") or compare slot A / B. */
+export type AtlasTone = "focus" | "a" | "b";
+
+/** Camera target for the Atlas: boxes of [lat, lng, span in degrees]. */
+export interface AtlasFrame {
+  key: string;
+  boxes: [number, number, number][];
+}
 
 interface WorldMapProps {
+  /** "atlas": every country equal + clickable; "worldcup": team styling, flags, arcs. */
+  mode: "atlas" | "worldcup";
+  /** Atlas countries to mark (selected country, or the compare pair). */
+  atlasMarks: { code: string; tone: AtlasTone }[];
+  atlasFrame: AtlasFrame | null;
+  /** Country name for tooltips (null until the Atlas data has loaded). */
+  countryName: ((code: string) => string | undefined) | null;
+  /** Any country polygon clicked (ISO A3 / Atlas code). */
+  onCountryClick: (code: string) => void;
+  /** An info card covers the map's right side (desktop) — frame around it. */
+  cardOpen: boolean;
   teams: Team[];
   /** fifaCodes to highlight (selected + hovered + comparison). */
   highlightCodes: string[];
@@ -32,25 +52,17 @@ interface WorldMapProps {
   onEasterEgg: () => void;
 }
 
-type GeoData = GeoJSON.FeatureCollection;
-
-// Compact world GeoJSON keyed by ISO A3 in feature.id (from johan/world.geo.json,
-// coordinates rounded to 3 dp). Self-hosted with a content-hashed filename, so
-// the CDN serves it compressed and browsers cache it permanently. The download
-// starts as soon as this module loads, in parallel with React's first render.
-let geoPromise: Promise<GeoData> | null = null;
-function loadGeo(): Promise<GeoData> {
-  geoPromise ??= fetch(geoUrl).then((r) => {
-    if (!r.ok) throw new Error(`HTTP ${r.status}`);
-    return r.json() as Promise<GeoData>;
-  });
-  // A failed attempt shouldn't be cached — allow a retry on next mount.
-  geoPromise.catch(() => (geoPromise = null));
-  return geoPromise;
-}
+// Start the borders download as soon as this module loads, in parallel with
+// React's first render.
 loadGeo();
 
 export default function WorldMap({
+  mode,
+  atlasMarks,
+  atlasFrame,
+  countryName,
+  onCountryClick,
+  cardOpen,
   teams,
   highlightCodes,
   focusCode,
@@ -80,7 +92,12 @@ export default function WorldMap({
   }, []);
 
   const highlightSet = useMemo(() => new Set(highlightCodes), [highlightCodes]);
-  const anyActive = highlightSet.size > 0;
+  const marks = useMemo(
+    () => new Map(atlasMarks.map((m) => [m.code, m.tone] as const)),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [atlasMarks.map((m) => `${m.code}:${m.tone}`).join(",")]
+  );
+  const anyActive = highlightSet.size > 0 || marks.size > 0;
 
   // Map ISO A3 (geojson id) -> team for polygon matching.
   const isoToTeam = useMemo(() => {
@@ -145,36 +162,49 @@ export default function WorldMap({
         {geo && (
           <GeoLayer
             data={geo}
+            mode={mode}
+            marks={marks}
+            countryName={countryName}
             isoToTeam={isoToTeam}
             highlightSet={highlightSet}
             focusCode={focusCode}
             anyActive={anyActive}
             satellite={satellite}
-            onTeamClick={onTeamClick}
+            onCountryClick={onCountryClick}
             onTeamHover={onTeamHover}
           />
         )}
 
-        {/* Markers for all teams — always render so the app works offline too */}
-        {teams.map((team) => (
-          <TeamMarker
-            key={team.fifaCode}
-            team={team}
-            active={highlightSet.has(team.fifaCode)}
-            dimmed={anyActive && !highlightSet.has(team.fifaCode)}
-            onTeamClick={onTeamClick}
-            onTeamHover={onTeamHover}
-          />
-        ))}
+        {mode === "worldcup" && (
+          <>
+            {/* Flag markers for the 48 teams */}
+            {teams.map((team) => (
+              <TeamMarker
+                key={team.fifaCode}
+                team={team}
+                active={highlightSet.has(team.fifaCode)}
+                dimmed={anyActive && !highlightSet.has(team.fifaCode)}
+                onTeamClick={onTeamClick}
+                onTeamHover={onTeamHover}
+              />
+            ))}
 
-        {/* Animated arcs linking the two teams of a selected match, meeting
-            at the venue's ⚽ when the stadium is known */}
-        <MatchArc codes={fitCodes} venue={venue} />
+            {/* Animated arcs linking the two teams of a selected match, meeting
+                at the venue's ⚽ when the stadium is known */}
+            <MatchArc codes={fitCodes} venue={venue} />
+          </>
+        )}
 
         {/* Hidden easter egg — only shows when zoomed into Orange County */}
         <OcEasterEgg onOpen={onEasterEgg} />
 
-        <MapController focusCode={focusCode} fitCodes={fitCodes} venue={venue} />
+        <MapController
+          focusCode={focusCode}
+          fitCodes={fitCodes}
+          venue={venue}
+          atlasFrame={atlasFrame}
+          cardOpen={cardOpen}
+        />
       </MapContainer>
 
       {/* Base-layer toggle: street map ↔ satellite imagery */}
@@ -201,46 +231,57 @@ export default function WorldMap({
 
 interface GeoLayerProps {
   data: GeoData;
+  mode: "atlas" | "worldcup";
+  marks: Map<string, AtlasTone>;
+  countryName: ((code: string) => string | undefined) | null;
   isoToTeam: Map<string, Team>;
   highlightSet: Set<string>;
   focusCode: string | null;
   anyActive: boolean;
   /** Satellite base layer active → mute fills so imagery stays visible. */
   satellite: boolean;
-  onTeamClick: (code: string) => void;
+  onCountryClick: (code: string) => void;
   onTeamHover: (code: string | null) => void;
 }
 
+/** Fill/border for Atlas marks; A/B match the Compare view's blue/orange. */
+const MARK_STYLE: Record<AtlasTone, { color: string; fill: string }> = {
+  focus: { color: "#6d4fc2", fill: "#9d86e9" },
+  a: { color: "#2f5fc4", fill: "#5b86e5" },
+  b: { color: "#d9713f", fill: "#f4a37a" },
+};
+
 function GeoLayer({
   data,
+  mode,
+  marks,
+  countryName,
   isoToTeam,
   highlightSet,
   focusCode,
   anyActive,
   satellite,
-  onTeamClick,
+  onCountryClick,
   onTeamHover,
 }: GeoLayerProps) {
   const map = useMap();
   const layerRef = useRef<L.GeoJSON | null>(null);
 
-  // Keep the latest values in refs so event handlers always read fresh data.
-  const stateRef = useRef({ isoToTeam, highlightSet, focusCode, anyActive });
-  stateRef.current = { isoToTeam, highlightSet, focusCode, anyActive };
-
-  const styleFor = (team: Team | undefined): L.PathOptions => {
-    if (!team) {
-      // Not a World Cup country. Over satellite imagery: thin light border,
-      // no fill, so the imagery isn't washed out.
+  const styleFor = (code: string, team: Team | undefined): L.PathOptions => {
+    const mark = marks.get(code);
+    if (mark) {
+      const s = MARK_STYLE[mark];
+      return { weight: 2.5, color: s.color, fillColor: s.fill, fillOpacity: satellite ? 0.35 : 0.6 };
+    }
+    if (mode === "atlas" || !team) {
+      // Atlas: every country equal (and clickable). World Cup: non-teams.
       if (satellite) {
-        return { weight: 0.4, color: "rgba(255,255,255,0.45)", fillOpacity: 0 };
+        return { weight: 0.5, color: "rgba(255,255,255,0.5)", fillOpacity: 0 };
       }
-      return {
-        weight: 0.5,
-        color: "#cbd5e1",
-        fillColor: "#e2e8f0",
-        fillOpacity: anyActive ? 0.25 : 0.4,
-      };
+      if (mode === "atlas") {
+        return { weight: 0.6, color: "#a9bfd9", fillColor: "#dbe7f5", fillOpacity: anyActive ? 0.25 : 0.45 };
+      }
+      return { weight: 0.5, color: "#cbd5e1", fillColor: "#e2e8f0", fillOpacity: anyActive ? 0.25 : 0.4 };
     }
     const isFocus = focusCode === team.fifaCode;
     const isActive = highlightSet.has(team.fifaCode);
@@ -248,12 +289,7 @@ function GeoLayer({
       // Outline-only highlight: a clear gold border, no fill — so the selected
       // country is marked without the heavy yellow wash. fillOpacity 0 keeps a
       // transparent fill so the interior stays clickable.
-      return {
-        weight: 3,
-        color: "#dca42f",
-        fillColor: "#fbe2a0",
-        fillOpacity: 0,
-      };
+      return { weight: 3, color: "#dca42f", fillColor: "#fbe2a0", fillOpacity: 0 };
     }
     if (isActive) {
       return {
@@ -264,52 +300,54 @@ function GeoLayer({
       };
     }
     if (anyActive) {
-      if (satellite) {
-        return { weight: 0.4, color: "rgba(255,255,255,0.3)", fillOpacity: 0 };
-      }
-      return {
-        weight: 0.5,
-        color: "#94a3b8",
-        fillColor: "#cbd5e1",
-        fillOpacity: 0.3,
-      };
+      if (satellite) return { weight: 0.4, color: "rgba(255,255,255,0.3)", fillOpacity: 0 };
+      return { weight: 0.5, color: "#94a3b8", fillColor: "#cbd5e1", fillOpacity: 0.3 };
     }
     // Resting state (nothing selected): subtle, so nothing looks "highlighted".
-    if (satellite) {
-      return { weight: 0.6, color: "rgba(255,255,255,0.55)", fillOpacity: 0 };
-    }
-    return {
-      weight: 0.6,
-      color: "#bcd9cb",
-      fillColor: "#bcd9cb",
-      fillOpacity: 0.22,
-    };
+    if (satellite) return { weight: 0.6, color: "rgba(255,255,255,0.55)", fillOpacity: 0 };
+    return { weight: 0.6, color: "#bcd9cb", fillColor: "#bcd9cb", fillOpacity: 0.22 };
   };
+
+  // Event handlers + tooltips read the latest values through a ref, since the
+  // layer (and its listeners) is built only once.
+  const live = { mode, isoToTeam, countryName, onCountryClick, onTeamHover, styleFor };
+  const liveRef = useRef(live);
+  liveRef.current = live;
 
   // Build the layer once.
   useEffect(() => {
+    const idOf = (f: GeoJSON.Feature | undefined) => (f?.id != null ? String(f.id) : "");
     const layer = L.geoJSON(data, {
       style: (feature) => {
-        const team = feature?.id
-          ? stateRef.current.isoToTeam.get(String(feature.id))
-          : undefined;
-        return styleFor(team);
+        const code = idOf(feature);
+        return liveRef.current.styleFor(code, liveRef.current.isoToTeam.get(code));
       },
       onEachFeature: (feature, lyr) => {
-        const team = feature?.id
-          ? isoToTeam.get(String(feature.id))
-          : undefined;
-        if (team) {
-          lyr.bindTooltip(`${team.teamName} · ${team.nameZh}`, {
-            sticky: true,
-            direction: "top",
-          });
-          lyr.on({
-            click: () => onTeamClick(team.fifaCode),
-            mouseover: () => onTeamHover(team.fifaCode),
-            mouseout: () => onTeamHover(null),
-          });
-        }
+        const code = idOf(feature);
+        if (!code || code === "-99") return; // unlabelled areas aren't interactive
+        const teamFor = () =>
+          liveRef.current.mode === "worldcup" ? liveRef.current.isoToTeam.get(code) : undefined;
+        lyr.bindTooltip(
+          () => {
+            const team = teamFor();
+            if (team) return `${team.teamName} · ${team.nameZh}`;
+            return liveRef.current.countryName?.(code) ?? code;
+          },
+          { sticky: true, direction: "top" }
+        );
+        lyr.on({
+          click: () => liveRef.current.onCountryClick(code),
+          mouseover: () => {
+            const team = teamFor();
+            if (team) liveRef.current.onTeamHover(team.fifaCode);
+            else (lyr as L.Path).setStyle({ weight: 1.8, color: "#475569" });
+          },
+          mouseout: () => {
+            const team = teamFor();
+            if (team) liveRef.current.onTeamHover(null);
+            else (lyr as L.Path).setStyle(liveRef.current.styleFor(code, liveRef.current.isoToTeam.get(code)));
+          },
+        });
       },
     });
     layer.addTo(map);
@@ -318,24 +356,22 @@ function GeoLayer({
       layer.remove();
       layerRef.current = null;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data, map]);
 
-  // Restyle whenever highlight/selection or the base layer changes.
+  // Restyle whenever highlight/selection, mode or the base layer changes.
   useEffect(() => {
     const layer = layerRef.current;
     if (!layer) return;
     layer.eachLayer((lyr) => {
       const feature = (lyr as L.GeoJSON & { feature?: GeoJSON.Feature }).feature;
-      const team = feature?.id ? isoToTeam.get(String(feature.id)) : undefined;
-      (lyr as L.Path).setStyle(styleFor(team));
+      const code = feature?.id != null ? String(feature.id) : "";
+      (lyr as L.Path).setStyle(styleFor(code, isoToTeam.get(code)));
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [highlightSet, focusCode, anyActive, isoToTeam, satellite]);
+  }, [highlightSet, focusCode, anyActive, isoToTeam, satellite, mode, marks]);
 
   return null;
 }
-
 /* ---------------- Markers ------------------------------------------------ */
 
 interface TeamMarkerProps {
@@ -553,21 +589,31 @@ function MapController({
   focusCode,
   fitCodes,
   venue,
+  atlasFrame,
+  cardOpen,
 }: {
   focusCode: string | null;
   fitCodes: string[] | null;
   venue: { lat: number; lng: number; label: string } | null;
+  atlasFrame: AtlasFrame | null;
+  cardOpen: boolean;
 }) {
   const map = useMap();
   const targetRef = useRef<string>("world");
+  const cardOpenRef = useRef(cardOpen);
+  cardOpenRef.current = cardOpen;
 
   // Latest venue for apply() to read — the venue point joins the fit bounds so
   // the stadium ⚽ always ends up in frame.
   const venueRef = useRef(venue);
   venueRef.current = venue;
+  const atlasRef = useRef(atlasFrame);
+  atlasRef.current = atlasFrame;
 
   // A single key describing the current camera target.
-  const target = fitCodes?.length
+  const target = atlasFrame
+    ? `atlas:${atlasFrame.key}`
+    : fitCodes?.length
     ? `fit:${fitCodes.join(",")}${venue ? `@${venue.lat},${venue.lng}` : ""}`
     : focusCode
     ? `team:${focusCode}`
@@ -583,7 +629,16 @@ function MapController({
         // Collect the point(s) to frame (1 for a team, 2 for a match).
         let pts: [number, number][] = [];
         let maxZoom = 5;
-        if (t.startsWith("fit:")) {
+        if (t.startsWith("atlas:")) {
+          // Each box: centre ± half its span (longitude widened by latitude).
+          for (const [lat, lng, span] of atlasRef.current?.boxes ?? []) {
+            const dLat = span / 2;
+            const dLng = span / 2 / Math.max(0.2, Math.cos((lat * Math.PI) / 180));
+            const clampLat = (v: number) => Math.max(-85, Math.min(85, v));
+            pts.push([clampLat(lat - dLat), lng - dLng], [clampLat(lat + dLat), lng + dLng]);
+          }
+          maxZoom = 6;
+        } else if (t.startsWith("fit:")) {
           pts = t
             .slice(4)
             .split("@")[0]
@@ -605,6 +660,9 @@ function MapController({
           // On phones a bottom sheet covers ~72% of the map, so pad the bottom
           // heavily to keep the framed countries in the visible top band.
           const isPhone = window.innerWidth < 640;
+          // Desktop: the info card (~23rem) sits on the right — keep the
+          // framed area clear of it when a card is open.
+          const cardPad = cardOpenRef.current ? Math.min(400, Math.round(size.x * 0.45)) : 70;
           const opts: L.FitBoundsOptions = isPhone
             ? {
                 paddingTopLeft: [30, 40],
@@ -612,7 +670,7 @@ function MapController({
                 maxZoom,
                 duration: 0.9,
               }
-            : { padding: [70, 70], maxZoom, duration: 0.9 };
+            : { paddingTopLeft: [70, 70], paddingBottomRight: [cardPad, 70], maxZoom, duration: 0.9 };
           map.flyToBounds(L.latLngBounds(pts), opts);
           return true;
         }

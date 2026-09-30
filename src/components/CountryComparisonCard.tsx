@@ -26,6 +26,8 @@ interface CountryComparisonCardProps {
   codeA: string;
   codeB: string;
   result?: ComparisonResult | null;
+  /** Opens the full Atlas comparison of these two countries. */
+  onMoreStats?: () => void;
   onClose: () => void;
   onCollapse?: () => void;
   onSelectTeam: (code: string) => void;
@@ -38,6 +40,7 @@ export default function CountryComparisonCard({
   codeA,
   codeB,
   result,
+  onMoreStats,
   onClose,
   onCollapse,
   onSelectTeam,
@@ -207,6 +210,15 @@ export default function CountryComparisonCard({
           <p className="mt-1 text-sm leading-relaxed text-slate-700">{summary}</p>
         </div>
 
+        {onMoreStats && (
+          <button
+            type="button"
+            onClick={onMoreStats}
+            className="mt-3 w-full rounded-lg bg-brand-blue/10 px-3 py-2 text-sm font-bold text-brand-blue transition hover:bg-brand-blue/20"
+          >
+            ⚖️ Compare 9 more statistics in the Atlas ›
+          </button>
+        )}
         <p className="mt-3 text-center text-[11px] text-slate-400">
           Tap a flag above to open that country&rsquo;s full details.
         </p>

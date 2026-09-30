@@ -1,5 +1,6 @@
 import { countryFacts } from "../data/countryFacts";
 import { squads } from "../data/squads";
+import { WORLD_COUNTRIES } from "../data/worldCountries";
 import type { CountryComparison, CountryFacts, SquadMember, Team } from "../types";
 import { getTeamByCode } from "./dataHelpers";
 import { formatGDP, formatPopulation } from "./formatters";
@@ -11,7 +12,23 @@ import { formatGDP, formatPopulation } from "./formatters";
  * components.
  */
 
-const factsByIso = new Map(countryFacts.map((f) => [f.isoA3Code, f]));
+// Headline numbers come from the Atlas's World Bank data where available, so
+// the World Cup panels and the Atlas never disagree. (England/Scotland keep
+// their curated figures — the World Bank only covers the whole UK.)
+const worldByCode = new Map(WORLD_COUNTRIES.map((c) => [c.code, c]));
+function withWorldStats(f: CountryFacts): CountryFacts {
+  const w = worldByCode.get(f.isoA3Code);
+  if (!w) return f;
+  return {
+    ...f,
+    population: w.population?.[0] ?? f.population,
+    gdpUsd: w.gdp?.[0] ?? f.gdpUsd,
+    gdpPerCapitaUsd: w.gdpPerCapita?.[0] ?? f.gdpPerCapitaUsd,
+    areaKm2: w.area ?? f.areaKm2,
+  };
+}
+
+const factsByIso = new Map(countryFacts.map((f) => [f.isoA3Code, withWorldStats(f)]));
 
 /** Get country facts by ISO A3 code. */
 export function getCountryFactsByIso(

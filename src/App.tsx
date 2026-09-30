@@ -2,9 +2,12 @@ import { Suspense, lazy, useEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import Layout from "./components/Layout";
 import SchedulePanel from "./components/SchedulePanel";
-import WorldMap from "./components/WorldMap";
+import WorldMap, { type AtlasFrame, type AtlasTone } from "./components/WorldMap";
 import type { ComparisonResult } from "./components/CountryComparisonCard";
+import type { AtlasTab } from "./components/atlas/AtlasPanel";
+import SectionSwitch, { type Section } from "./components/SectionSwitch";
 import Flag from "./components/Flag";
+import CountryFlag from "./components/atlas/CountryFlag";
 
 // Loaded on demand: the country panels carry the heavy country-facts + squad
 // data, and the modals are rarely opened — none are needed for first paint.
@@ -12,6 +15,8 @@ const CountryDetailPanel = lazy(() => import("./components/CountryDetailPanel"))
 const CountryComparisonCard = lazy(() => import("./components/CountryComparisonCard"));
 const EasterEggModal = lazy(() => import("./components/EasterEggModal"));
 const PlayerModal = lazy(() => import("./components/PlayerModal"));
+const AtlasPanel = lazy(() => import("./components/atlas/AtlasPanel"));
+const AtlasCountryCard = lazy(() => import("./components/atlas/AtlasCountryCard"));
 import type { KnockoutMatch, LiveScoresResponse, Match, StarPlayer, Team } from "./types";
 import { teams } from "./data/teams";
 import { matches, mergeLiveScores, isLiveWindowNow, isTournamentOver } from "./data/matches";
@@ -19,8 +24,57 @@ import { fetchLiveScores } from "./utils/liveScores";
 import { ROUND_META, fetchKnockout } from "./utils/knockout";
 import { getMatchesForTeam, getTeamByCode } from "./utils/dataHelpers";
 import { getVenuePoint } from "./data/venues";
+import { atlasCodeForTeam, useWorldData } from "./utils/world";
+import { currentStreak, gameFor, puzzleNumber, useDaily } from "./utils/daily";
+
+/** Shareable deep links: ?compare=CHN,IND and ?country=JPN. */
+function readInitialLink(): { compare: [string, string] | null; country: string | null } {
+  try {
+    const p = new URLSearchParams(window.location.search);
+    const code = (s: string | undefined) => (s && /^[A-Z]{3}$/.test(s.toUpperCase()) ? s.toUpperCase() : null);
+    const [a, b] = (p.get("compare") ?? "").split(",");
+    const ca = code(a);
+    const cb = code(b);
+    return { compare: ca && cb && ca !== cb ? [ca, cb] : null, country: code(p.get("country") ?? undefined) };
+  } catch {
+    return { compare: null, country: null };
+  }
+}
+const initialLink = readInitialLink();
+
+/** The single World Cup team for an Atlas country (none for the UK: 2 teams). */
+function teamForAtlasCode(code: string): Team | undefined {
+  const matchesCode = teams.filter((t) => atlasCodeForTeam(t) === code);
+  return matchesCode.length === 1 ? matchesCode[0] : undefined;
+}
 
 export default function App() {
+  // ---- Section (Atlas / World Cup) + Atlas state ----
+  const [section, setSection] = useState<Section>("atlas");
+  const [atlasTab, setAtlasTab] = useState<AtlasTab>(initialLink.compare ? "compare" : "today");
+  const [atlasCountry, setAtlasCountry] = useState<string | null>(initialLink.country);
+  const [compareA, setCompareA] = useState<string | null>(initialLink.compare?.[0] ?? null);
+  const [compareB, setCompareB] = useState<string | null>(initialLink.compare?.[1] ?? null);
+  const world = useWorldData();
+
+  // Drop deep-linked codes that don't exist once the data has loaded.
+  useEffect(() => {
+    if (!world) return;
+    if (atlasCountry && !world.byCode.has(atlasCountry)) setAtlasCountry(null);
+    if (compareA && !world.byCode.has(compareA)) setCompareA(null);
+    if (compareB && !world.byCode.has(compareB)) setCompareB(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [world]);
+
+  // ---- Mobile: bump to jump to the Browse panel (e.g. to see a comparison) ----
+  const [focusPanelSignal, setFocusPanelSignal] = useState(0);
+  const surfacePanel = () => setFocusPanelSignal((n) => n + 1);
+
+  // Daily puzzle status for the header badge.
+  const daily = useDaily();
+  const puzzle = puzzleNumber();
+  const todayGame = gameFor(daily, puzzle);
+
   // ---- Selection / hover state ----
   const [hoveredTeamCode, setHoveredTeamCode] = useState<string | null>(null);
   const [selectedTeamCode, setSelectedTeamCode] = useState<string | null>(null);
@@ -238,6 +292,7 @@ export default function App() {
     setSelectedTeamCode(code);
     setSelectedMatchId(null);
     setSelectedKnockoutId(null);
+    setAtlasCountry(null);
     setInfoCollapsed(false);
     surfaceMap();
   };
@@ -246,8 +301,78 @@ export default function App() {
     setSelectedMatchId(id);
     setSelectedTeamCode(null);
     setSelectedKnockoutId(null);
+    setAtlasCountry(null);
     setInfoCollapsed(false);
     surfaceMap();
+  };
+
+  // Open any country's Atlas profile on the map.
+  const selectAtlasCountry = (code: string) => {
+    setAtlasCountry(code);
+    setSelectedTeamCode(null);
+    setSelectedMatchId(null);
+    setSelectedKnockoutId(null);
+    setInfoCollapsed(false);
+    surfaceMap();
+  };
+
+  // Start a comparison from a country (Country of the Week, profile card…).
+  const startCompare = (code: string) => {
+    setSection("atlas");
+    setAtlasTab("compare");
+    setCompareA(code);
+    setCompareB((b) => (b === code ? null : b));
+    setAtlasCountry(null);
+    surfacePanel();
+  };
+
+  const changeCompare = (a: string | null, b: string | null) => {
+    setCompareA(a);
+    setCompareB(b);
+    setAtlasCountry(null);
+  };
+
+  // Map click on any country polygon, routed by context.
+  const onCountryClick = (code: string) => {
+    if (section === "worldcup") {
+      const team = teams.find((t) => t.isoA3Code === code);
+      if (team) return selectTeam(team.fifaCode);
+    }
+    if (!world?.byCode.has(code)) return;
+    if (section === "atlas" && atlasTab === "compare") {
+      // Fill the empty slot; with both set, the tap replaces the second.
+      if (!compareA) changeCompare(code, compareB);
+      else if (code !== compareA) {
+        changeCompare(compareA, code);
+        surfacePanel(); // phones: show the comparison
+      }
+      return;
+    }
+    selectAtlasCountry(code);
+  };
+
+  const changeSection = (s: Section) => {
+    setSection(s);
+    setSelectedTeamCode(null);
+    setSelectedMatchId(null);
+    setSelectedKnockoutId(null);
+    setHoveredTeamCode(null);
+    setAtlasCountry(null);
+  };
+
+  const changeAtlasTab = (t: AtlasTab) => {
+    // Opening Compare with a country open: start the comparison from it.
+    if (t === "compare" && atlasCountry) {
+      if (!compareA) setCompareA(atlasCountry);
+      else if (!compareB && compareA !== atlasCountry) setCompareB(atlasCountry);
+      setAtlasCountry(null);
+    }
+    setAtlasTab(t);
+  };
+
+  const openDaily = () => {
+    changeSection("atlas");
+    setAtlasTab("today");
   };
 
   // Opens the head-to-head comparison once both sides of a knockout fixture
@@ -259,6 +384,7 @@ export default function App() {
       setSelectedKnockoutId(k.id);
       setSelectedMatchId(null);
       setSelectedTeamCode(null);
+      setAtlasCountry(null);
       setInfoCollapsed(false);
       surfaceMap();
     } else if (k.teamA || k.teamB) {
@@ -270,7 +396,53 @@ export default function App() {
     setSelectedMatchId(null);
     setSelectedTeamCode(null);
     setSelectedKnockoutId(null);
+    setAtlasCountry(null);
   };
+
+  // ---- Atlas map marks + camera ----
+  const showCompareOnMap = section === "atlas" && atlasTab === "compare";
+  const atlasMarks = useMemo(() => {
+    const out: { code: string; tone: AtlasTone }[] = [];
+    if (showCompareOnMap) {
+      if (compareA) out.push({ code: compareA, tone: "a" });
+      if (compareB) out.push({ code: compareB, tone: "b" });
+    }
+    if (atlasCountry) {
+      const i = out.findIndex((m) => m.code === atlasCountry);
+      if (i >= 0) out.splice(i, 1);
+      out.push({ code: atlasCountry, tone: "focus" });
+    }
+    return out;
+  }, [showCompareOnMap, compareA, compareB, atlasCountry]);
+
+  const atlasFrame = useMemo((): AtlasFrame | null => {
+    if (!world) return null;
+    const codes = atlasCountry
+      ? [atlasCountry]
+      : showCompareOnMap
+      ? [compareA, compareB].filter((c): c is string => Boolean(c))
+      : [];
+    const boxes = codes
+      .map((c) => world.byCode.get(c))
+      .filter((c): c is NonNullable<typeof c> => Boolean(c))
+      .map((c): [number, number, number] => {
+        // Box side from the country's area (km → degrees), within sane limits.
+        const span = c.area ? Math.sqrt(c.area) / 111 : 3;
+        return [c.lat, c.lng, Math.min(45, Math.max(2.5, span * 1.3))];
+      });
+    return boxes.length ? { key: codes.join(","), boxes } : null;
+  }, [world, atlasCountry, showCompareOnMap, compareA, compareB]);
+
+  const countryName = useMemo(
+    () =>
+      world
+        ? (code: string) => {
+            const c = world.byCode.get(code);
+            return c ? `${c.name} · ${c.nameZh}` : undefined;
+          }
+        : null,
+    [world]
+  );
 
   // ---- Browser Back returns to the initial view instead of leaving ----
   // While anything is open (team/match panel, player modal, easter egg) we
@@ -279,7 +451,7 @@ export default function App() {
   // usual. Closing things in-app (×) consumes the guard entry silently so the
   // history never accumulates stale states.
   const hasOpenUI = Boolean(
-    selectedTeamCode || selectedMatchId || selectedKnockoutId || selectedPlayer || eggOpen
+    selectedTeamCode || selectedMatchId || selectedKnockoutId || atlasCountry || selectedPlayer || eggOpen
   );
   const historyArmedRef = useRef(false);
   const suppressPopRef = useRef(false);
@@ -308,6 +480,7 @@ export default function App() {
         setSelectedMatchId(null);
         setSelectedTeamCode(null);
         setSelectedKnockoutId(null);
+        setAtlasCountry(null);
         setSelectedPlayer(null);
         setEggOpen(false);
       }
@@ -320,19 +493,57 @@ export default function App() {
   const cardShell =
     "animate-fade-in-up absolute inset-x-0 bottom-0 z-[600] flex h-[72%] flex-col overflow-hidden rounded-t-2xl bg-white shadow-card ring-1 ring-black/5 sm:inset-x-auto sm:bottom-4 sm:right-4 sm:h-[min(34rem,calc(100%-2rem))] sm:w-[min(23rem,calc(100%-1.5rem))] sm:rounded-2xl sm:border sm:border-white/60";
 
-  const hasSelection = Boolean(comparison || selectedTeam);
+  const atlasSelected = atlasCountry ? world?.byCode.get(atlasCountry) : undefined;
+  const hasSelection = Boolean(comparison || selectedTeam || atlasCountry);
 
   let mapInfoCard;
   if (!hasSelection) {
     mapInfoCard = null;
   } else if (infoCollapsed) {
     mapInfoCard = (
-      <CollapsedBar
-        teamA={comparison ? comparison.teamA : selectedTeam ?? null}
-        teamB={comparison ? comparison.teamB : null}
-        onExpand={() => setInfoCollapsed(false)}
-        onClose={clearSelection}
-      />
+      <CollapsedBar onExpand={() => setInfoCollapsed(false)} onClose={clearSelection}>
+        {comparison ? (
+          <>
+            <Flag team={comparison.teamA} className="h-5 w-7" />
+            <span className="text-[11px] font-black text-slate-400">vs</span>
+            <Flag team={comparison.teamB} className="h-5 w-7" />
+          </>
+        ) : selectedTeam ? (
+          <>
+            <Flag team={selectedTeam} className="h-5 w-7" />
+            <span className="truncate">{selectedTeam.teamName}</span>
+          </>
+        ) : atlasSelected ? (
+          <>
+            <CountryFlag country={atlasSelected} className="h-5 w-7" />
+            <span className="truncate">{atlasSelected.name}</span>
+          </>
+        ) : null}
+      </CollapsedBar>
+    );
+  } else if (atlasCountry) {
+    const wcTeam = teamForAtlasCode(atlasCountry);
+    mapInfoCard = (
+      <MapInfoSheet key={`atlas-${atlasCountry}`} className={cardShell} onCollapse={() => setInfoCollapsed(true)}>
+        <Suspense fallback={<PanelLoading />}>
+          <AtlasCountryCard
+            code={atlasCountry}
+            worldCupTeamName={wcTeam?.teamName}
+            onClose={clearSelection}
+            onCollapse={() => setInfoCollapsed(true)}
+            onShowCountry={selectAtlasCountry}
+            onCompare={startCompare}
+            onOpenWorldCup={
+              wcTeam
+                ? () => {
+                    changeSection("worldcup");
+                    selectTeam(wcTeam.fifaCode);
+                  }
+                : undefined
+            }
+          />
+        </Suspense>
+      </MapInfoSheet>
     );
   } else if (comparison) {
     mapInfoCard = (
@@ -346,6 +557,14 @@ export default function App() {
             codeA={comparison.codes[0]}
             codeB={comparison.codes[1]}
             result={comparisonResult}
+            onMoreStats={() => {
+              const a = atlasCodeForTeam(comparison.teamA);
+              const b = atlasCodeForTeam(comparison.teamB);
+              changeSection("atlas");
+              setAtlasTab("compare");
+              changeCompare(a, a === b ? null : b);
+              surfacePanel();
+            }}
             onClose={clearSelection}
             onCollapse={() => setInfoCollapsed(true)}
             onSelectTeam={selectTeam}
@@ -381,33 +600,66 @@ export default function App() {
   return (
     <Layout
       focusMapSignal={focusMapSignal}
+      focusPanelSignal={focusPanelSignal}
+      daily={{
+        puzzle,
+        done: todayGame.done,
+        streak: currentStreak(daily.stats, puzzle),
+        onOpen: openDaily,
+      }}
       schedule={
-        <SchedulePanel
-          matches={filteredMatches}
-          allMatches={liveMatches}
-          knockout={knockout}
-          liveMeta={liveMeta}
-          teams={filteredTeams}
-          hoveredTeamCode={hoveredTeamCode}
-          selectedTeamCode={selectedTeamCode}
-          hoveredMatchId={hoveredMatchId}
-          selectedMatchId={selectedMatchId}
-          hoveredKnockoutId={hoveredKnockoutId}
-          selectedKnockoutId={selectedKnockoutId}
-          onHoverTeam={setHoveredTeamCode}
-          onSelectTeam={selectTeam}
-          onHoverMatch={setHoveredMatchId}
-          onSelectMatch={selectMatch}
-          onHoverKnockout={setHoveredKnockoutId}
-          onSelectKnockout={selectKnockout}
-          onSelectPlayer={(team, player) => setSelectedPlayer({ team, player })}
-          searchTerm={searchTerm}
-          onSearchChange={setSearchTerm}
-        />
+        <div className="flex h-full min-h-0 flex-col">
+          <SectionSwitch section={section} onChange={changeSection} />
+          <div className="flex min-h-0 flex-1 flex-col">
+            {section === "atlas" ? (
+              <Suspense fallback={<div className="m-3 h-72 animate-pulse rounded-2xl bg-slate-100" />}>
+                <AtlasPanel
+                  tab={atlasTab}
+                  onTabChange={changeAtlasTab}
+                  compareA={compareA}
+                  compareB={compareB}
+                  onCompareChange={changeCompare}
+                  selectedCode={atlasCountry}
+                  onShowCountry={selectAtlasCountry}
+                  onCompare={startCompare}
+                />
+              </Suspense>
+            ) : (
+              <SchedulePanel
+                matches={filteredMatches}
+                allMatches={liveMatches}
+                knockout={knockout}
+                liveMeta={liveMeta}
+                teams={filteredTeams}
+                hoveredTeamCode={hoveredTeamCode}
+                selectedTeamCode={selectedTeamCode}
+                hoveredMatchId={hoveredMatchId}
+                selectedMatchId={selectedMatchId}
+                hoveredKnockoutId={hoveredKnockoutId}
+                selectedKnockoutId={selectedKnockoutId}
+                onHoverTeam={setHoveredTeamCode}
+                onSelectTeam={selectTeam}
+                onHoverMatch={setHoveredMatchId}
+                onSelectMatch={selectMatch}
+                onHoverKnockout={setHoveredKnockoutId}
+                onSelectKnockout={selectKnockout}
+                onSelectPlayer={(team, player) => setSelectedPlayer({ team, player })}
+                searchTerm={searchTerm}
+                onSearchChange={setSearchTerm}
+              />
+            )}
+          </div>
+        </div>
       }
       map={
         <div className="relative h-full w-full">
           <WorldMap
+            mode={section}
+            atlasMarks={atlasMarks}
+            atlasFrame={atlasFrame}
+            countryName={countryName}
+            onCountryClick={onCountryClick}
+            cardOpen={hasSelection && !infoCollapsed}
             teams={teams}
             highlightCodes={highlightCodes}
             focusCode={focusCode}
@@ -517,31 +769,29 @@ function MapInfoSheet({
   );
 }
 
-/** Collapsed state of the info card: a small pill you can re-expand. */
 /** Brief placeholder while a lazily loaded info panel downloads. */
 function PanelLoading() {
   return (
     <div className="flex h-full items-center justify-center text-sm text-slate-400">
       <span className="ball-spin mr-2 inline-block" aria-hidden>
-        ⚽
+        🌍
       </span>
       Loading…
     </div>
   );
 }
 
+/** Collapsed state of the info card: a small pill you can re-expand. */
 function CollapsedBar({
-  teamA,
-  teamB,
+  children,
   onExpand,
   onClose,
 }: {
-  teamA: import("./types").Team | null;
-  teamB: import("./types").Team | null;
+  /** Flag(s) + label describing what's collapsed. */
+  children: ReactNode;
   onExpand: () => void;
   onClose: () => void;
 }) {
-  if (!teamA) return null;
   return (
     <div className="animate-fade-in-up absolute bottom-4 right-4 z-[600] flex max-w-[calc(100%-1.5rem)] items-center gap-2 rounded-full border border-white/60 bg-white/95 py-1.5 pl-2.5 pr-1.5 shadow-card ring-1 ring-black/5 backdrop-blur">
       <button
@@ -550,15 +800,7 @@ function CollapsedBar({
         className="flex min-w-0 items-center gap-1.5 text-sm font-semibold text-slate-700"
         title="Expand"
       >
-        <Flag team={teamA} className="h-5 w-7" />
-        {teamB ? (
-          <>
-            <span className="text-[11px] font-black text-slate-400">vs</span>
-            <Flag team={teamB} className="h-5 w-7" />
-          </>
-        ) : (
-          <span className="truncate">{teamA.teamName}</span>
-        )}
+        {children}
       </button>
       <button
         type="button"
