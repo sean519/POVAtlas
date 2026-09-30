@@ -39,7 +39,7 @@ export default function Layout({
             </span>
             <div className="min-w-0">
               <h1 className="truncate text-base font-extrabold leading-tight sm:text-xl">
-                POV GoalMap
+                POV Atlas
               </h1>
               <p className="hidden text-xs text-white/90 sm:block sm:text-sm">
                 FIFA World Cup 2026 · explore every nation on the map

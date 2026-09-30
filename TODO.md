@@ -1,4 +1,4 @@
-# POV GoalMap — TODO
+# POV Atlas — TODO
 
 > Status as of 2026-09-29. The World Cup is over; the site is in its
 > post-tournament state. Full context lives in [HANDOFF.md](HANDOFF.md).
