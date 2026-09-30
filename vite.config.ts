@@ -12,6 +12,16 @@ export default defineConfig({
         game: "game.html",
         soccer: "soccer.html",
       },
+      output: {
+        // Libraries change far less often than app code: keep them in their
+        // own chunks so a deploy doesn't invalidate them in visitors' caches.
+        manualChunks(id) {
+          if (!/node_modules/.test(id)) return undefined;
+          if (/[\\/](leaflet|react-leaflet|@react-leaflet)[\\/]/.test(id)) return "vendor-map";
+          if (/[\\/](react|react-dom|scheduler)[\\/]/.test(id)) return "vendor-react";
+          return undefined;
+        },
+      },
     },
   },
   server: {

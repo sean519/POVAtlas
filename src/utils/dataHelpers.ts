@@ -1,29 +1,24 @@
 import { teams } from "../data/teams";
 import { matches } from "../data/matches";
-import { countryFacts } from "../data/countryFacts";
 import { teamExtras, type TeamExtra } from "../data/teamExtras";
-import { squads } from "../data/squads";
 import type {
-  CountryComparison,
-  CountryFacts,
   Group,
   KnockoutMatch,
   Match,
   ScoredResult,
-  SquadMember,
   StandingRow,
   StarPlayer,
   Team,
   TournamentStats,
   WinChance,
 } from "../types";
-import { formatGDP, formatPopulation } from "./formatters";
-
 export { todayISO } from "./formatters";
+
+// Country facts + full squads are heavy, so their helpers live in
+// ./countryData and load on demand with the country panels.
 
 // ---- Lookup maps (built once) ----
 const teamByCode = new Map(teams.map((t) => [t.fifaCode, t]));
-const factsByIso = new Map(countryFacts.map((f) => [f.isoA3Code, f]));
 
 export const ALL_GROUPS: Group[] = [
   "A",
@@ -46,22 +41,6 @@ export function getTeamByCode(code: string | null | undefined): Team | undefined
   return teamByCode.get(code);
 }
 
-/** Get country facts by ISO A3 code. */
-export function getCountryFactsByIso(
-  iso: string | null | undefined
-): CountryFacts | undefined {
-  if (!iso) return undefined;
-  return factsByIso.get(iso);
-}
-
-/** Get country facts for a team (resolves the team's ISO code first). */
-export function getFactsForTeam(
-  code: string | null | undefined
-): CountryFacts | undefined {
-  const team = getTeamByCode(code);
-  return team ? getCountryFactsByIso(team.isoA3Code) : undefined;
-}
-
 /** All matches involving a given team code (either side). */
 export function getMatchesForTeam(
   code: string | null | undefined,
@@ -76,81 +55,6 @@ export function getTeamsByGroup(group: Group): Team[] {
   return teams.filter((t) => t.group === group);
 }
 
-/**
- * Build a kid-friendly comparison between two teams' countries.
- */
-export function compareCountries(
-  codeA: string,
-  codeB: string
-): CountryComparison | null {
-  const teamA = getTeamByCode(codeA);
-  const teamB = getTeamByCode(codeB);
-  if (!teamA || !teamB) return null;
-
-  const factsA = getCountryFactsByIso(teamA.isoA3Code);
-  const factsB = getCountryFactsByIso(teamB.isoA3Code);
-
-  return {
-    teamA,
-    teamB,
-    factsA,
-    factsB,
-    summary: buildComparisonSummary(teamA, teamB, factsA, factsB),
-  };
-}
-
-function buildComparisonSummary(
-  teamA: Team,
-  teamB: Team,
-  factsA: CountryFacts | undefined,
-  factsB: CountryFacts | undefined
-): string {
-  if (!factsA || !factsB) {
-    return `${teamA.teamName} and ${teamB.teamName} both bring their own football story to the World Cup.`;
-  }
-
-  const parts: string[] = [];
-
-  // Economy comparison
-  if (factsA.gdpUsd !== factsB.gdpUsd) {
-    const bigger = factsA.gdpUsd > factsB.gdpUsd ? factsA : factsB;
-    const smaller = factsA.gdpUsd > factsB.gdpUsd ? factsB : factsA;
-    const ratio = bigger.gdpUsd / Math.max(smaller.gdpUsd, 1);
-    const sizeWord = ratio >= 4 ? "much larger" : "larger";
-    parts.push(
-      `${bigger.countryName} has a ${sizeWord} economy (${formatGDP(
-        bigger.gdpUsd
-      )} vs ${formatGDP(smaller.gdpUsd)})`
-    );
-  }
-
-  // Population comparison
-  if (factsA.population !== factsB.population) {
-    const bigger = factsA.population > factsB.population ? factsA : factsB;
-    const smaller = factsA.population > factsB.population ? factsB : factsA;
-    parts.push(
-      `${bigger.countryName} has more people (${formatPopulation(
-        bigger.population
-      )}) than ${smaller.countryName} (${formatPopulation(
-        smaller.population
-      )})`
-    );
-  }
-
-  const lead = parts.length
-    ? `${capitalize(parts[0])}.`
-    : `${teamA.countryName} and ${teamB.countryName} are quite similar in size.`;
-
-  const second =
-    parts.length > 1 ? ` ${capitalize(parts[1])}.` : "";
-
-  return `${lead}${second} But on the football pitch, size doesn't decide the winner — every team has a real chance, and both ${teamA.teamName} and ${teamB.teamName} have proud football traditions.`;
-}
-
-function capitalize(s: string): string {
-  return s.charAt(0).toUpperCase() + s.slice(1);
-}
-
 /** Star players + strength rating for a team. */
 export function getTeamExtras(
   code: string | null | undefined
@@ -162,15 +66,6 @@ export function getTeamExtras(
 /** Star players for a team (empty array if none). */
 export function getStarPlayers(code: string | null | undefined): StarPlayer[] {
   return getTeamExtras(code)?.starPlayers ?? [];
-}
-
-/**
- * Full 26-player squad for a team (empty array if not curated yet). The Squad
- * tab uses this; when empty it falls back to the curated star players.
- */
-export function getSquad(code: string | null | undefined): SquadMember[] {
-  if (!code) return [];
-  return squads[code] ?? [];
 }
 
 /** True once a match has a usable score (finished or live in progress). */

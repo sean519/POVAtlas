@@ -1,4 +1,4 @@
-# POV GoalMap — Session Handoff
+# POV Atlas — Session Handoff
 
 > Last updated: 2026-06-25 (Vercel-from-source live; canonical folder moved) · Branch: `main` · Working tree: **clean** · Live on povatlas.com
 >
@@ -20,6 +20,23 @@
 This document is the single source of truth for picking up work on this project
 in a fresh Claude Code session. Read it top-to-bottom before making changes.
 
+> 🏷️⚡ **2026-09-30 — renamed to "POV Atlas" + load-time work.** Header/title now
+> say POV Atlas. First load dropped from ~263 KB to ~187 KB gzip:
+> - The world GeoJSON is self-hosted as `src/assets/countries.geo.json`
+>   (coordinates rounded to 3 dp; imported with `?url` so its filename is
+>   content-hashed and cached permanently; fetch starts at module load).
+>   Before, it came from raw.githubusercontent.com with a 5-min cache.
+> - Heavy country data moved to `src/utils/countryData.ts` (`getFactsForTeam`,
+>   `getSquad`, `compareCountries`). **Import it only from lazily loaded
+>   components.** `CountryDetailPanel`, `CountryComparisonCard`, `PlayerModal`
+>   and `EasterEggModal` are `React.lazy` in `App.tsx`; the comparison card now
+>   takes `codeA`/`codeB`.
+> - `vite.config.ts` splits `vendor-react` / `vendor-map` chunks so deploys don't
+>   bust library caches.
+> - Dev server gotcha: the preview tool reads `F:\world map\.claude\launch.json`
+>   (where this session started). Its `povatlas` entry runs Vite with the
+>   canonical folder as root on port 5181.
+>
 > 🏁 **2026-09-29 — the tournament is OVER** (Spain beat Argentina 1–0 a.e.t. in
 > the July 19 final). Post-tournament review changes:
 > - **Basemap moved from CARTO to Esri Light Gray Canvas.** CARTO's keyless

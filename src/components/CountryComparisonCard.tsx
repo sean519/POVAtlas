@@ -1,4 +1,5 @@
-import type { CountryComparison, Team } from "../types";
+import type { Team } from "../types";
+import { compareCountries } from "../utils/countryData";
 import {
   formatArea,
   formatGDP,
@@ -21,7 +22,9 @@ export interface ComparisonResult {
 }
 
 interface CountryComparisonCardProps {
-  comparison: CountryComparison;
+  /** fifaCodes of the two teams being compared. */
+  codeA: string;
+  codeB: string;
   result?: ComparisonResult | null;
   onClose: () => void;
   onCollapse?: () => void;
@@ -32,13 +35,16 @@ interface CountryComparisonCardProps {
 type Winner = "a" | "b" | "tie";
 
 export default function CountryComparisonCard({
-  comparison,
+  codeA,
+  codeB,
   result,
   onClose,
   onCollapse,
   onSelectTeam,
   onHoverTeam,
 }: CountryComparisonCardProps) {
+  const comparison = compareCountries(codeA, codeB);
+  if (!comparison) return null;
   const { teamA, teamB, factsA, factsB, summary } = comparison;
   const chance = matchWinChance(teamA.fifaCode, teamB.fifaCode);
   const starsA = getStarPlayers(teamA.fifaCode);

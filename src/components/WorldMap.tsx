@@ -14,6 +14,7 @@ import type { Team } from "../types";
 import { getTeamByCode } from "../utils/dataHelpers";
 import { flagUrl } from "../utils/flags";
 import { OC_HQ, OC_TRIGGER } from "../data/easterEgg";
+import geoUrl from "../assets/countries.geo.json?url";
 
 interface WorldMapProps {
   teams: Team[];
@@ -31,11 +32,23 @@ interface WorldMapProps {
   onEasterEgg: () => void;
 }
 
-// A compact world GeoJSON keyed by ISO A3 in feature.id.
-const GEOJSON_URL =
-  "https://raw.githubusercontent.com/johan/world.geo.json/master/countries.geo.json";
-
 type GeoData = GeoJSON.FeatureCollection;
+
+// Compact world GeoJSON keyed by ISO A3 in feature.id (from johan/world.geo.json,
+// coordinates rounded to 3 dp). Self-hosted with a content-hashed filename, so
+// the CDN serves it compressed and browsers cache it permanently. The download
+// starts as soon as this module loads, in parallel with React's first render.
+let geoPromise: Promise<GeoData> | null = null;
+function loadGeo(): Promise<GeoData> {
+  geoPromise ??= fetch(geoUrl).then((r) => {
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    return r.json() as Promise<GeoData>;
+  });
+  // A failed attempt shouldn't be cached — allow a retry on next mount.
+  geoPromise.catch(() => (geoPromise = null));
+  return geoPromise;
+}
+loadGeo();
 
 export default function WorldMap({
   teams,
@@ -54,12 +67,8 @@ export default function WorldMap({
 
   useEffect(() => {
     let cancelled = false;
-    fetch(GEOJSON_URL)
-      .then((r) => {
-        if (!r.ok) throw new Error(`HTTP ${r.status}`);
-        return r.json();
-      })
-      .then((data: GeoData) => {
+    loadGeo()
+      .then((data) => {
         if (!cancelled) setGeo(data);
       })
       .catch(() => {

@@ -1,24 +1,23 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { Suspense, lazy, useEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import Layout from "./components/Layout";
 import SchedulePanel from "./components/SchedulePanel";
 import WorldMap from "./components/WorldMap";
-import CountryDetailPanel from "./components/CountryDetailPanel";
-import CountryComparisonCard, { type ComparisonResult } from "./components/CountryComparisonCard";
-import EasterEggModal from "./components/EasterEggModal";
-import PlayerModal from "./components/PlayerModal";
+import type { ComparisonResult } from "./components/CountryComparisonCard";
 import Flag from "./components/Flag";
+
+// Loaded on demand: the country panels carry the heavy country-facts + squad
+// data, and the modals are rarely opened — none are needed for first paint.
+const CountryDetailPanel = lazy(() => import("./components/CountryDetailPanel"));
+const CountryComparisonCard = lazy(() => import("./components/CountryComparisonCard"));
+const EasterEggModal = lazy(() => import("./components/EasterEggModal"));
+const PlayerModal = lazy(() => import("./components/PlayerModal"));
 import type { KnockoutMatch, LiveScoresResponse, Match, StarPlayer, Team } from "./types";
 import { teams } from "./data/teams";
 import { matches, mergeLiveScores, isLiveWindowNow, isTournamentOver } from "./data/matches";
 import { fetchLiveScores } from "./utils/liveScores";
 import { ROUND_META, fetchKnockout } from "./utils/knockout";
-import {
-  compareCountries,
-  getFactsForTeam,
-  getMatchesForTeam,
-  getTeamByCode,
-} from "./utils/dataHelpers";
+import { getMatchesForTeam, getTeamByCode } from "./utils/dataHelpers";
 import { getVenuePoint } from "./data/venues";
 
 export default function App() {
@@ -150,11 +149,16 @@ export default function App() {
   const hoveredKnockout = hoveredKnockoutId
     ? knockout.find((k) => k.id === hoveredKnockoutId) ?? null
     : null;
-  const comparison = selectedMatch
-    ? compareCountries(selectedMatch.teamA, selectedMatch.teamB)
+  // The two teams of the selected match (the comparison card itself loads the
+  // country facts on demand).
+  const pairCodes: [string, string] | null = selectedMatch
+    ? [selectedMatch.teamA, selectedMatch.teamB]
     : selectedKnockout && selectedKnockout.teamA && selectedKnockout.teamB
-    ? compareCountries(selectedKnockout.teamA, selectedKnockout.teamB)
+    ? [selectedKnockout.teamA, selectedKnockout.teamB]
     : null;
+  const pairA = pairCodes ? getTeamByCode(pairCodes[0]) : undefined;
+  const pairB = pairCodes ? getTeamByCode(pairCodes[1]) : undefined;
+  const comparison = pairCodes && pairA && pairB ? { codes: pairCodes, teamA: pairA, teamB: pairB } : null;
   const comparisonResult: ComparisonResult | null =
     selectedMatch && selectedMatch.status === "finished" &&
     selectedMatch.scoreA !== null && selectedMatch.scoreB !== null
@@ -337,14 +341,17 @@ export default function App() {
         className={cardShell}
         onCollapse={() => setInfoCollapsed(true)}
       >
-        <CountryComparisonCard
-          comparison={comparison}
-          result={comparisonResult}
-          onClose={clearSelection}
-          onCollapse={() => setInfoCollapsed(true)}
-          onSelectTeam={selectTeam}
-          onHoverTeam={setHoveredTeamCode}
-        />
+        <Suspense fallback={<PanelLoading />}>
+          <CountryComparisonCard
+            codeA={comparison.codes[0]}
+            codeB={comparison.codes[1]}
+            result={comparisonResult}
+            onClose={clearSelection}
+            onCollapse={() => setInfoCollapsed(true)}
+            onSelectTeam={selectTeam}
+            onHoverTeam={setHoveredTeamCode}
+          />
+        </Suspense>
       </MapInfoSheet>
     );
   } else if (selectedTeam) {
@@ -354,18 +361,19 @@ export default function App() {
         className={cardShell}
         onCollapse={() => setInfoCollapsed(true)}
       >
-        <CountryDetailPanel
-          team={selectedTeam}
-          facts={getFactsForTeam(selectedTeam.fifaCode)}
-          matches={getMatchesForTeam(selectedTeam.fifaCode, liveMatches)}
-          selectedMatchId={selectedMatchId}
-          hoveredMatchId={hoveredMatchId}
-          onClose={() => setSelectedTeamCode(null)}
-          onCollapse={() => setInfoCollapsed(true)}
-          onHoverMatch={setHoveredMatchId}
-          onSelectMatch={selectMatch}
-          onSelectPlayer={(team, player) => setSelectedPlayer({ team, player })}
-        />
+        <Suspense fallback={<PanelLoading />}>
+          <CountryDetailPanel
+            team={selectedTeam}
+            matches={getMatchesForTeam(selectedTeam.fifaCode, liveMatches)}
+            selectedMatchId={selectedMatchId}
+            hoveredMatchId={hoveredMatchId}
+            onClose={() => setSelectedTeamCode(null)}
+            onCollapse={() => setInfoCollapsed(true)}
+            onHoverMatch={setHoveredMatchId}
+            onSelectMatch={selectMatch}
+            onSelectPlayer={(team, player) => setSelectedPlayer({ team, player })}
+          />
+        </Suspense>
       </MapInfoSheet>
     );
   }
@@ -414,13 +422,17 @@ export default function App() {
       }
       overlay={
         <>
-          <EasterEggModal open={eggOpen} onClose={() => setEggOpen(false)} />
-          <PlayerModal
-            team={selectedPlayer?.team ?? null}
-            player={selectedPlayer?.player ?? null}
-            onClose={() => setSelectedPlayer(null)}
-            onViewCountry={selectTeam}
-          />
+          <Suspense fallback={null}>
+            {eggOpen && <EasterEggModal open onClose={() => setEggOpen(false)} />}
+            {selectedPlayer && (
+              <PlayerModal
+                team={selectedPlayer.team}
+                player={selectedPlayer.player}
+                onClose={() => setSelectedPlayer(null)}
+                onViewCountry={selectTeam}
+              />
+            )}
+          </Suspense>
         </>
       }
     />
@@ -506,6 +518,18 @@ function MapInfoSheet({
 }
 
 /** Collapsed state of the info card: a small pill you can re-expand. */
+/** Brief placeholder while a lazily loaded info panel downloads. */
+function PanelLoading() {
+  return (
+    <div className="flex h-full items-center justify-center text-sm text-slate-400">
+      <span className="ball-spin mr-2 inline-block" aria-hidden>
+        ⚽
+      </span>
+      Loading…
+    </div>
+  );
+}
+
 function CollapsedBar({
   teamA,
   teamB,

@@ -1,7 +1,8 @@
 import { useState, type ReactNode } from "react";
 import type { CountryFacts, Match, StarPlayer, Team } from "../types";
 import { groupColors } from "../utils/groupColors";
-import { getSquad, getStarPlayers } from "../utils/dataHelpers";
+import { getStarPlayers } from "../utils/dataHelpers";
+import { getFactsForTeam, getSquad } from "../utils/countryData";
 import MatchCard from "./MatchCard";
 import Flag from "./Flag";
 import Squad from "./Squad";
@@ -14,7 +15,6 @@ import {
 
 interface CountryDetailPanelProps {
   team: Team;
-  facts: CountryFacts | undefined;
   matches: Match[];
   selectedMatchId: string | null;
   hoveredMatchId: string | null;
@@ -29,7 +29,6 @@ type DetailTab = "country" | "squad";
 
 export default function CountryDetailPanel({
   team,
-  facts,
   matches,
   selectedMatchId,
   hoveredMatchId,
@@ -42,6 +41,7 @@ export default function CountryDetailPanel({
   const c = groupColors[team.group];
   const stars = getStarPlayers(team.fifaCode);
   const squad = getSquad(team.fifaCode);
+  const facts = getFactsForTeam(team.fifaCode);
   const [tab, setTab] = useState<DetailTab>("country");
 
   return (
