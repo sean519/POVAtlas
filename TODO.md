@@ -4,8 +4,12 @@
 > post-tournament state. Full context lives in [HANDOFF.md](HANDOFF.md).
 
 ## 🔜 Next up (candidates — user's call)
-- [ ] **Next "event lens"** (per the mission): Winter Olympics (Feb 2027) as a
-      new section next to "⚽ World Cup 2026" in `SectionSwitch`.
+- [ ] **Keep events fresh:** re-run `node scripts/build-events.mjs` as Women's
+      World Cup 2027 qualifiers finish (CONCACAF + more UEFA slots) and after its
+      draw (11 Dec 2026) — then switch it to the drawn groups. Add results once
+      the Rugby World Cup 2027 (1 Oct–13 Nov 2027) is played.
+- [ ] **More events** (add to `EVENTS` in the script): 2027 FIBA Basketball World
+      Cup (Qatar), 2027 Cricket World Cup, 2028 Summer Olympics (LA).
 - [ ] **Per-country pages / SEO:** `?country=JPN` links exist; real paths
       (`/japan`) + per-page titles/preview images would help search & sharing.
 - [ ] **Country of the Week beyond 46:** write intros/fun facts/must-see for
@@ -15,6 +19,12 @@
 - [ ] **Yearly:** re-run `node scripts/build-world-data.mjs` (World Bank data).
 - [ ] **Map coloring by statistic** (choropleth): the Countries-tab ranking data
       is ready for it.
+
+## ✅ Done 2026-10-14
+- [x] 🏅 Events section: 6 events (Women's World Cup 2027, Rugby World Cup 2027,
+      Asian Games 2026, FIBA Women's World Cup 2026, Commonwealth Games 2026,
+      Winter Olympics 2026); teams → countries/regions; map shading; "At sports
+      events" on every country card; `?event=` links.
 
 ## ✅ Done 2026-09-30
 - [x] Renamed to POV Atlas; first load −29% (self-hosted borders, lazy country

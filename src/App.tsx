@@ -2,7 +2,7 @@ import { Suspense, lazy, useEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import Layout from "./components/Layout";
 import SchedulePanel from "./components/SchedulePanel";
-import WorldMap, { type AtlasFrame, type AtlasTone } from "./components/WorldMap";
+import WorldMap, { type AtlasFrame, type AtlasMark } from "./components/WorldMap";
 import type { ComparisonResult } from "./components/CountryComparisonCard";
 import type { AtlasTab } from "./components/atlas/AtlasPanel";
 import SectionSwitch, { type Section } from "./components/SectionSwitch";
@@ -17,6 +17,7 @@ const EasterEggModal = lazy(() => import("./components/EasterEggModal"));
 const PlayerModal = lazy(() => import("./components/PlayerModal"));
 const AtlasPanel = lazy(() => import("./components/atlas/AtlasPanel"));
 const AtlasCountryCard = lazy(() => import("./components/atlas/AtlasCountryCard"));
+const EventsPanel = lazy(() => import("./components/events/EventsPanel"));
 import type { KnockoutMatch, LiveScoresResponse, Match, StarPlayer, Team } from "./types";
 import { teams } from "./data/teams";
 import { matches, mergeLiveScores, isLiveWindowNow, isTournamentOver } from "./data/matches";
@@ -26,18 +27,28 @@ import { getMatchesForTeam, getTeamByCode } from "./utils/dataHelpers";
 import { getVenuePoint } from "./data/venues";
 import { atlasCodeForTeam, useWorldData } from "./utils/world";
 import { currentStreak, gameFor, puzzleNumber, useDaily } from "./utils/daily";
+import { eventCountries, orderEvents, useEvents } from "./utils/events";
 
-/** Shareable deep links: ?compare=CHN,IND and ?country=JPN. */
-function readInitialLink(): { compare: [string, string] | null; country: string | null } {
+/** Shareable deep links: ?compare=CHN,IND, ?country=JPN and ?event=rwc-2027. */
+function readInitialLink(): {
+  compare: [string, string] | null;
+  country: string | null;
+  event: string | null;
+} {
   try {
     const p = new URLSearchParams(window.location.search);
     const code = (s: string | undefined) => (s && /^[A-Z]{3}$/.test(s.toUpperCase()) ? s.toUpperCase() : null);
     const [a, b] = (p.get("compare") ?? "").split(",");
     const ca = code(a);
     const cb = code(b);
-    return { compare: ca && cb && ca !== cb ? [ca, cb] : null, country: code(p.get("country") ?? undefined) };
+    const ev = p.get("event");
+    return {
+      compare: ca && cb && ca !== cb ? [ca, cb] : null,
+      country: code(p.get("country") ?? undefined),
+      event: ev && /^[a-z0-9-]{3,40}$/.test(ev) ? ev : null,
+    };
   } catch {
-    return { compare: null, country: null };
+    return { compare: null, country: null, event: null };
   }
 }
 const initialLink = readInitialLink();
@@ -50,7 +61,14 @@ function teamForAtlasCode(code: string): Team | undefined {
 
 export default function App() {
   // ---- Section (Atlas / World Cup) + Atlas state ----
-  const [section, setSection] = useState<Section>("atlas");
+  const [section, setSection] = useState<Section>(initialLink.event ? "events" : "atlas");
+  const [eventId, setEventId] = useState<string | null>(initialLink.event);
+  const events = useEvents(section === "events");
+  // The browsed event: the chosen one, else the first in display order.
+  const selectedEvent = useMemo(
+    () => (events ? events.find((e) => e.id === eventId) ?? orderEvents(events)[0] : null),
+    [events, eventId]
+  );
   const [atlasTab, setAtlasTab] = useState<AtlasTab>(initialLink.compare ? "compare" : "today");
   const [atlasCountry, setAtlasCountry] = useState<string | null>(initialLink.country);
   const [compareA, setCompareA] = useState<string | null>(initialLink.compare?.[0] ?? null);
@@ -375,6 +393,15 @@ export default function App() {
     setAtlasTab("today");
   };
 
+  // From a country card: browse that event, keeping the country open.
+  const openEvent = (id: string) => {
+    setSection("events");
+    setEventId(id);
+    setSelectedTeamCode(null);
+    setSelectedMatchId(null);
+    setSelectedKnockoutId(null);
+  };
+
   // Opens the head-to-head comparison once both sides of a knockout fixture
   // are decided; if only one side is known yet, opens that team's profile
   // instead (nothing to compare against). No-op for two TBD placeholders —
@@ -401,11 +428,33 @@ export default function App() {
 
   // ---- Atlas map marks + camera ----
   const showCompareOnMap = section === "atlas" && atlasTab === "compare";
+  const browsingEvent = section === "events" ? selectedEvent : null;
   const atlasMarks = useMemo(() => {
-    const out: { code: string; tone: AtlasTone }[] = [];
+    const out: AtlasMark[] = [];
     if (showCompareOnMap) {
       if (compareA) out.push({ code: compareA, tone: "a" });
       if (compareB) out.push({ code: compareB, tone: "b" });
+    }
+    if (browsingEvent) {
+      // Shade each place by how it did: medals won, or final placing.
+      const level = new Map<string, number>();
+      if (browsingEvent.medals) {
+        const totals = new Map<string, number>();
+        for (const m of browsingEvent.medals) {
+          if (m.team.atlas) totals.set(m.team.atlas, (totals.get(m.team.atlas) ?? 0) + m.total);
+        }
+        const max = Math.max(1, ...totals.values());
+        for (const [c, t] of totals) level.set(c, Math.sqrt(t / max));
+      } else if (browsingEvent.ranking) {
+        const n = browsingEvent.ranking.length;
+        for (const r of browsingEvent.ranking) {
+          if (r.team.atlas) level.set(r.team.atlas, Math.max(level.get(r.team.atlas) ?? 0, 1 - (r.rank - 1) / n));
+        }
+      }
+      for (const c of eventCountries(browsingEvent)) {
+        if (c !== browsingEvent.hostCode) out.push({ code: c, tone: "event", level: level.get(c) ?? 0.55 });
+      }
+      out.push({ code: browsingEvent.hostCode, tone: "host" });
     }
     if (atlasCountry) {
       const i = out.findIndex((m) => m.code === atlasCountry);
@@ -413,7 +462,7 @@ export default function App() {
       out.push({ code: atlasCountry, tone: "focus" });
     }
     return out;
-  }, [showCompareOnMap, compareA, compareB, atlasCountry]);
+  }, [showCompareOnMap, compareA, compareB, atlasCountry, browsingEvent]);
 
   const atlasFrame = useMemo((): AtlasFrame | null => {
     if (!world) return null;
@@ -421,6 +470,8 @@ export default function App() {
       ? [atlasCountry]
       : showCompareOnMap
       ? [compareA, compareB].filter((c): c is string => Boolean(c))
+      : browsingEvent
+      ? eventCountries(browsingEvent)
       : [];
     const boxes = codes
       .map((c) => world.byCode.get(c))
@@ -430,8 +481,9 @@ export default function App() {
         const span = c.area ? Math.sqrt(c.area) / 111 : 3;
         return [c.lat, c.lng, Math.min(45, Math.max(2.5, span * 1.3))];
       });
-    return boxes.length ? { key: codes.join(","), boxes } : null;
-  }, [world, atlasCountry, showCompareOnMap, compareA, compareB]);
+    const key = !atlasCountry && browsingEvent ? `event:${browsingEvent.id}` : codes.join(",");
+    return boxes.length ? { key, boxes } : null;
+  }, [world, atlasCountry, showCompareOnMap, compareA, compareB, browsingEvent]);
 
   const countryName = useMemo(
     () =>
@@ -541,6 +593,8 @@ export default function App() {
                   }
                 : undefined
             }
+            highlightEventId={browsingEvent?.id ?? null}
+            onOpenEvent={openEvent}
           />
         </Suspense>
       </MapInfoSheet>
@@ -624,6 +678,24 @@ export default function App() {
                   onCompare={startCompare}
                 />
               </Suspense>
+            ) : section === "events" ? (
+              <Suspense fallback={<div className="m-3 h-72 animate-pulse rounded-2xl bg-slate-100" />}>
+                {events && selectedEvent ? (
+                  <EventsPanel
+                    events={events}
+                    selectedId={selectedEvent.id}
+                    onSelect={(id) => {
+                      setEventId(id);
+                      setAtlasCountry(null);
+                    }}
+                    selectedCode={atlasCountry}
+                    onShowCountry={selectAtlasCountry}
+                    onOpenWorldCup={() => changeSection("worldcup")}
+                  />
+                ) : (
+                  <div className="m-3 h-72 animate-pulse rounded-2xl bg-slate-100" />
+                )}
+              </Suspense>
             ) : (
               <SchedulePanel
                 matches={filteredMatches}
@@ -654,7 +726,7 @@ export default function App() {
       map={
         <div className="relative h-full w-full">
           <WorldMap
-            mode={section}
+            mode={section === "worldcup" ? "worldcup" : "atlas"}
             atlasMarks={atlasMarks}
             atlasFrame={atlasFrame}
             countryName={countryName}

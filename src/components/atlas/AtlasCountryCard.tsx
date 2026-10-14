@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import type { CountryFacts, WorldCountry } from "../../types";
 import { METRICS, useWorldData } from "../../utils/world";
+import { orderEvents, participationFor, useEvents } from "../../utils/events";
 import CountryFlag from "./CountryFlag";
 
 /**
@@ -15,6 +16,8 @@ export default function AtlasCountryCard({
   onShowCountry,
   onCompare,
   onOpenWorldCup,
+  highlightEventId,
+  onOpenEvent,
 }: {
   code: string;
   /** Set when this country played at the 2026 World Cup. */
@@ -24,8 +27,12 @@ export default function AtlasCountryCard({
   onShowCountry: (code: string) => void;
   onCompare: (code: string) => void;
   onOpenWorldCup?: () => void;
+  /** The event being browsed — its entry is shown first, at the top. */
+  highlightEventId?: string | null;
+  onOpenEvent?: (id: string) => void;
 }) {
   const world = useWorldData();
+  const events = useEvents();
   const [facts, setFacts] = useState<CountryFacts | null>(null);
   useEffect(() => {
     let cancelled = false;
@@ -45,6 +52,48 @@ export default function AtlasCountryCard({
   const neighbours = c.borders
     .map((b) => world?.byCode.get(b))
     .filter((n): n is WorldCountry => Boolean(n));
+
+  // Every event this country/region took part in, the browsed one first.
+  const participation = (events ? orderEvents(events) : [])
+    .map((ev) => ({ ev, lines: participationFor(ev, c.code) }))
+    .filter((p) => p.lines.length > 0)
+    .sort((a, b) => Number(b.ev.id === highlightEventId) - Number(a.ev.id === highlightEventId));
+  const eventsSection = participation.length > 0 && (
+    <section className={highlightEventId ? "mb-3" : "mt-3"}>
+      <h3 className="mb-1 text-xs font-bold uppercase tracking-wide text-brand-blue">🏅 At sports events</h3>
+      <ul className="space-y-1.5">
+        {participation.map(({ ev, lines }) => (
+          <li key={ev.id}>
+            <button
+              type="button"
+              disabled={!onOpenEvent}
+              onClick={() => onOpenEvent?.(ev.id)}
+              className={`w-full rounded-lg border px-2.5 py-1.5 text-left transition ${
+                ev.id === highlightEventId
+                  ? "border-teal-300 bg-teal-50"
+                  : "border-slate-200 bg-white hover:border-brand-sky hover:bg-brand-sky/5"
+              }`}
+            >
+              <span className="block text-xs font-bold text-slate-700">
+                {ev.icon} {ev.name}
+              </span>
+              {lines.map(({ team, detail }) => (
+                <span key={team.code} className="mt-0.5 block text-xs text-slate-600">
+                  {(lines.length > 1 || team.name !== c.name) && (
+                    <span className="font-semibold">{team.name}: </span>
+                  )}
+                  {detail}
+                  {team.note && team.atlas !== "GBR" && (
+                    <span className="mt-0.5 block text-[11px] text-slate-400">{team.note}</span>
+                  )}
+                </span>
+              ))}
+            </button>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
 
   return (
     <div className="flex h-full flex-col">
@@ -84,6 +133,7 @@ export default function AtlasCountryCard({
       </div>
 
       <div className="nice-scroll flex-1 overflow-y-auto p-4">
+        {highlightEventId && eventsSection}
         <div className="grid grid-cols-2 gap-1.5">
           {METRICS.map((m) => {
             const v = m.get(c);
@@ -107,6 +157,8 @@ export default function AtlasCountryCard({
           <Fact label="Currency" value={c.currencies.join(", ") || "—"} />
           <Fact label="Coastline" value={c.landlocked ? "None — landlocked" : "Yes"} />
         </dl>
+
+        {!highlightEventId && eventsSection}
 
         <section className="mt-3">
           <h3 className="mb-1 text-xs font-bold uppercase tracking-wide text-brand-blue">

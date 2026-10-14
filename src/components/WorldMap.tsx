@@ -16,8 +16,18 @@ import { flagUrl } from "../utils/flags";
 import { OC_HQ, OC_TRIGGER } from "../data/easterEgg";
 import { loadGeo, type GeoData } from "../utils/geo";
 
-/** How an Atlas country is marked: selected ("focus") or compare slot A / B. */
-export type AtlasTone = "focus" | "a" | "b";
+/**
+ * How an Atlas country is marked: selected ("focus"), compare slot A / B, an
+ * event participant ("event", shaded by `level`), or the event host.
+ */
+export type AtlasTone = "focus" | "a" | "b" | "event" | "host";
+
+export interface AtlasMark {
+  code: string;
+  tone: AtlasTone;
+  /** 0–1 shade strength for "event" marks (e.g. medal count). */
+  level?: number;
+}
 
 /** Camera target for the Atlas: boxes of [lat, lng, span in degrees]. */
 export interface AtlasFrame {
@@ -28,8 +38,8 @@ export interface AtlasFrame {
 interface WorldMapProps {
   /** "atlas": every country equal + clickable; "worldcup": team styling, flags, arcs. */
   mode: "atlas" | "worldcup";
-  /** Atlas countries to mark (selected country, or the compare pair). */
-  atlasMarks: { code: string; tone: AtlasTone }[];
+  /** Atlas countries to mark (selected country, compare pair, event teams). */
+  atlasMarks: AtlasMark[];
   atlasFrame: AtlasFrame | null;
   /** Country name for tooltips (null until the Atlas data has loaded). */
   countryName: ((code: string) => string | undefined) | null;
@@ -93,9 +103,9 @@ export default function WorldMap({
 
   const highlightSet = useMemo(() => new Set(highlightCodes), [highlightCodes]);
   const marks = useMemo(
-    () => new Map(atlasMarks.map((m) => [m.code, m.tone] as const)),
+    () => new Map(atlasMarks.map((m) => [m.code, m] as const)),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [atlasMarks.map((m) => `${m.code}:${m.tone}`).join(",")]
+    [atlasMarks.map((m) => `${m.code}:${m.tone}:${m.level ?? ""}`).join(",")]
   );
   const anyActive = highlightSet.size > 0 || marks.size > 0;
 
@@ -232,7 +242,7 @@ export default function WorldMap({
 interface GeoLayerProps {
   data: GeoData;
   mode: "atlas" | "worldcup";
-  marks: Map<string, AtlasTone>;
+  marks: Map<string, AtlasMark>;
   countryName: ((code: string) => string | undefined) | null;
   isoToTeam: Map<string, Team>;
   highlightSet: Set<string>;
@@ -249,6 +259,8 @@ const MARK_STYLE: Record<AtlasTone, { color: string; fill: string }> = {
   focus: { color: "#6d4fc2", fill: "#9d86e9" },
   a: { color: "#2f5fc4", fill: "#5b86e5" },
   b: { color: "#d9713f", fill: "#f4a37a" },
+  event: { color: "#0f766e", fill: "#2bb5a5" },
+  host: { color: "#c2780a", fill: "#f6c453" },
 };
 
 function GeoLayer({
@@ -270,7 +282,12 @@ function GeoLayer({
   const styleFor = (code: string, team: Team | undefined): L.PathOptions => {
     const mark = marks.get(code);
     if (mark) {
-      const s = MARK_STYLE[mark];
+      const s = MARK_STYLE[mark.tone];
+      if (mark.tone === "event") {
+        // Shade by strength (medals / finish); a thin border keeps it light.
+        const lv = mark.level ?? 0.5;
+        return { weight: 1, color: s.color, fillColor: s.fill, fillOpacity: (satellite ? 0.15 : 0.22) + lv * 0.5 };
+      }
       return { weight: 2.5, color: s.color, fillColor: s.fill, fillOpacity: satellite ? 0.35 : 0.6 };
     }
     if (mode === "atlas" || !team) {
